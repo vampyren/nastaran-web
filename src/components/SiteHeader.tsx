@@ -180,12 +180,12 @@ export default function SiteHeader({ items }: Props) {
     <>
       <header
         aria-label="Sidhuvud"
-        className="sticky top-3 z-[60] mx-auto mt-3 flex h-[52px] w-[min(calc(100%-32px),1180px)] items-center justify-between gap-3.5 overflow-hidden rounded-[22px] border border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,234,248,0.82))] px-3.5 shadow-rail ring-1 ring-inset ring-white/40 backdrop-blur-xl sm:px-4 md:h-[60px] md:px-[22px] lg:h-16 lg:px-[26px]"
+        className="sticky top-0 z-[60] mx-auto flex h-[60px] w-[min(calc(100%-32px),1180px)] items-center justify-between gap-3.5 overflow-hidden rounded-b-[22px] border-b border-x border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,234,248,0.95))] px-3.5 shadow-rail ring-1 ring-inset ring-white/40 backdrop-blur-xl sm:px-4 md:h-[68px] md:px-[22px] lg:h-[72px] lg:px-[26px]"
       >
         {/* Glossy highlight strip */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[22px] bg-[linear-gradient(180deg,rgba(255,255,255,0.55),transparent)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-[linear-gradient(180deg,rgba(255,255,255,0.55),transparent)]"
         />
         <Link
           href="/"
@@ -233,7 +233,7 @@ export default function SiteHeader({ items }: Props) {
       <div
         id="mobile-menu"
         hidden={!open}
-        className="fixed inset-x-4 top-[76px] z-[50] mx-auto max-w-[1180px] rounded-[22px] border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_98%,white)] p-[18px] shadow-card md:hidden"
+        className="fixed inset-x-4 top-[68px] z-[50] mx-auto max-w-[1180px] rounded-[22px] border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_98%,white)] p-[18px] shadow-card md:hidden"
       >
         <p className="mb-3.5 text-eyebrow uppercase tracking-[0.075em] tabular-nums text-ink-muted">
           Sidor

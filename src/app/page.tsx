@@ -17,7 +17,7 @@ export default function Home() {
     <>
       <SkipLink href="#hem">Hoppa till innehåll</SkipLink>
       <SiteHeader items={navItems} />
-      <main className="relative z-[1]">
+      <main className="relative z-[1] pt-2 md:pt-3 lg:pt-4">
         <Hero />
 
         <PaisleyDivider className="my-2" />
