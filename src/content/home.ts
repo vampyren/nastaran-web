@@ -6,6 +6,8 @@ export const home = {
   hero: {
     sectionId: "hem",
     headingId: "hem-heading",
+    numeral: "01",
+    label: "Hem",
     prelude: "Healing · Reiki · Massage",
     h1: "Nastaran",
     intro: "En varm plats för stillhet, beröring och återhämtning.",
@@ -40,7 +42,8 @@ export const home = {
   rhythm: {
     sectionId: "rytm",
     headingId: "rytm-heading",
-    prelude: "03 / Rytm",
+    numeral: "03",
+    label: "Rytm",
     heading: "En mjukare rytm genom dagen.",
     words: ["Stillhet", "Beröring", "Återhämtning"] as const,
     wordsAriaLabel: "Stillhet, beröring och återhämtning",

@@ -1,7 +1,7 @@
 import LotusRosette from "@/components/motifs/LotusRosette";
 import SectionClose from "@/components/motifs/SectionClose";
 import Reveal from "@/components/ui/Reveal";
-import { EYEBROW } from "@/lib/layout";
+import SectionMarker from "@/components/home/SectionMarker";
 import { home } from "@/content/home";
 
 const { rhythm } = home;
@@ -15,7 +15,9 @@ export default function RhythmStrip() {
     >
       <div className="mx-auto w-[min(100%,680px)] text-center">
         <Reveal>
-          <p className={`${EYEBROW} text-accent-deep`}>{rhythm.prelude}</p>
+          <div className="flex justify-center">
+            <SectionMarker number={rhythm.numeral} label={rhythm.label} />
+          </div>
           <h2
             id={rhythm.headingId}
             className="mt-3 font-serif font-medium tracking-[-0.018em] text-balance text-ink text-h2 leading-[var(--text-h2--line-height)] md:text-h2-md md:leading-[var(--text-h2-md--line-height)]"

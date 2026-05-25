@@ -27,7 +27,6 @@ export default function Home() {
           headingId={home.treatments.headingId}
           numeral={home.treatments.numeral}
           label={home.treatments.label}
-          index={home.treatments.index}
           heading={home.treatments.heading}
           pullQuote={home.treatments.pullQuote}
           body={home.treatments.body}
@@ -42,7 +41,6 @@ export default function Home() {
           headingId={home.preparation.headingId}
           numeral={home.preparation.numeral}
           label={home.preparation.label}
-          index={home.preparation.index}
           heading={home.preparation.heading}
           body={home.preparation.body}
           tone="sandalwood"
@@ -55,7 +53,6 @@ export default function Home() {
           headingId={home.information.headingId}
           numeral={home.information.numeral}
           label={home.information.label}
-          index={home.information.index}
           heading={home.information.heading}
           body={home.information.body}
         >
