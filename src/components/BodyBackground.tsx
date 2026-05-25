@@ -26,28 +26,6 @@ export default function BodyBackground() {
             "linear-gradient(to bottom, black, black 20%, transparent 62%)",
         }}
       />
-      {/* Top blur veil — frosts content scrolling past the floating menu pill.
-          z-55 sits above main content (z-1) and below the menu (z-60).
-          Bounded to the page frame (≤ 1180px). Radial-gradient mask fades the
-          element on all four sides so it reads as a soft halo behind the menu
-          pill, not a visible rectangle. */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-[55] flex justify-center"
-      >
-        <div
-          className="h-[72px] w-[min(calc(100%-32px),1180px)] md:h-[80px] lg:h-[88px]"
-          style={{
-            background: "color-mix(in srgb, var(--color-paper) 90%, white)",
-            backdropFilter: "blur(16px) saturate(1.05)",
-            WebkitBackdropFilter: "blur(16px) saturate(1.05)",
-            maskImage:
-              "radial-gradient(ellipse 92% 85% at center 30%, black 60%, transparent 100%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 92% 85% at center 30%, black 60%, transparent 100%)",
-          }}
-        />
-      </div>
     </>
   );
 }

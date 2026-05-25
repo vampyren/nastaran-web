@@ -178,6 +178,25 @@ export default function SiteHeader({ items }: Props) {
 
   return (
     <>
+      {/* Frosted veil — same width + rounded shape as the menu pill, but
+          extends from top of viewport to the pill's bottom. The menu pill
+          (z:60) covers the lower portion; only the top 12px above the pill
+          is visible. Rendered inside SiteHeader so pages without a menu
+          (e.g. 404) don't show it. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 z-[55] flex justify-center"
+      >
+        <div
+          className="h-[64px] w-[min(calc(100%-32px),1180px)] rounded-[22px] md:h-[72px] lg:h-[76px]"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,234,248,0.82))",
+            backdropFilter: "blur(16px) saturate(1.05)",
+            WebkitBackdropFilter: "blur(16px) saturate(1.05)",
+          }}
+        />
+      </div>
       <header
         aria-label="Sidhuvud"
         className="sticky top-3 z-[60] mx-auto mt-3 flex h-[52px] w-[min(calc(100%-32px),1180px)] items-center justify-between gap-3.5 overflow-hidden rounded-[22px] border border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,234,248,0.82))] px-3.5 shadow-rail ring-1 ring-inset ring-white/40 backdrop-blur-xl sm:px-4 md:h-[60px] md:px-[22px] lg:h-16 lg:px-[26px]"
