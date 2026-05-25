@@ -51,6 +51,14 @@ These are the defaults. They apply unless the user explicitly overrides.
 
 These were added as ornaments only — **no `data-theme` attribute, no theme switcher, no ornament/elements/arch theme infrastructure**. Theme system itself remains MS2.
 
+**Update after MS1.2/MS1.3 routes shipped:**
+
+- `/om-mig`, `/berattelser`, `/kontakt` are now implemented as part of MS1 (no longer deferred).
+- `/testimonials` redirect now retargets to `/berattelser` (was `/`).
+- `next.config.mjs` got `images.remotePatterns` for `images.unsplash.com` to support the 5 gallery placeholders that the old project already used.
+- `next/image` is used for local assets only on Berättelser; the gallery itself uses a plain `<img>` element (with `referrerPolicy="no-referrer"`) inside the ported `GalleryCarousel`. This matches the old project's pattern for Unsplash CDN images.
+- New `public/assets/generated/nastaran-character-01.jpeg` for the Om-mig portrait, copied from the old project.
+
 ### 4. Body dot pattern — preserve with forced-colors safety gate
 
 **Recommendation:** Preserve the body-wide dot pattern, but move it from `body::before` to a dedicated `<BodyBackground>` component in `RootLayout`. Keep the `@media (forced-colors: none)` gate so the pattern doesn't fight accessibility/contrast modes.
