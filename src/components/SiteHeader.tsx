@@ -178,22 +178,6 @@ export default function SiteHeader({ items }: Props) {
 
   return (
     <>
-      {/* Frosted veil — full viewport-width strip with backdrop-blur. The
-          left/right edges land at the viewport edges (no visible perimeter
-          since there's nothing distinct out there) and the bottom fades to
-          transparent via the bg gradient. Height ends at the menu pill
-          bottom so text just below the menu stays sharp. Rendered inside
-          SiteHeader so pages without a menu (e.g. 404) don't render it. */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-[55] h-[64px] md:h-[72px] lg:h-[76px]"
-        style={{
-          background:
-            "linear-gradient(180deg, color-mix(in srgb, var(--color-paper) 98%, white) 0%, color-mix(in srgb, var(--color-paper) 94%, white) 58%, color-mix(in srgb, var(--color-paper) 72%, transparent) 84%, transparent 100%)",
-          backdropFilter: "blur(18px) saturate(1.05)",
-          WebkitBackdropFilter: "blur(18px) saturate(1.05)",
-        }}
-      />
       <header
         aria-label="Sidhuvud"
         className="sticky top-3 z-[60] mx-auto mt-3 flex h-[52px] w-[min(calc(100%-32px),1180px)] items-center justify-between gap-3.5 overflow-hidden rounded-[22px] border border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,234,248,0.82))] px-3.5 shadow-rail ring-1 ring-inset ring-white/40 backdrop-blur-xl sm:px-4 md:h-[60px] md:px-[22px] lg:h-16 lg:px-[26px]"
