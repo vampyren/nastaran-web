@@ -29,9 +29,9 @@ type Props = {
 const TONE_BG: Record<Tone, string> = {
   paper: "",
   sandalwood:
-    "bg-[linear-gradient(180deg,rgba(255,255,255,0.16),transparent_34%),var(--color-sandalwood)] border-y border-hairline-warm",
+    "bg-sandalwood bg-[linear-gradient(180deg,rgba(255,255,255,0.16),transparent_34%)] border-y border-hairline-warm",
   aubergine:
-    "bg-[radial-gradient(circle_at_90%_10%,rgba(216,154,78,0.14),transparent_30vw),radial-gradient(circle_at_8%_90%,rgba(138,106,165,0.18),transparent_34vw),var(--color-aubergine)] text-[#eadff0]",
+    "bg-aubergine bg-[radial-gradient(circle_at_90%_10%,rgba(216,154,78,0.14),transparent_30vw),radial-gradient(circle_at_8%_90%,rgba(138,106,165,0.18),transparent_34vw)] text-[#eadff0]",
 };
 
 const RAIL_TONE: Record<Tone, string> = {

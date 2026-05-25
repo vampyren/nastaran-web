@@ -3,7 +3,7 @@ import LotusRosette from "./motifs/LotusRosette";
 
 export default function SiteFooter() {
   return (
-    <footer className="relative z-[1] mt-0 w-full bg-[color-mix(in_srgb,var(--color-aubergine)_85%,black)] px-4 pb-9 pt-0 text-[#c9b8d4]">
+    <footer className="relative z-[1] mt-0 w-full bg-aubergine px-4 pb-9 pt-0 text-[#c9b8d4]">
       {/* Top dot pattern strip — marigold polka above the footer content */}
       <div
         aria-hidden

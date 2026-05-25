@@ -19,7 +19,7 @@ export default function InformationLedger({ rows, importantLabel }: Props) {
           >
             <dt className={`${EYEBROW} text-copper m-0`}>{term}</dt>
             <dd
-              className={`m-0 text-body leading-[var(--text-body--line-height)] text-ink ${
+              className={`m-0 font-serif italic text-[18px] leading-[27px] text-ink ${
                 isImportant ? "border-l border-copper pl-3.5" : ""
               }`}
             >
