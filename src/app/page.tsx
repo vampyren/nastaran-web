@@ -2,6 +2,7 @@ import SkipLink from "@/components/SkipLink";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PaisleyDivider from "@/components/motifs/PaisleyDivider";
+import ElementsBand from "@/components/motifs/ElementsBand";
 import Hero from "@/components/home/Hero";
 import SectionShell from "@/components/home/SectionShell";
 import TreatmentPanels from "@/components/home/TreatmentPanels";
@@ -61,6 +62,9 @@ export default function Home() {
             importantLabel={home.information.importantLabel}
           />
         </SectionShell>
+
+        {/* Pancha Mahabhuta band — only rendered when theme = "elementen". */}
+        <ElementsBand />
 
         <PaisleyDivider className="my-2" />
 
