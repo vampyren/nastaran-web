@@ -44,6 +44,13 @@ These are the defaults. They apply unless the user explicitly overrides.
 
 **Reason:** The old project declares it but doesn't actually render it on Home. Don't invent new placements in MS1.
 
+**Update after PR2 visual review:** Two formerly MS2-only motifs were promoted into MS1 for decorative polish:
+
+- `SanskritColumn` (ॐ · शान्ति · Shanti · Fred) on the left edge at xl+ — rendered in `RootLayout`, opacity 0.82, fixed position, aria-hidden.
+- `PaisleyDivider` between Hero/Behandlingar and Information/Kontakt — accent color, opacity 0.55.
+
+These were added as ornaments only — **no `data-theme` attribute, no theme switcher, no ornament/elements/arch theme infrastructure**. Theme system itself remains MS2.
+
 ### 4. Body dot pattern — preserve with forced-colors safety gate
 
 **Recommendation:** Preserve the body-wide dot pattern, but move it from `body::before` to a dedicated `<BodyBackground>` component in `RootLayout`. Keep the `@media (forced-colors: none)` gate so the pattern doesn't fight accessibility/contrast modes.

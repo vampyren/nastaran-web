@@ -134,6 +134,8 @@ All motifs already exist as clean React SVG components in `src/app/SiteMotifs.ts
 | `PaisleyArch` | Section dividers; decorative footer of treatment panels (md+) |
 | `SectionClose` | Composed `[PaisleyArch, LotusRosette, PaisleyArch]` at section end |
 | `BootiField` | Soft dot+leaf pattern inside the hero ritual panel |
+| `SanskritColumn` | "ॐ शान्ति · Shanti · Fred" — fixed left-edge ambient ornament, xl+ only, opacity 0.82 |
+| `PaisleyDivider` | Subtle horizontal divider between sections (hero/behandlingar, information/kontakt) |
 
 **Preserved as available, not forced into MS1:**
 
@@ -144,10 +146,10 @@ All motifs already exist as clean React SVG components in `src/app/SiteMotifs.ts
 **Deferred to MS2 theme system (optional):**
 
 - `MandalaWatermark` (theme: ornament)
-- `PaisleyDivider` (theme: ornament)
 - `JharokhaArch` (theme: arch)
-- `SanskritColumn` "ॐ शान्ति" (theme: ornament)
 - `ElementsBand` Pancha Mahabhuta (theme: elements)
+
+**Note:** `SanskritColumn` and `PaisleyDivider` were originally listed as MS2-only. They were promoted into MS1 as decorative polish (not as theme infrastructure — no `data-theme` attribute, no theme switcher) after visual review showed the page needed more visual life.
 
 **Body dot pattern.** Old project applies a faint dot grid via `body::before` under `@media (forced-colors: none)`. New project moves this to a dedicated overlay `<BodyBackground>` element in `RootLayout`, keeping the `forced-colors` safety gate.
 
