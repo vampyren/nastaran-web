@@ -12,7 +12,7 @@ export default function ContactTeaser() {
     <section
       id={contactTeaser.sectionId}
       aria-labelledby={contactTeaser.headingId}
-      className="relative scroll-mt-[76px] bg-[radial-gradient(circle_at_90%_10%,rgba(216,154,78,0.14),transparent_30vw),radial-gradient(circle_at_8%_90%,rgba(138,106,165,0.18),transparent_34vw),var(--color-aubergine)] py-20 px-5 text-[#eadff0] sm:px-6 md:px-7 lg:py-[106px] xl:py-[120px]"
+      className="relative scroll-mt-[76px] bg-[radial-gradient(circle_at_90%_10%,rgba(216,154,78,0.22),transparent_30vw),radial-gradient(circle_at_8%_90%,rgba(255,255,255,0.08),transparent_34vw),var(--color-accent-deep)] py-20 px-5 text-[#eadff0] sm:px-6 md:px-7 lg:py-[106px] xl:py-[120px]"
     >
       <div className="mx-auto w-[min(100%,560px)] md:w-[min(100%,672px)] lg:grid lg:w-[min(100%,896px)] lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start lg:gap-x-14 xl:w-[min(100%,1180px)]">
         {/* Spine rail */}
