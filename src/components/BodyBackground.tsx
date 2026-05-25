@@ -27,17 +27,28 @@ export default function BodyBackground() {
         }}
       />
       {/* Top blur veil — frosts content scrolling past the floating menu pill.
-          z-55 sits above main content (z-1) and below the menu (z-60). */}
+          z-55 sits above main content (z-1) and below the menu (z-60).
+          Width matches the menu pill (≤ 1180px frame). Height ends just past
+          the menu bottom. Mask fades the whole element (incl. backdrop blur)
+          so text immediately below the menu stays sharp. */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-[55] h-[124px]"
-        style={{
-          background:
-            "linear-gradient(180deg, color-mix(in srgb, var(--color-paper) 98%, white) 0%, color-mix(in srgb, var(--color-paper) 94%, white) 58%, color-mix(in srgb, var(--color-paper) 72%, transparent) 84%, transparent 100%)",
-          backdropFilter: "blur(18px) saturate(1.05)",
-          WebkitBackdropFilter: "blur(18px) saturate(1.05)",
-        }}
-      />
+        className="pointer-events-none fixed inset-x-0 top-0 z-[55] flex justify-center"
+      >
+        <div
+          className="h-[72px] w-[min(calc(100%-32px),1180px)] md:h-[80px] lg:h-[88px]"
+          style={{
+            background:
+              "linear-gradient(180deg, color-mix(in srgb, var(--color-paper) 96%, white), color-mix(in srgb, var(--color-paper) 88%, white))",
+            backdropFilter: "blur(18px) saturate(1.05)",
+            WebkitBackdropFilter: "blur(18px) saturate(1.05)",
+            maskImage:
+              "linear-gradient(180deg, black, black 55%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(180deg, black, black 55%, transparent 100%)",
+          }}
+        />
+      </div>
     </>
   );
 }
