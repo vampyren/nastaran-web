@@ -178,11 +178,12 @@ export default function SiteHeader({ items }: Props) {
 
   return (
     <>
-      {/* Frosted veil — same width + rounded shape as the menu pill, but
-          extends from top of viewport to the pill's bottom. The menu pill
-          (z:60) covers the lower portion; only the top 12px above the pill
-          is visible. Rendered inside SiteHeader so pages without a menu
-          (e.g. 404) don't show it. */}
+      {/* Frosted veil — same footprint as the menu pill, extends upward to
+          the top of the viewport. Two crossed mask gradients fade the top
+          and both sides to invisible, leaving only a soft glossy halo above
+          the menu pill. No visible perimeter, even on pages with contrast
+          backgrounds. Rendered inside SiteHeader so pages without a menu
+          (e.g. 404) don't render it at all. */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-x-0 top-0 z-[55] flex justify-center"
@@ -191,9 +192,15 @@ export default function SiteHeader({ items }: Props) {
           className="h-[64px] w-[min(calc(100%-32px),1180px)] rounded-[22px] md:h-[72px] lg:h-[76px]"
           style={{
             background:
-              "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,234,248,0.82))",
-            backdropFilter: "blur(16px) saturate(1.05)",
-            WebkitBackdropFilter: "blur(16px) saturate(1.05)",
+              "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.95) 12%, rgba(244,234,248,0.86) 24%, rgba(244,234,248,0.8) 100%)",
+            backdropFilter: "blur(20px) saturate(1.12)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.12)",
+            maskImage:
+              "linear-gradient(180deg, transparent 0%, black 22%, black 100%), linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(180deg, transparent 0%, black 22%, black 100%), linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+            maskComposite: "intersect",
+            WebkitMaskComposite: "source-in",
           }}
         />
       </div>
