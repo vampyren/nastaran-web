@@ -14,7 +14,7 @@ export default function SiteFooter() {
           backgroundSize: "18px 12px",
         }}
       />
-      <div className="relative z-[1] mx-auto flex min-h-[72px] w-full max-w-[1180px] items-center justify-between gap-4 border-t border-white/10 px-[22px] pt-7 text-eyebrow uppercase tracking-[0.075em] tabular-nums max-[640px]:flex-col max-[640px]:items-start">
+      <div className="relative z-[1] mx-auto flex min-h-[72px] w-full max-w-[1180px] items-center justify-between gap-3 border-t border-white/10 px-[22px] pt-7 text-eyebrow uppercase tracking-[0.075em] tabular-nums max-[640px]:px-3.5">
         <span className="inline-flex items-center gap-2">
           <LotusRosette className="h-4 w-4 text-marigold" />
           Nastaran · © {new Date().getFullYear()}
