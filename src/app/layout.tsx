@@ -52,7 +52,9 @@ export default function RootLayout({
       <body>
         <BodyBackground />
         <SanskritColumn />
-        {children}
+        {/* Global top safe-area for the fixed floating nav pill.
+            All routes get this padding so content starts below the pill. */}
+        <div className="pt-[96px] lg:pt-[112px]">{children}</div>
       </body>
     </html>
   );
