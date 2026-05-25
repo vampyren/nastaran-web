@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { NavItem } from "@/content/site";
@@ -56,16 +56,6 @@ export default function SiteHeader({ items }: Props) {
   const [scrollHashHref, setScrollHashHref] = useState<string | null>(null);
   // Derived: scroll-spy state is only meaningful on the home route.
   const activeHashHref = pathname === "/" ? scrollHashHref : null;
-
-  const activeItem = useMemo(
-    () =>
-      items.find((item) =>
-        hrefMatchesPath(item.href, pathname, activeHashHref),
-      ) ??
-      items.find((item) => item.href === pathname) ??
-      items[0],
-    [activeHashHref, items, pathname],
-  );
 
   useEffect(() => {
     if (pathname !== "/") return undefined;
@@ -208,9 +198,6 @@ export default function SiteHeader({ items }: Props) {
           </span>
         </Link>
         {renderNav("desktop")}
-        <span className="ml-auto hidden whitespace-nowrap text-right text-eyebrow uppercase tracking-[0.075em] tabular-nums text-ink-muted md:inline-block lg:hidden">
-          {activeItem ? `${activeItem.number} / ${activeItem.label}` : "01 / Hem"}
-        </span>
         <button
           type="button"
           aria-controls="mobile-menu"

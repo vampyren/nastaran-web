@@ -8,37 +8,45 @@ import { home } from "@/content/home";
 
 const { hero } = home;
 
+/**
+ * Hero layout responsive strategy:
+ * - Below xl (< 1280px): stacked. Copy first, ritual image panel below.
+ *   The h1 has full section width so it never clips or collides.
+ * - xl+ (≥ 1280px): 3-column editorial grid — 220px spine + content + image.
+ *   Only at this width is the content column wide enough for the 118px
+ *   text-display-xl h1 without cramping.
+ */
 export default function Hero() {
   return (
     <section
       id={hero.sectionId}
       tabIndex={-1}
       aria-labelledby={hero.headingId}
-      className={`relative scroll-mt-[76px] pt-10 pb-14 md:pt-12 md:pb-16 lg:pt-[88px] lg:pb-[108px] xl:pt-28 xl:pb-32`}
+      className="relative scroll-mt-[76px] pt-10 pb-14 md:pt-12 md:pb-16 lg:pt-16 lg:pb-24 xl:pt-28 xl:pb-32"
     >
       <div
-        className={`${SECTION_WIDTH} lg:grid lg:grid-cols-[220px_minmax(0,1fr)_minmax(260px,330px)] lg:gap-x-[46px] lg:items-stretch xl:grid-cols-[220px_minmax(0,680px)_minmax(300px,380px)]`}
+        className={`${SECTION_WIDTH} xl:grid xl:grid-cols-[220px_minmax(0,680px)_minmax(300px,380px)] xl:gap-x-[46px] xl:items-stretch`}
       >
-        {/* Mobile/tablet rail (hidden at lg+) */}
-        <div
-          aria-hidden
-          className="text-ink-muted lg:hidden"
-        >
+        {/* Section rail (hidden at xl+, where the spine column carries the label) */}
+        <div aria-hidden className="text-ink-muted xl:hidden">
           <span className={`inline-flex items-center gap-2 ${EYEBROW}`}>
             <LotusRosette className="h-3.5 w-3.5 text-copper" />
             Hem
           </span>
         </div>
-        <div aria-hidden className={`mt-3 mb-6 ${HAIRLINE_GRADIENT} lg:hidden`} />
-        {/* Empty spine column at lg+ */}
-        <div aria-hidden className="hidden lg:block lg:row-span-3" />
+        <div
+          aria-hidden
+          className={`mt-3 mb-6 ${HAIRLINE_GRADIENT} xl:hidden`}
+        />
+        {/* Empty spine column at xl+ */}
+        <div aria-hidden className="hidden xl:block xl:row-span-3" />
         {/* Hero copy */}
-        <div className="lg:row-span-3 lg:pt-5">
+        <div className="xl:row-span-3 xl:pt-5">
           <Reveal>
             <p className={`mb-4 ${EYEBROW} text-accent-deep`}>{hero.prelude}</p>
             <h1
               id={hero.headingId}
-              className="mb-4 font-serif font-medium tracking-[-0.018em] text-balance text-ink text-display leading-[var(--text-display--line-height)] md:text-display-md md:leading-[var(--text-display-md--line-height)] lg:text-display-lg lg:leading-[var(--text-display-lg--line-height)] xl:text-display-xl xl:leading-[var(--text-display-xl--line-height)] lg:max-w-[760px]"
+              className="mb-4 font-serif font-medium tracking-[-0.018em] text-balance text-ink text-display leading-[var(--text-display--line-height)] md:text-display-md md:leading-[var(--text-display-md--line-height)] lg:text-display-lg lg:leading-[var(--text-display-lg--line-height)] xl:text-display-xl xl:leading-[var(--text-display-xl--line-height)] xl:max-w-[760px]"
             >
               {hero.h1}
             </h1>
@@ -73,14 +81,14 @@ export default function Hero() {
             </div>
           </Reveal>
         </div>
-        {/* Ritual panel */}
+        {/* Ritual panel — stacked below copy until xl, then enters column 3 */}
         <Reveal
           delay={0.12}
-          className="mt-7 lg:row-span-3 lg:mt-0 lg:self-stretch"
+          className="mt-8 xl:row-span-3 xl:mt-0 xl:self-stretch"
         >
           <aside
             aria-label="Visuell signatur"
-            className="relative min-h-[190px] overflow-hidden border border-hairline bg-lavender text-accent-deep px-6 pt-7 pb-7 lg:min-h-[520px]"
+            className="relative min-h-[260px] overflow-hidden border border-hairline bg-lavender text-accent-deep px-6 pt-7 pb-7 md:min-h-[320px] lg:min-h-[380px] xl:min-h-[520px]"
             style={{ borderRadius: "26px 26px 70px 26px" }}
           >
             <Image
@@ -89,7 +97,7 @@ export default function Hero() {
               alt={hero.image.alt}
               aria-hidden={hero.image.alt === "" ? true : undefined}
               fill
-              sizes="(min-width: 1100px) 380px, (min-width: 768px) 50vw, 100vw"
+              sizes="(min-width: 1280px) 380px, (min-width: 768px) 90vw, 100vw"
               priority
               style={{ objectPosition: "center 32%" }}
             />
@@ -102,10 +110,13 @@ export default function Hero() {
               }}
             />
             <BootiField className="absolute inset-y-[-20px] right-0 z-[1] h-[120%] w-[54%] text-accent-deep opacity-[0.17]" />
-            <LotusRosette className="relative z-[1] h-[72px] w-[72px] text-accent-deep lg:h-[106px] lg:w-[106px]" />
-            <div aria-hidden className="relative my-7 h-[30px] lg:mt-[260px] lg:h-9" />
+            <LotusRosette className="relative z-[1] h-[72px] w-[72px] text-accent-deep xl:h-[106px] xl:w-[106px]" />
+            <div
+              aria-hidden
+              className="relative my-7 h-[30px] xl:mt-[260px] xl:h-9"
+            />
             <span
-              className={`relative z-[1] ${EYEBROW} text-ink-muted lg:text-[16px] lg:tracking-[0.075em]`}
+              className={`relative z-[1] ${EYEBROW} text-ink-muted xl:text-[16px] xl:tracking-[0.075em]`}
             >
               {hero.ritualCaption}
             </span>
