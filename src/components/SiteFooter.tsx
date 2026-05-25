@@ -4,12 +4,13 @@ import LotusRosette from "./motifs/LotusRosette";
 export default function SiteFooter() {
   return (
     <footer className="relative z-[1] mt-0 w-full bg-aubergine px-4 pb-9 pt-0 text-[#c9b8d4]">
-      {/* Top dot pattern strip */}
+      {/* Top dot pattern strip — marigold polka above the footer content */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-3 opacity-[0.14]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-3 opacity-[0.32]"
         style={{
-          backgroundImage: "radial-gradient(circle, var(--color-marigold) 1px, transparent 1.5px)",
+          backgroundImage:
+            "radial-gradient(circle, var(--color-marigold) 1px, transparent 1.5px)",
           backgroundSize: "18px 12px",
         }}
       />

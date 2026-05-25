@@ -180,8 +180,13 @@ export default function SiteHeader({ items }: Props) {
     <>
       <header
         aria-label="Sidhuvud"
-        className="sticky top-3 z-[60] mx-auto mt-3 flex h-[52px] w-[min(calc(100%-32px),1180px)] items-center justify-between gap-3.5 rounded-[22px] border border-hairline/80 bg-[color-mix(in_srgb,var(--color-paper)_96%,white)] px-3.5 shadow-rail backdrop-blur-md sm:px-4 md:h-[60px] md:px-[22px] lg:h-16 lg:px-[26px]"
+        className="sticky top-3 z-[60] mx-auto mt-3 flex h-[52px] w-[min(calc(100%-32px),1180px)] items-center justify-between gap-3.5 overflow-hidden rounded-[22px] border border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,234,248,0.82))] px-3.5 shadow-rail ring-1 ring-inset ring-white/40 backdrop-blur-xl sm:px-4 md:h-[60px] md:px-[22px] lg:h-16 lg:px-[26px]"
       >
+        {/* Glossy highlight strip */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[22px] bg-[linear-gradient(180deg,rgba(255,255,255,0.55),transparent)]"
+        />
         <Link
           href="/"
           aria-label="Till startsidan"
