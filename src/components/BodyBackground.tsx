@@ -26,6 +26,18 @@ export default function BodyBackground() {
             "linear-gradient(to bottom, black, black 20%, transparent 62%)",
         }}
       />
+      {/* Top blur veil — frosts content scrolling past the floating menu pill.
+          z-55 sits above main content (z-1) and below the menu (z-60). */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 z-[55] h-[124px]"
+        style={{
+          background:
+            "linear-gradient(180deg, color-mix(in srgb, var(--color-paper) 98%, white) 0%, color-mix(in srgb, var(--color-paper) 94%, white) 58%, color-mix(in srgb, var(--color-paper) 72%, transparent) 84%, transparent 100%)",
+          backdropFilter: "blur(18px) saturate(1.05)",
+          WebkitBackdropFilter: "blur(18px) saturate(1.05)",
+        }}
+      />
     </>
   );
 }
