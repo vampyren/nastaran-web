@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import BodyBackground from "@/components/BodyBackground";
+import HeaderFrost from "@/components/HeaderFrost";
 import SanskritColumn from "@/components/motifs/SanskritColumn";
 import { siteMeta } from "@/content/site";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
     <html lang="sv" className={`${inter.variable} ${newsreader.variable}`}>
       <body>
         <BodyBackground />
+        <HeaderFrost />
         <SanskritColumn />
         {/* Global top safe-area for the fixed floating nav pill.
             All routes get this padding so content starts below the pill. */}

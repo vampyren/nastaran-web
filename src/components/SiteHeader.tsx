@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import HeaderFrost from "@/components/HeaderFrost";
 import type { NavItem } from "@/content/site";
 
 function LotusMini() {
@@ -179,10 +178,9 @@ export default function SiteHeader({ items }: Props) {
 
   return (
     <>
-      {/* Top frost layer — z:40, sits behind the nav pill, masked to fade. */}
-      <HeaderFrost />
       {/* Outer wrapper — fixed positioning, no visual styling, no veil.
-          Holds the floating pill (the rail). */}
+          Holds the floating pill (the rail). HeaderFrost is rendered in
+          RootLayout. */}
       <div className="pointer-events-none fixed inset-x-0 top-3 z-50 px-4 lg:top-4">
         <header
           aria-label="Sidhuvud"
