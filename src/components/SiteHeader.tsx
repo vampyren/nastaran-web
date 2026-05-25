@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import HeaderFrost from "@/components/HeaderFrost";
 import type { NavItem } from "@/content/site";
 
 function LotusMini() {
@@ -178,6 +179,8 @@ export default function SiteHeader({ items }: Props) {
 
   return (
     <>
+      {/* Top frost layer — z:40, sits behind the nav pill, masked to fade. */}
+      <HeaderFrost />
       {/* Outer wrapper — fixed positioning, no visual styling, no veil.
           Holds the floating pill (the rail). */}
       <div className="pointer-events-none fixed inset-x-0 top-3 z-50 px-4 lg:top-4">
@@ -237,7 +240,7 @@ export default function SiteHeader({ items }: Props) {
       <div
         id="mobile-menu"
         hidden={!open}
-        className="pointer-events-auto fixed inset-x-4 top-[72px] z-40 mx-auto max-w-[1180px] rounded-[22px] border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_98%,white)] p-[18px] shadow-card md:hidden"
+        className="pointer-events-auto fixed inset-x-4 top-[72px] z-50 mx-auto max-w-[1180px] rounded-[22px] border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_98%,white)] p-[18px] shadow-card md:hidden"
       >
         <p className="mb-3.5 text-eyebrow uppercase tracking-[0.075em] tabular-nums text-ink-muted">
           Sidor
