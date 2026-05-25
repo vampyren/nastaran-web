@@ -34,7 +34,7 @@ export default function Hero() {
         <div aria-hidden className="hidden lg:block lg:row-span-3" />
         {/* Hero copy */}
         <div className="lg:row-span-3 lg:pt-5">
-          <Reveal onMount>
+          <Reveal>
             <p className={`mb-4 ${EYEBROW} text-accent-deep`}>{hero.prelude}</p>
             <h1
               id={hero.headingId}
@@ -43,7 +43,7 @@ export default function Hero() {
               {hero.h1}
             </h1>
           </Reveal>
-          <Reveal onMount delay={0.08}>
+          <Reveal delay={0.08}>
             <p className="mb-3.5 max-w-[17ch] font-serif italic font-normal tracking-[-0.005em] text-ink text-intro leading-[var(--text-intro--line-height)] md:text-intro-md md:leading-[var(--text-intro-md--line-height)] md:max-w-[20ch]">
               {hero.intro}
             </p>
@@ -51,7 +51,7 @@ export default function Hero() {
               {hero.body}
             </p>
           </Reveal>
-          <Reveal onMount delay={0.18}>
+          <Reveal delay={0.18}>
             <dl
               aria-label="Kort översikt"
               className="mt-6 border-t border-hairline"
@@ -75,7 +75,6 @@ export default function Hero() {
         </div>
         {/* Ritual panel */}
         <Reveal
-          onMount
           delay={0.12}
           className="mt-7 lg:row-span-3 lg:mt-0 lg:self-stretch"
         >
