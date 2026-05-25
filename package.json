@@ -1,0 +1,33 @@
+{
+  "name": "nastaran-web-clean",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clean Tailwind-first rebuild of Nastaran's site for healing, reiki and massage.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "framer-motion": "^12.40.0",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "postcss": "^8.5.11",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.11"
+  }
+}
