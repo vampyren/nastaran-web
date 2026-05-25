@@ -1,6 +1,7 @@
 import SkipLink from "@/components/SkipLink";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaisleyDivider from "@/components/motifs/PaisleyDivider";
 import Hero from "@/components/home/Hero";
 import SectionShell from "@/components/home/SectionShell";
 import TreatmentPanels from "@/components/home/TreatmentPanels";
@@ -18,6 +19,8 @@ export default function Home() {
       <SiteHeader items={navItems} />
       <main className="relative z-[1]">
         <Hero />
+
+        <PaisleyDivider className="my-2" />
 
         <SectionShell
           id={home.treatments.sectionId}
@@ -61,6 +64,8 @@ export default function Home() {
             importantLabel={home.information.importantLabel}
           />
         </SectionShell>
+
+        <PaisleyDivider className="my-2" />
 
         <ContactTeaser />
       </main>

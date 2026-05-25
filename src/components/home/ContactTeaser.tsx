@@ -18,7 +18,7 @@ export default function ContactTeaser() {
         {/* Spine rail */}
         <div aria-hidden className="text-[#eadff0] lg:row-span-3">
           <span
-            className="hidden font-serif font-medium tracking-[-0.02em] text-marigold lg:block"
+            className="hidden font-serif font-medium tracking-[-0.02em] text-paper lg:block"
             style={{ fontSize: "clamp(64px, 7vw, 96px)", lineHeight: 0.86 }}
           >
             {contactTeaser.numeral}

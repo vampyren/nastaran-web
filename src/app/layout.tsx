@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import BodyBackground from "@/components/BodyBackground";
+import SanskritColumn from "@/components/motifs/SanskritColumn";
 import { siteMeta } from "@/content/site";
 
 const inter = Inter({
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="sv" className={`${inter.variable} ${newsreader.variable}`}>
       <body>
         <BodyBackground />
+        <SanskritColumn />
         {children}
       </body>
     </html>
