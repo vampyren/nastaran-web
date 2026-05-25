@@ -38,18 +38,45 @@ function ArrowMotif({ direction }: { direction: "previous" | "next" }) {
   );
 }
 
+/**
+ * Seamless-loop carousel.
+ *
+ * To avoid the visible "rewind" when wrapping from last → first, we render
+ * one clone of the first image at the end of the track. The clone is visually
+ * identical to the real first image, so swapping between them via an instant
+ * (non-animated) scrollLeft change is invisible.
+ *
+ * - Forward wrap (auto-advance / next on last): smooth-scroll to the clone,
+ *   then instantly snap back to real first.
+ * - Backward wrap (prev on first): instantly teleport to the clone position
+ *   (same image), then smooth-scroll backward to real last.
+ * - Manual mid-track scrolls and indicator clicks behave normally.
+ * - Mobile swipe past the last real image lands on the clone via scroll-snap,
+ *   then the scroll handler snaps back to real first.
+ *
+ * The indicator dots reflect the real index (0..N-1), never the clone.
+ */
 export default function GalleryCarousel({
   images,
 }: {
   images: readonly CeremonyImage[];
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const offsetsRef = useRef([0]);
-  const activePageRef = useRef(0);
-  const [pageOffsets, setPageOffsets] = useState([0]);
-  const [activePage, setActivePage] = useState(0);
+  const realCount = images.length;
+  const useLoop = realCount >= 2;
+  // DOM slides: [...real images, cloneOfFirst]. Length = realCount + 1 when looping.
+  const domSlides = useLoop ? [...images, images[0]!] : images;
+  const totalDom = domSlides.length;
 
-  const findClosestPage = useCallback(
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const offsetsRef = useRef<number[]>([0]);
+  const activeRealIndexRef = useRef(0);
+  const [pageOffsets, setPageOffsets] = useState<number[]>([0]);
+  const [activeRealIndex, setActiveRealIndex] = useState(0);
+  const isSnappingRef = useRef(false);
+  const pendingSnapRef = useRef<number | null>(null);
+  const swipeSnapDebounceRef = useRef<number | null>(null);
+
+  const findClosestDomIndex = useCallback(
     (scrollLeft: number, offsets = offsetsRef.current) => {
       return offsets.reduce(
         (best, offset, index) => {
@@ -81,67 +108,176 @@ export default function GalleryCarousel({
     const nextOffsets = offsets.length ? offsets.sort((a, b) => a - b) : [0];
     offsetsRef.current = nextOffsets;
     setPageOffsets(nextOffsets);
-    const nextActive = findClosestPage(container.scrollLeft, nextOffsets);
-    activePageRef.current = nextActive;
-    setActivePage(nextActive);
-  }, [findClosestPage]);
-
-  const goToPage = useCallback((index: number) => {
-    const container = scrollRef.current;
-    const offsets = offsetsRef.current;
-    if (!container || !offsets.length) return;
-    const nextIndex = Math.max(0, Math.min(index, offsets.length - 1));
-    activePageRef.current = nextIndex;
-    setActivePage(nextIndex);
-    container.scrollTo({ left: offsets[nextIndex], behavior: "smooth" });
   }, []);
 
-  const movePage = useCallback(
-    (direction: -1 | 1) => {
+  const instantScrollTo = useCallback((scrollLeft: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    isSnappingRef.current = true;
+    const prev = container.style.scrollBehavior;
+    container.style.scrollBehavior = "auto";
+    container.scrollLeft = scrollLeft;
+    container.style.scrollBehavior = prev;
+    // Release the flag after two frames so the resulting scroll event from
+    // setting scrollLeft is filtered out.
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        isSnappingRef.current = false;
+      });
+    });
+  }, []);
+
+  const clearPendingSnap = useCallback(() => {
+    if (pendingSnapRef.current !== null) {
+      window.clearTimeout(pendingSnapRef.current);
+      pendingSnapRef.current = null;
+    }
+  }, []);
+
+  const advance = useCallback(() => {
+    const container = scrollRef.current;
+    const offsets = offsetsRef.current;
+    if (!container || offsets.length < totalDom) return;
+    clearPendingSnap();
+
+    const current = activeRealIndexRef.current;
+
+    if (useLoop && current === realCount - 1) {
+      // Forward wrap: smooth-scroll to clone (forward motion), then snap to real first.
+      container.scrollTo({
+        left: offsets[realCount]!,
+        behavior: "smooth",
+      });
+      activeRealIndexRef.current = 0;
+      setActiveRealIndex(0);
+      pendingSnapRef.current = window.setTimeout(() => {
+        instantScrollTo(offsets[0]!);
+        pendingSnapRef.current = null;
+      }, 700);
+      return;
+    }
+
+    const next = useLoop ? (current + 1) % realCount : current + 1;
+    if (next >= realCount) return;
+    activeRealIndexRef.current = next;
+    setActiveRealIndex(next);
+    container.scrollTo({ left: offsets[next]!, behavior: "smooth" });
+  }, [
+    clearPendingSnap,
+    instantScrollTo,
+    realCount,
+    totalDom,
+    useLoop,
+  ]);
+
+  const reverse = useCallback(() => {
+    const container = scrollRef.current;
+    const offsets = offsetsRef.current;
+    if (!container || offsets.length < totalDom) return;
+    clearPendingSnap();
+
+    const current = activeRealIndexRef.current;
+
+    if (useLoop && current === 0) {
+      // Backward wrap: instantly teleport to clone position (visually identical to
+      // real first), then smooth-scroll backward to real last.
+      instantScrollTo(offsets[realCount]!);
+      activeRealIndexRef.current = realCount - 1;
+      setActiveRealIndex(realCount - 1);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const c = scrollRef.current;
+          if (!c) return;
+          c.scrollTo({ left: offsets[realCount - 1]!, behavior: "smooth" });
+        });
+      });
+      return;
+    }
+
+    const prev = current - 1;
+    if (prev < 0) return;
+    activeRealIndexRef.current = prev;
+    setActiveRealIndex(prev);
+    container.scrollTo({ left: offsets[prev]!, behavior: "smooth" });
+  }, [clearPendingSnap, instantScrollTo, realCount, totalDom, useLoop]);
+
+  const goToReal = useCallback(
+    (realIdx: number) => {
+      const container = scrollRef.current;
       const offsets = offsetsRef.current;
-      if (!offsets.length) return;
-      const next =
-        (activePageRef.current + direction + offsets.length) % offsets.length;
-      goToPage(next);
+      if (!container || offsets.length === 0) return;
+      const clamped = Math.max(0, Math.min(realIdx, realCount - 1));
+      if (offsets[clamped] === undefined) return;
+      clearPendingSnap();
+      activeRealIndexRef.current = clamped;
+      setActiveRealIndex(clamped);
+      container.scrollTo({ left: offsets[clamped]!, behavior: "smooth" });
     },
-    [goToPage],
+    [clearPendingSnap, realCount],
   );
 
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return undefined;
+
     const handleScroll = () => {
-      const nextActive = findClosestPage(container.scrollLeft);
-      activePageRef.current = nextActive;
-      setActivePage(nextActive);
+      if (isSnappingRef.current) return;
+      const domIdx = findClosestDomIndex(container.scrollLeft);
+      // Map clone index back to real index 0.
+      const realIdx = useLoop && domIdx === realCount ? 0 : domIdx;
+      if (realIdx !== activeRealIndexRef.current && realIdx < realCount) {
+        activeRealIndexRef.current = realIdx;
+        setActiveRealIndex(realIdx);
+      }
+
+      // If the user manually scrolled onto the clone (mobile swipe past last),
+      // wait briefly for scroll-snap to settle, then snap back to real first.
+      if (useLoop && domIdx === realCount) {
+        if (swipeSnapDebounceRef.current !== null) {
+          window.clearTimeout(swipeSnapDebounceRef.current);
+        }
+        swipeSnapDebounceRef.current = window.setTimeout(() => {
+          swipeSnapDebounceRef.current = null;
+          const c = scrollRef.current;
+          if (!c) return;
+          if (findClosestDomIndex(c.scrollLeft) === realCount) {
+            instantScrollTo(offsetsRef.current[0]!);
+          }
+        }, 180);
+      }
     };
+
     const frame = window.requestAnimationFrame(updatePageOffsets);
     const resizeObserver = new ResizeObserver(updatePageOffsets);
     resizeObserver.observe(container);
     container.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
       window.cancelAnimationFrame(frame);
       resizeObserver.disconnect();
       container.removeEventListener("scroll", handleScroll);
+      if (swipeSnapDebounceRef.current !== null) {
+        window.clearTimeout(swipeSnapDebounceRef.current);
+        swipeSnapDebounceRef.current = null;
+      }
     };
-  }, [findClosestPage, updatePageOffsets]);
+  }, [findClosestDomIndex, instantScrollTo, realCount, updatePageOffsets, useLoop]);
 
   useEffect(() => {
-    if (images.length < 2) return undefined;
-    const interval = window.setInterval(() => {
-      const offsets = offsetsRef.current;
-      if (offsets.length < 2) return;
-      goToPage((activePageRef.current + 1) % offsets.length);
-    }, 4200);
+    if (!useLoop) return undefined;
+    const interval = window.setInterval(advance, 4200);
     return () => window.clearInterval(interval);
-  }, [goToPage, images.length]);
+  }, [advance, useLoop]);
+
+  // Clear pending snap on unmount.
+  useEffect(() => () => clearPendingSnap(), [clearPendingSnap]);
 
   return (
     <div className="relative mt-8">
       <button
         type="button"
         aria-label="Visa föregående bildgrupp"
-        onClick={() => movePage(-1)}
+        onClick={reverse}
         className="absolute top-[calc(50%-38px)] left-[-27px] z-[3] grid h-[54px] w-[54px] place-items-center rounded-full border border-accent/40 bg-[color-mix(in_srgb,var(--color-paper)_84%,white)] text-accent-deep shadow-card transition-all duration-200 hover:-translate-y-px hover:bg-accent-deep hover:text-paper focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[3px] max-[640px]:top-auto max-[640px]:bottom-[-3px] max-[640px]:left-0 max-[640px]:h-[44px] max-[640px]:w-[44px]"
       >
         <ArrowMotif direction="previous" />
@@ -152,43 +288,48 @@ export default function GalleryCarousel({
         aria-label="Exempelbilder, scrolla i sidled"
         className="grid grid-flow-col [grid-auto-columns:clamp(260px,29vw,340px)] gap-5 overflow-x-auto overscroll-x-contain pb-[18px] [scroll-behavior:smooth] [scroll-snap-type:inline_mandatory] [scrollbar-color:var(--color-accent)_transparent] max-[560px]:[grid-auto-columns:minmax(260px,82vw)]"
       >
-        {images.map((image, index) => (
-          <figure
-            key={image.src}
-            data-gallery-index={index}
-            className="m-0 overflow-hidden border border-hairline bg-paper [scroll-snap-align:start]"
-            style={{ borderRadius: "28px 28px 70px 28px" }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image.src}
-              alt={`${image.title} — exempelbild`}
-              loading={index === 0 ? "eager" : "lazy"}
-              referrerPolicy="no-referrer"
-              className="block h-[clamp(310px,42vw,520px)] w-full object-cover [filter:saturate(0.88)_contrast(0.96)] max-[560px]:h-[330px]"
-            />
-            <figcaption className="grid gap-1.5 px-[26px] pt-6 pb-7">
-              <span className="text-copper text-eyebrow uppercase tracking-[0.075em] tabular-nums">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <strong className="font-serif font-medium text-ink text-[23px]">
-                {image.title}
-              </strong>
-              <em className="text-ink-muted text-[15px] leading-[22px] not-italic">
-                {image.tone}
-              </em>
-              <small className="mt-1 text-[12px] text-[color-mix(in_srgb,var(--color-ink-muted)_76%,transparent)]">
-                {image.credit}
-              </small>
-            </figcaption>
-          </figure>
-        ))}
+        {domSlides.map((image, domIdx) => {
+          const isClone = useLoop && domIdx === realCount;
+          const realIndexForCaption = isClone ? 0 : domIdx;
+          return (
+            <figure
+              key={isClone ? `${image.src}-clone` : image.src}
+              data-gallery-index={domIdx}
+              aria-hidden={isClone ? "true" : undefined}
+              className="m-0 overflow-hidden border border-hairline bg-paper [scroll-snap-align:start]"
+              style={{ borderRadius: "28px 28px 70px 28px" }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.src}
+                alt={`${image.title} — exempelbild`}
+                loading={domIdx === 0 ? "eager" : "lazy"}
+                referrerPolicy="no-referrer"
+                className="block h-[clamp(310px,42vw,520px)] w-full object-cover [filter:saturate(0.88)_contrast(0.96)] max-[560px]:h-[330px]"
+              />
+              <figcaption className="grid gap-1.5 px-[26px] pt-6 pb-7">
+                <span className="text-copper text-eyebrow uppercase tracking-[0.075em] tabular-nums">
+                  {String(realIndexForCaption + 1).padStart(2, "0")}
+                </span>
+                <strong className="font-serif font-medium text-ink text-[23px]">
+                  {image.title}
+                </strong>
+                <em className="text-ink-muted text-[15px] leading-[22px] not-italic">
+                  {image.tone}
+                </em>
+                <small className="mt-1 text-[12px] text-[color-mix(in_srgb,var(--color-ink-muted)_76%,transparent)]">
+                  {image.credit}
+                </small>
+              </figcaption>
+            </figure>
+          );
+        })}
       </div>
 
       <button
         type="button"
         aria-label="Visa nästa bildgrupp"
-        onClick={() => movePage(1)}
+        onClick={advance}
         className="absolute top-[calc(50%-38px)] right-[-27px] z-[3] grid h-[54px] w-[54px] place-items-center rounded-full border border-accent/40 bg-[color-mix(in_srgb,var(--color-paper)_84%,white)] text-accent-deep shadow-card transition-all duration-200 hover:-translate-y-px hover:bg-accent-deep hover:text-paper focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[3px] max-[640px]:top-auto max-[640px]:bottom-[-3px] max-[640px]:right-0 max-[640px]:h-[44px] max-[640px]:w-[44px]"
       >
         <ArrowMotif direction="next" />
@@ -198,15 +339,20 @@ export default function GalleryCarousel({
         aria-label="Välj bildgrupp"
         className="mt-2.5 flex justify-center gap-2"
       >
-        {pageOffsets.map((offset, index) => {
-          const current = activePage === index;
+        {Array.from({ length: Math.max(1, realCount) }).map((_, realIdx) => {
+          const current = activeRealIndex === realIdx;
+          const offsetIdx = realIdx;
+          const dotKey =
+            pageOffsets[offsetIdx] !== undefined
+              ? `${pageOffsets[offsetIdx]}-${realIdx}`
+              : `dot-${realIdx}`;
           return (
             <button
-              key={`${offset}-${index}`}
+              key={dotKey}
               type="button"
-              aria-label={`Visa bildgrupp ${index + 1}`}
+              aria-label={`Visa bildgrupp ${realIdx + 1}`}
               aria-current={current ? "true" : undefined}
-              onClick={() => goToPage(index)}
+              onClick={() => goToReal(realIdx)}
               className={`h-[7px] rounded-full transition-all duration-200 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[3px] ${
                 current
                   ? "w-[42px] bg-accent-deep"
