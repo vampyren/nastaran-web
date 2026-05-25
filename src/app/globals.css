@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @theme {
   --color-paper: #f4eaf8;
   --color-paper-deep: #e6d5ee;
@@ -15,10 +14,8 @@
   --color-accent-deep: #6b4d87;
   --color-copper: #b77f50;
   --color-marigold: #d89a4e;
-
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
-
   --text-display: 50px;
   --text-display--line-height: 49px;
   --text-display-md: 82px;
@@ -51,24 +48,20 @@
   --text-card-h3-md--line-height: 29px;
   --text-eyebrow: 12px;
   --text-eyebrow--line-height: 16px;
-
   --radius-panel-soft: 26px;
   --radius-panel-flare: 70px;
   --radius-page-hero: 30px;
   --radius-page-hero-flare: 90px;
   --radius-treatment: 24px;
   --radius-treatment-flare: 52px;
-
   --shadow-rail: 0 18px 54px rgba(54, 34, 62, 0.08);
   --shadow-cta: 0 14px 34px rgba(54, 34, 62, 0.12);
   --shadow-card: 0 28px 80px rgba(54, 34, 62, 0.12);
 }
-
 * { box-sizing: border-box; }
 html { color: var(--color-ink); font-family: var(--font-sans); scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; overflow-x: clip; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
-
 :root {
   --bg-page:
     radial-gradient(circle at 10% 8%, rgba(138, 106, 165, 0.24), transparent 31vw),
@@ -76,7 +69,6 @@ a { color: inherit; text-decoration: none; }
     radial-gradient(circle at 50% 76%, rgba(126, 74, 139, 0.12), transparent 38vw),
     linear-gradient(180deg, #f4eaf8 0%, #eee0f5 48%, #e6d5ee 100%);
 }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;

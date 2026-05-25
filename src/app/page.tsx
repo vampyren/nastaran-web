@@ -1,27 +1,68 @@
 import SkipLink from "@/components/SkipLink";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import Hero from "@/components/home/Hero";
+import SectionShell from "@/components/home/SectionShell";
+import TreatmentPanels from "@/components/home/TreatmentPanels";
+import RhythmStrip from "@/components/home/RhythmStrip";
+import PreparationList from "@/components/home/PreparationList";
+import InformationLedger from "@/components/home/InformationLedger";
+import ContactTeaser from "@/components/home/ContactTeaser";
 import { navItems } from "@/content/site";
+import { home } from "@/content/home";
 
 export default function Home() {
   return (
     <>
       <SkipLink href="#hem">Hoppa till innehåll</SkipLink>
       <SiteHeader items={navItems} />
-      <main
-        id="hem"
-        tabIndex={-1}
-        className="relative z-[1] mx-auto w-[min(100%-40px,560px)] py-14 sm:py-16 md:w-[min(100%-96px,672px)] md:py-20 lg:w-[min(100%-128px,896px)] lg:py-28 xl:w-[min(100%-192px,1180px)] xl:py-32"
-      >
-        <p className="text-eyebrow uppercase tracking-[0.075em] tabular-nums text-ink-muted">
-          MS1 PR1
-        </p>
-        <h1 className="mt-4 font-serif text-display leading-[var(--text-display--line-height)] tracking-[-0.018em] text-ink md:text-display-md md:leading-[var(--text-display-md--line-height)] lg:text-display-lg lg:leading-[var(--text-display-lg--line-height)] xl:text-display-xl xl:leading-[var(--text-display-xl--line-height)]">
-          Nastaran
-        </h1>
-        <p className="mt-4 max-w-[600px] text-body leading-[var(--text-body--line-height)] text-ink-muted">
-          Shell is up. Home content lands in MS1 PR2.
-        </p>
+      <main className="relative z-[1]">
+        <Hero />
+
+        <SectionShell
+          id={home.treatments.sectionId}
+          headingId={home.treatments.headingId}
+          numeral={home.treatments.numeral}
+          label={home.treatments.label}
+          index={home.treatments.index}
+          heading={home.treatments.heading}
+          pullQuote={home.treatments.pullQuote}
+          body={home.treatments.body}
+        >
+          <TreatmentPanels rows={home.treatments.rows} />
+        </SectionShell>
+
+        <RhythmStrip />
+
+        <SectionShell
+          id={home.preparation.sectionId}
+          headingId={home.preparation.headingId}
+          numeral={home.preparation.numeral}
+          label={home.preparation.label}
+          index={home.preparation.index}
+          heading={home.preparation.heading}
+          body={home.preparation.body}
+          tone="sandalwood"
+        >
+          <PreparationList rows={home.preparation.rows} />
+        </SectionShell>
+
+        <SectionShell
+          id={home.information.sectionId}
+          headingId={home.information.headingId}
+          numeral={home.information.numeral}
+          label={home.information.label}
+          index={home.information.index}
+          heading={home.information.heading}
+          body={home.information.body}
+        >
+          <InformationLedger
+            rows={home.information.rows}
+            importantLabel={home.information.importantLabel}
+          />
+        </SectionShell>
+
+        <ContactTeaser />
       </main>
       <SiteFooter />
     </>
