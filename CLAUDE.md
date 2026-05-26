@@ -49,3 +49,33 @@ Run before opening a PR:
 - `npm run build`
 
 All three must pass. The build is part of the gate, not optional.
+
+## Keep documentation in sync
+
+**Docs that describe what the code is or how it works must be updated in the same PR as the code change.** Stale docs are worse than no docs — they actively mislead.
+
+Doc surfaces in this repo, and what should trigger an update:
+
+| Doc | Update when… |
+|---|---|
+| `README.md` | Run/build/deploy instructions change, new top-level scripts, env vars added, repo URL or stack basics change. |
+| `CLAUDE.md` | Conventions, workflow rules, or tech stack basics shift. |
+| `spec/design-spec.md` | Visual system, themes, motifs, tokens, or layout/spine architecture changes. |
+| `spec/implementation-spec.md` | New routes, milestone scope shifts, completed/added/dropped PRs in the roadmap. |
+| `spec/decisions-and-open-questions.md` | A new architectural decision is made, an open question is resolved, or a previously-resolved decision is revisited. |
+| `docs/DESIGN-SYSTEM.md` | Design tokens, components, color/spacing/typography rules, or motif inventory changes. |
+| `docs/LEARNINGS.md` | A non-obvious gotcha, browser quirk, or pattern-that-bit-us emerges and is worth not repeating. |
+
+Process at PR time:
+
+1. Before opening the PR, walk through the doc list and identify which (if any) the change touches.
+2. Update them in the **same branch / same PR** — never as a follow-up "I'll do it later".
+3. Mention the doc updates in the PR body under a `## Docs` heading or as a checked item in the Test plan.
+4. If the change genuinely touches no docs, say so explicitly in the PR body (`No docs affected.`) so it's visible the question was considered, not skipped.
+
+**Exceptions** — small enough that doc churn isn't worth it:
+- One-line typo fixes in code comments or strings.
+- Renames internal to a single function.
+- Dependency bumps that don't change behavior.
+
+In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleading doc compounds.
