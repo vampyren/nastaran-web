@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CeremonyImage } from "@/content/berattelser";
 
@@ -299,14 +300,16 @@ export default function GalleryCarousel({
               className="m-0 overflow-hidden border border-hairline bg-paper [scroll-snap-align:start]"
               style={{ borderRadius: "28px 28px 70px 28px" }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image.src}
-                alt={`${image.title} — exempelbild`}
-                loading={domIdx === 0 ? "eager" : "lazy"}
-                referrerPolicy="no-referrer"
-                className="block h-[clamp(310px,42vw,520px)] w-full object-cover [filter:saturate(0.88)_contrast(0.96)] max-[560px]:h-[330px]"
-              />
+              <div className="relative h-[clamp(310px,42vw,520px)] w-full max-[560px]:h-[330px]">
+                <Image
+                  src={image.src}
+                  alt={`${image.title} — exempelbild`}
+                  fill
+                  sizes="(min-width: 768px) 340px, 82vw"
+                  priority={domIdx === 0}
+                  className="object-cover [filter:saturate(0.88)_contrast(0.96)]"
+                />
+              </div>
               <figcaption className="grid gap-1.5 px-[26px] pt-6 pb-7">
                 <span className="text-copper text-eyebrow uppercase tracking-[0.075em] tabular-nums">
                   {String(realIndexForCaption + 1).padStart(2, "0")}
