@@ -1,8 +1,23 @@
 # Design system — current accepted visual state
 
-This file captures the visual system of the **clean rebuild as deployed at `https://nastaran-web-clean.vercel.app`** (commit `865b34b` at the time of writing). It exists so we can preserve the accepted look during MS2 theme work and any future redesign.
+This file captures the visual system of the **clean rebuild as deployed at `https://nastaran-web.vercel.app`**. MS1 and MS2 are both shipped; this document records what is actually live.
 
 > The accompanying `spec/design-spec.md` is the original design brief extracted from the old project before implementation began. **This document records what is actually shipped.**
+
+## Themes (MS2 — shipped)
+
+Four selectable themes; default (`nuvarande`) preserves the original deployed look exactly. Choice persists in `localStorage` and is set as `data-theme` on `<html>` by an inline boot script before hydration, so there is no flash on load.
+
+| Theme id | Swedish label | Effect |
+|---|---|---|
+| `nuvarande` | Nuvarande | Default. Base palette, no decorative overlays. |
+| `ornament` | Ornament | `<MandalaWatermark />` + the fixed `ॐ शान्ति` `<SanskritColumn />` on the left edge at xl+. |
+| `elementen` | Elementen | Inline `<ElementsBand />` (Pancha Mahabhuta) section on the home page. |
+| `bage` | Båge | `<JharokhaArch />` SVG behind the hero copy. |
+
+**Note on `SanskritColumn`:** previously rendered globally at xl+ from `RootLayout`. As of the MS1 cleanup pass it is gated to the `ornament` theme only — see [`LEARNINGS.md`](./LEARNINGS.md) for why.
+
+The four themes share the same color palette and typography. Differences are decorative overlays + tiny per-theme tone adjustments. Components stay Tailwind-utility based and reference tokens; tokens change per theme via `:root[data-theme="..."]` blocks in `globals.css`.
 
 ## Color tokens
 
@@ -150,7 +165,7 @@ The Tailwind v4 `mask-b-*` utilities compose to a vertical fade (solid → trans
 |---|---|
 | `/` | Hero · PaisleyDivider · 4 SectionShell sections (Behandlingar, Rytm, Inför besök, Praktiskt) · PaisleyDivider · ContactTeaser (aubergine) · SiteFooter |
 | `/om-mig` | About-letter + portrait card (2-col editorial at md+) · approach split section · values ledger |
-| `/berattelser` | Stories intro band · gallery section with `GalleryCarousel` (seamless loop) · 3-slot story grid |
+| `/berattelser` | Stories intro band · gallery section with `GalleryCarousel` (step-style timer carousel — one card every ~3.5s with invisible wrap via doubled images) · 3-slot story grid |
 | `/kontakt` | Hero (with email side-card) · contact form section · flow ordered list · dark aubergine safety note |
 | `/testimonials` | `redirect("/berattelser")` |
 | `/_not-found` | Next.js default (no SiteHeader, no HeaderFrost) |
@@ -167,7 +182,8 @@ The Tailwind v4 `mask-b-*` utilities compose to a vertical fade (solid → trans
 | `TextCTA` | `src/components/ui/TextCTA.tsx` | Pill CTA, variants: `light` (aubergine bg), `dark` (marigold bg) |
 | `Reveal` | `src/components/ui/Reveal.tsx` | Server component, applies `nw-rise` CSS animation class |
 | `Panel` | `src/components/ui/Panel.tsx` | Exists but unused in home — kept for future |
-| Motifs | `src/components/motifs/*` | `LotusRosette`, `PaisleyArch`, `PaisleyDivider`, `SectionClose`, `BootiField`, `LavenderSprig` (unused), `SanskritColumn` (rendered globally at xl+) |
+| Motifs | `src/components/motifs/*` | `LotusRosette`, `PaisleyArch`, `PaisleyDivider`, `SectionClose`, `BootiField`, `LavenderSprig` (unused), `SanskritColumn` (gated to `ornament` theme), `MandalaWatermark` (ornament theme), `JharokhaArch` (bage theme), `ElementsBand` (elementen theme, rendered inline in `src/app/page.tsx`) |
+| Theme system | `src/components/theme/*` | `ThemeContext` (`useSyncExternalStore`-based, no provider needed), `ThemeBootScript` (inline `<script>` sets `data-theme` before hydration, no FOUC), `ThemeDecorations` (conditional render of theme-specific overlays), `ThemeSwitcher` (floating button + panel) |
 | Home sections | `src/components/home/*` | `Hero`, `SectionShell`, `SectionMarker`, `TreatmentPanels`, `RhythmStrip`, `PreparationList`, `InformationLedger`, `ContactTeaser` |
 | Subpage components | `src/components/berattelser/GalleryCarousel.tsx`, `src/components/kontakt/ContactForm.tsx` | Client components |
 
@@ -208,4 +224,6 @@ Small uppercase, copper lotus, accent-deep text. Tone variant: `dark` swaps to p
 - `npm run typecheck` (`tsc --noEmit`)
 - `npm run build` (`next build`)
 
-All 6 routes prerender static.
+All 6 user-facing routes (`/`, `/om-mig`, `/berattelser`, `/kontakt`, `/testimonials`, plus `/_not-found`) prerender static — 7 pages total via the App Router static generation.
+
+The same three checks run in CI on every PR + every push to `main` via [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Deployment is handled by the Vercel ↔ GitHub integration; CI does not deploy.

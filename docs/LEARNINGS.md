@@ -1,6 +1,6 @@
-# Learnings + MS2 guardrails
+# Learnings + MS2 theme system (shipped)
 
-Captures original-site theme/design learnings (extracted read-only from `/home/spawn/Apps/nastaran-web`) and the rules MS2's theme selector must follow. Pairs with [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) which records the current accepted look.
+Captures original-site theme/design learnings (extracted read-only from `/home/spawn/Apps/nastaran-web`) and the rules the MS2 theme selector followed. **MS2 shipped** — the guardrails below are kept as the contract for any future theme additions or changes. Pairs with [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) which records the current accepted look.
 
 ---
 
@@ -41,10 +41,10 @@ The current site already inherits these (via `next/font/google`).
 | Booti dot+leaf pattern | `BootiField` | ✓ Hero ritual panel |
 | Lavender sprig (drawn) | `LavenderSprig` | Exported, not rendered |
 | Paisley divider (horizontal) | `PaisleyDivider` | ✓ Between Hero/Behandlingar and Information/Kontakt |
-| Sanskrit column (ॐ · शान्ति · Shanti · Fred) | `SanskritColumn` | ✓ Rendered globally at xl+ from `RootLayout` (currently always on) |
-| Mandala watermark | `MandalaWatermark` | NOT ported — was theme-gated |
-| Jharokha arch (palace window) | `JharokhaArch` | NOT ported — was theme-gated |
-| Elements band (Pancha Mahabhuta) | `ElementsBand` | NOT ported — was theme-gated |
+| Sanskrit column (ॐ · शान्ति · Shanti · Fred) | `SanskritColumn` | ✓ Gated to `ornament` theme via `ThemeDecorations` (was always-on at xl+ during MS1; moved to ornament-only as part of MS1 cleanup since the original site treated it as theme-only) |
+| Mandala watermark | `MandalaWatermark` | ✓ Ported (MS2) — rendered for `ornament` theme |
+| Jharokha arch (palace window) | `JharokhaArch` | ✓ Ported (MS2) — rendered for `bage` theme |
+| Elements band (Pancha Mahabhuta) | `ElementsBand` | ✓ Ported (MS2) — rendered inline in `src/app/page.tsx` for `elementen` theme |
 
 ### Indian / spiritual inspiration patterns
 
@@ -78,20 +78,20 @@ The current site already inherits these (via `next/font/google`).
 
 ---
 
-## 2. MS2 Theme Selector — Guardrails
+## 2. MS2 Theme Selector — guardrails (held during MS2, kept for future)
 
-Hard rules for the upcoming theme selector. Every PR touching MS2 must respect these.
+Hard rules the theme selector followed. **MS2 shipped** with these rules respected — they remain the contract for any future theme additions or modifications.
 
 ### Default theme must preserve the current deployed appearance
 
-- The default theme (call it `current` or `base`) must render the site **exactly as it appears at `https://nastaran-web-clean.vercel.app`**.
-- No font swap, no color shift, no spacing change, no layout adjustment as a side effect of introducing the theme system.
-- If MS2 ships and someone visits the site without picking a theme, they see the same thing they see today.
+- The default theme (shipped as `nuvarande`) renders the site **exactly as it appears at `https://nastaran-web.vercel.app`**.
+- No font swap, no color shift, no spacing change, no layout adjustment introduced as a side effect of the theme system.
+- A visitor who never opens the switcher sees the same thing they saw before MS2.
 
 ### Do not redesign while adding themes
 
-- MS2 is **only** the selector + alternative themes. It is not a chance to revisit hero composition, header chrome, section layouts, gallery behavior, or contact form styling.
-- If a polish itch shows up during MS2, file it for MS3 — don't slip it in.
+- MS2 was **only** the selector + alternative themes. It was not a chance to revisit hero composition, header chrome, section layouts, gallery behavior, or contact form styling. Any future theme work must hold the same line.
+- If a polish itch shows up while doing theme work, file it as a separate PR — don't slip it in.
 
 ### Tailwind-first
 
@@ -140,46 +140,50 @@ Inventory below proposes themes derived from the old project's four. **Don't inv
 
 ---
 
-## 3. Proposed MS2 theme inventory (do not implement yet)
+## 3. MS2 theme inventory (shipped)
 
 | Theme id | Swedish label | Inspired by | Color palette | Decorations |
 |---|---|---|---|---|
-| `current` | Nuvarande | Current deployed site | Existing tokens (unchanged). `--color-paper #f4eaf8` base, `--color-accent #8a6aa5`, copper + marigold accents | Lotus + paisley + booti + the always-on `SanskritColumn` (xl+) |
-| `ornament` | Ornament | Old project's "ornament" theme | Same base palette as `current`. Slightly stronger purple accent | Adds `MandalaWatermark` top-left and `PaisleyDivider` between every major section. Sanskrit column stays |
-| `elements` | Elementen | Old project's "elements" theme (Pancha Mahabhuta) | Same base, slight marigold lift on the page gradient (warmer paper) | Adds `ElementsBand` section between Praktiskt and Kontakt-teaser. Optional small Devanagari glyphs on section markers |
-| `arch` | Båge | Old project's "arch" theme (Jharokha) | Same base, slightly deeper aubergine for contact section | Adds `JharokhaArch` SVG behind the hero copy. Subtle. |
+| `nuvarande` | Nuvarande | Current deployed site | Existing tokens (unchanged). `--color-paper #f4eaf8` base, `--color-accent #8a6aa5`, copper + marigold accents | Lotus + paisley + booti only. No theme-specific overlays. |
+| `ornament` | Ornament | Old project's "ornament" theme | Same base palette | `<MandalaWatermark />` top-left + the fixed `<SanskritColumn />` on the left edge at xl+ |
+| `elementen` | Elementen | Old project's "elements" theme (Pancha Mahabhuta) | Same base | `<ElementsBand />` (Pancha Mahabhuta) section rendered inline in `src/app/page.tsx` |
+| `bage` | Båge | Old project's "arch" theme (Jharokha) | Same base | `<JharokhaArch />` SVG behind the hero copy |
 
 **All four themes share the same palette family.** The differences are decorative overlays + tiny per-theme tone adjustments. This matches the old project's intent — themes are seasonings on the same base recipe, not entirely different recipes.
 
-### Optional restrained additions (only if user asks)
+### Optional themes — explicitly not implemented
 
-| Theme id | Swedish label | Idea | Notes |
+| Theme id | Swedish label | Idea | Status |
 |---|---|---|---|
-| `kvall` | Kväll (evening) | Slightly desaturated, deeper aubergine page background. Same accents. | A dim-mode aesthetic; not a full dark mode. Optional. |
-| `morgon` | Morgon (morning) | Slightly warmer paper tone, brighter copper. | Soft morning light feel. Optional. |
+| `kvall` | Kväll (evening) | Slightly desaturated, deeper aubergine page background. Same accents. A dim-mode aesthetic; not a full dark mode. | **Not implemented.** Add only if explicitly requested. |
+| `morgon` | Morgon (morning) | Slightly warmer paper tone, brighter copper. Soft morning light feel. | **Not implemented.** Add only if explicitly requested. |
 
-**Do not add these unless the user explicitly wants them.** The four original-derived themes should ship first.
-
-### Implementation sketch (for reference — not a commitment)
+### Implementation that shipped
 
 ```
-1. Add per-theme @theme blocks in globals.css:
-   :root[data-theme="ornament"] { --color-accent: ... }
-   etc.
+1. Per-theme :root[data-theme="..."] blocks in globals.css override the
+   tokens that vary; tokens that don't vary are not redeclared per theme.
 
-2. <ThemeSwitcher /> client component:
-   - Reads localStorage for stored choice on mount
-   - Sets document.documentElement.dataset.theme
-   - Renders a small floating button (top-right or bottom-right) with
-     a panel that opens to show the swatches + Swedish hints
+2. <ThemeSwitcher /> (src/components/theme/ThemeSwitcher.tsx) client:
+   - Reads/writes localStorage
+   - Sets document.documentElement.dataset.theme via the external store
+   - Floating button (top-right) opens a panel with swatches + Swedish hints
 
-3. <ThemeDecorations /> client component:
-   - Reads the active theme from a context or document.documentElement
-   - Conditionally renders MandalaWatermark / PaisleyDivider /
-     ElementsBand / JharokhaArch based on the theme
+3. <ThemeDecorations /> (src/components/theme/ThemeDecorations.tsx):
+   - Reads the active theme via useTheme() (useSyncExternalStore-based,
+     no provider needed)
+   - Conditionally renders MandalaWatermark / SanskritColumn / JharokhaArch
+     for the matching theme. ElementsBand is rendered inline on the home
+     page rather than via ThemeDecorations because it lives in the page
+     content flow.
 
-4. Default theme is "current" — if no stored choice, that's what
-   renders. No visual change to anyone who doesn't open the switcher.
+4. <ThemeBootScript /> (src/components/theme/ThemeBootScript.tsx) is an
+   inline <script> in <head> that reads localStorage and sets
+   data-theme on <html> before hydration, so there is no flash between
+   default and stored theme on load.
+
+5. Default theme is "nuvarande" — visitors who never open the switcher
+   see the original deployed look unchanged.
 ```
 
-The old project's ThemeSwitcher and ThemeDecorations code can serve as a reference for the React side, but the styling must be Tailwind utilities, not the old project's CSS class system.
+The state is read via `useSyncExternalStore` (no Context Provider needed and no setState-in-effect), which keeps `RootLayout` a Server Component and avoids the `react-hooks/set-state-in-effect` lint complaint that an earlier draft hit.

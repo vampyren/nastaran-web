@@ -78,4 +78,11 @@ Process at PR time:
 - Renames internal to a single function.
 - Dependency bumps that don't change behavior.
 
+**Don't open a separate docs follow-up PR for an ordinary change.** Fold the doc update into the same PR before opening, or update the open PR before merging. "I'll fix the docs in a separate PR" becomes "docs never get fixed."
+
+Standalone docs-only PRs are reserved for:
+- Intentional documentation cleanup (typo passes, restructuring, dead-link sweeps).
+- Project wrap-up / status finalization (e.g., milestone close, deferral checkpoint).
+- When the user explicitly asks for a docs-only PR.
+
 In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleading doc compounds.
