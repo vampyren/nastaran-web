@@ -86,3 +86,29 @@ Standalone docs-only PRs are reserved for:
 - When the user explicitly asks for a docs-only PR.
 
 In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleading doc compounds.
+
+## Rolling status file (auto-update, don't wait to be asked)
+
+The user keeps a rolling project-status file at `/home/spawn/temp/output_nastaran.md`. Keep it up to date **proactively** — don't make the user ask each time.
+
+**When to update** (any of these is a trigger):
+- A PR was just merged to `main`.
+- A CI run on `main` just completed (note green/red and time).
+- A CLAUDE.md / convention / rule was added or changed.
+- A milestone was just closed or deferred (MS1/MS2/etc., feature gating, scope changes).
+- The user explicitly asks (`update output`, `status`, etc.) — but this should be redundant most of the time.
+
+**How to update:**
+- **Always overwrite, never append.** Use the `Write` tool to replace the entire file.
+- **Current-state snapshot only**, not a running history log. The reader should be able to open the file cold and immediately know where the project is *now*. No table of every PR ever merged, no chronological narrative of the session.
+
+**What to include** (lean — aim for one screen):
+- Production URL + repo + current `main` HEAD short SHA.
+- Brief status (MS1/MS2/etc. shipped or in progress).
+- CI state if non-trivial (last run on main green/red, workflow file path).
+- Open PRs (none ➝ say "None").
+- Final design / shape of any feature that just stabilized (one paragraph each).
+- Active conventions in `CLAUDE.md` (one line each, not the full rules).
+- Deferred / outstanding items (terse bullet list).
+
+Do not include: every past PR, the full diff of any commit, the full text of conventions (link to `CLAUDE.md` instead), or session-internal chatter.
