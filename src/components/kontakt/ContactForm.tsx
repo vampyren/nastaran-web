@@ -306,11 +306,7 @@ export default function ContactForm({ email }: { email: string }) {
                         aria-pressed={selected}
                         disabled={day.disabled}
                         onClick={() => toggleDate(day.key)}
-                        className={`aspect-square min-w-0 rounded-full border border-transparent bg-white/70 text-[13px] text-ink hover:enabled:border-accent/45 disabled:bg-transparent disabled:text-ink-muted/40 disabled:cursor-not-allowed max-[640px]:text-[12px] ${
-                          selected
-                            ? "!border-accent-deep !bg-accent-deep !text-paper"
-                            : ""
-                        }`}
+                        className="aspect-square min-w-0 rounded-full border border-transparent bg-white/70 text-[13px] text-ink aria-[pressed=false]:hover:enabled:border-accent/45 aria-pressed:border-accent-deep aria-pressed:bg-accent-deep aria-pressed:text-paper disabled:bg-transparent disabled:text-ink-muted/40 disabled:cursor-not-allowed max-[640px]:text-[12px]"
                       >
                         {day.dayNumber}
                       </button>

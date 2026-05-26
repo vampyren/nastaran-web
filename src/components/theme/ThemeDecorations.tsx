@@ -2,24 +2,34 @@
 
 import JharokhaArch from "@/components/motifs/JharokhaArch";
 import MandalaWatermark from "@/components/motifs/MandalaWatermark";
+import SanskritColumn from "@/components/motifs/SanskritColumn";
 import { useTheme } from "./ThemeContext";
 
 /**
  * Global decorations that are rendered conditionally based on the active
- * theme. Returns null on the default ("nuvarande") theme so the deployed
- * look is unchanged.
+ * theme. Returns null on the default ("nuvarande") theme so the page
+ * stays clean.
  *
- * Each decoration is fixed-positioned at -z-10 sitting above the body bg
- * but below page content (z-1). aria-hidden; pointer-events-none.
+ * - ornament: MandalaWatermark behind the page + the fixed ॐ शान्ति
+ *   SanskritColumn on the left edge at xl+ (matches the original
+ *   project's "ornament" theme intent — both were theme-only-ornament).
+ * - bage: JharokhaArch behind the hero copy.
+ * - elementen: handled separately by the inline <ElementsBand /> in
+ *   src/app/page.tsx (it lives inside the home content flow).
+ *
+ * Each decoration is fixed-positioned, aria-hidden, pointer-events-none.
  */
 export default function ThemeDecorations() {
   const { theme } = useTheme();
 
   if (theme === "ornament") {
     return (
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-        <MandalaWatermark className="absolute left-[-200px] top-[60px] h-[760px] w-[760px] text-accent opacity-[0.09] max-[1100px]:left-[-260px] max-[1100px]:top-[40px] max-[1100px]:h-[620px] max-[1100px]:w-[620px] max-[1100px]:opacity-[0.08] max-[768px]:left-[-280px] max-[768px]:top-[20px] max-[768px]:h-[480px] max-[768px]:w-[480px] max-[768px]:opacity-[0.07]" />
-      </div>
+      <>
+        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+          <MandalaWatermark className="absolute left-[-200px] top-[60px] h-[760px] w-[760px] text-accent opacity-[0.09] max-[1100px]:left-[-260px] max-[1100px]:top-[40px] max-[1100px]:h-[620px] max-[1100px]:w-[620px] max-[1100px]:opacity-[0.08] max-[768px]:left-[-280px] max-[768px]:top-[20px] max-[768px]:h-[480px] max-[768px]:w-[480px] max-[768px]:opacity-[0.07]" />
+        </div>
+        <SanskritColumn />
+      </>
     );
   }
 
