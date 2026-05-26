@@ -43,10 +43,17 @@ function ArrowMotif({ direction }: { direction: "previous" | "next" }) {
  * pixel-identical to the first copy at the equivalent offset, so the
  * wrap is invisible.
  *
- * Auto-scroll pauses while the user is hovering, touching, or focused
- * inside the gallery, so manual swipe / arrow / dot interactions feel
- * natural. Reduced motion users get a static carousel they can
- * navigate manually.
+ * Auto-scroll pauses briefly on intentional interaction: pointerdown
+ * (including touch), focusin, and any click on the manual controls
+ * (arrows + dots — these live outside the scroll container, so they
+ * call pauseManual() explicitly to keep the rAF loop from fighting the
+ * smooth manual scroll). Reduced-motion users get a static carousel
+ * they navigate with the controls.
+ *
+ * Manual arrows preserve visual direction across the marquee seam by
+ * normalizing scrollLeft into [0, realWidth) before each move, and (for
+ * the reverse arrow) jumping into the second copy via an invisible
+ * behavior:"auto" scroll if the smooth move would otherwise go negative.
  */
 const VELOCITY_PX_PER_SEC = 32;
 const INTERACTION_PAUSE_MS = 2500;
@@ -63,7 +70,15 @@ export default function GalleryCarousel({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const realWidthRef = useRef(0);
+  const pausedUntilRef = useRef(0);
   const [activeRealIndex, setActiveRealIndex] = useState(0);
+
+  // Shared pause helper. Used by the in-container pointerdown/focusin
+  // listeners AND by the manual arrow/dot click handlers (which live
+  // outside the scroll container and so don't trigger those listeners).
+  const pauseManual = useCallback(() => {
+    pausedUntilRef.current = performance.now() + INTERACTION_PAUSE_MS;
+  }, []);
 
   /** Measure the width of one complete copy of the real images. */
   const measureRealWidth = useCallback(() => {
@@ -106,11 +121,10 @@ export default function GalleryCarousel({
 
     let raf = 0;
     let last: number | null = null;
-    let pausedUntil = 0;
 
     const tick = (now: number) => {
       const realWidth = realWidthRef.current;
-      if (realWidth <= 0 || now < pausedUntil) {
+      if (realWidth <= 0 || now < pausedUntilRef.current) {
         last = now;
         raf = window.requestAnimationFrame(tick);
         return;
@@ -135,24 +149,17 @@ export default function GalleryCarousel({
     // on PC — normal page scrolling fires wheel events over the gallery and
     // a stationary cursor landing on the gallery when it enters the viewport
     // counts as mouseenter, so both effectively suppressed all motion.
-    const pauseFor = (ms: number) => {
-      pausedUntil = performance.now() + ms;
-      last = null;
-    };
-    const onPointerDown = () => pauseFor(INTERACTION_PAUSE_MS);
-    const onFocusIn = () => pauseFor(INTERACTION_PAUSE_MS);
-
-    container.addEventListener("pointerdown", onPointerDown);
-    container.addEventListener("focusin", onFocusIn);
+    container.addEventListener("pointerdown", pauseManual);
+    container.addEventListener("focusin", pauseManual);
 
     raf = window.requestAnimationFrame(tick);
 
     return () => {
       window.cancelAnimationFrame(raf);
-      container.removeEventListener("pointerdown", onPointerDown);
-      container.removeEventListener("focusin", onFocusIn);
+      container.removeEventListener("pointerdown", pauseManual);
+      container.removeEventListener("focusin", pauseManual);
     };
-  }, [useLoop]);
+  }, [useLoop, pauseManual]);
 
   // Compute the active real index from scrollLeft. Pure read; no scroll mutation.
   useEffect(() => {
@@ -185,7 +192,26 @@ export default function GalleryCarousel({
     return () => container.removeEventListener("scroll", onScroll);
   }, [realCount]);
 
+  // Normalize scrollLeft into [0, realWidth) so manual moves always have
+  // realWidth of forward headroom. The two copies are pixel-identical, so
+  // dropping back from copy 2 → copy 1 is invisible.
+  const normalizeScrollIntoFirstCopy = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const realWidth = realWidthRef.current;
+    if (!useLoop || realWidth <= 0) return;
+    if (container.scrollLeft >= realWidth) {
+      container.scrollTo({
+        left: container.scrollLeft - realWidth,
+        behavior: "auto",
+      });
+    }
+  }, [useLoop]);
+
   // Manual: advance one card.
+  // Normalize first, then smooth-scroll forward. We deliberately do NOT
+  // modulo-wrap the target — letting it cross into copy 2 keeps the
+  // animation visibly forward. The rAF tick will wrap it invisibly later.
   const advance = useCallback(() => {
     const container = scrollRef.current;
     if (!container) return;
@@ -195,15 +221,18 @@ export default function GalleryCarousel({
     if (items.length < 2) return;
     const cardWidth = items[1]!.offsetLeft - items[0]!.offsetLeft;
     if (cardWidth <= 0) return;
-    const realWidth = realWidthRef.current;
-    let target = container.scrollLeft + cardWidth;
-    if (useLoop && realWidth > 0 && target >= realWidth) {
-      target -= realWidth;
-    }
-    container.scrollTo({ left: target, behavior: "smooth" });
-  }, [useLoop]);
+    pauseManual();
+    normalizeScrollIntoFirstCopy();
+    container.scrollTo({
+      left: container.scrollLeft + cardWidth,
+      behavior: "smooth",
+    });
+  }, [normalizeScrollIntoFirstCopy, pauseManual]);
 
   // Manual: go back one card.
+  // Normalize first, then — if we'd go negative — jump into copy 2 via an
+  // invisible behavior:"auto" scroll. The subsequent smooth scroll then
+  // animates visibly backward, instead of forward across the seam.
   const reverse = useCallback(() => {
     const container = scrollRef.current;
     if (!container) return;
@@ -214,15 +243,27 @@ export default function GalleryCarousel({
     const cardWidth = items[1]!.offsetLeft - items[0]!.offsetLeft;
     if (cardWidth <= 0) return;
     const realWidth = realWidthRef.current;
-    let target = container.scrollLeft - cardWidth;
-    if (useLoop && realWidth > 0 && target < 0) {
-      target += realWidth;
+    pauseManual();
+    normalizeScrollIntoFirstCopy();
+    if (
+      useLoop &&
+      realWidth > 0 &&
+      container.scrollLeft - cardWidth < 0
+    ) {
+      container.scrollTo({
+        left: container.scrollLeft + realWidth,
+        behavior: "auto",
+      });
     }
-    container.scrollTo({ left: target, behavior: "smooth" });
-  }, [useLoop]);
+    container.scrollTo({
+      left: container.scrollLeft - cardWidth,
+      behavior: "smooth",
+    });
+  }, [normalizeScrollIntoFirstCopy, pauseManual, useLoop]);
 
-  // Manual: jump to a specific real index. Picks whichever copy (first or second)
-  // is closest to the current scroll position so the smooth scroll feels short.
+  // Manual: jump to a specific real index. Picks whichever copy (first or
+  // second) is closest to the current scroll position so the smooth scroll
+  // feels short — this already keeps direction sensible across the seam.
   const goToReal = useCallback(
     (index: number) => {
       const container = scrollRef.current;
@@ -247,9 +288,10 @@ export default function GalleryCarousel({
           bestDistance = d;
         }
       }
+      pauseManual();
       container.scrollTo({ left: best, behavior: "smooth" });
     },
-    [realCount, useLoop],
+    [pauseManual, realCount, useLoop],
   );
 
   return (
