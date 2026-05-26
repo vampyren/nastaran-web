@@ -4,14 +4,6 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CeremonyImage } from "@/content/berattelser";
 
-function uniqueOffsets(offsets: number[]) {
-  return offsets.reduce<number[]>((result, offset) => {
-    const rounded = Math.round(offset);
-    if (!result.some((item) => Math.abs(item - rounded) < 18)) result.push(rounded);
-    return result;
-  }, []);
-}
-
 function ArrowMotif({ direction }: { direction: "previous" | "next" }) {
   return (
     <svg
@@ -66,7 +58,6 @@ export default function GalleryCarousel({
   const useLoop = realCount >= 2;
   // DOM slides: [...real images, cloneOfFirst]. Length = realCount + 1 when looping.
   const domSlides = useLoop ? [...images, images[0]!] : images;
-  const totalDom = domSlides.length;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const offsetsRef = useRef<number[]>([0]);
@@ -93,22 +84,19 @@ export default function GalleryCarousel({
   const updatePageOffsets = useCallback(() => {
     const container = scrollRef.current;
     if (!container) return;
-    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
     const cards = Array.from(
       container.querySelectorAll<HTMLElement>("[data-gallery-index]"),
     );
-    const offsets = uniqueOffsets(
-      cards.map((card) => Math.min(card.offsetLeft, maxScroll)),
-    );
-    if (
-      maxScroll > 1 &&
-      !offsets.some((offset) => Math.abs(offset - maxScroll) < 18)
-    ) {
-      offsets.push(Math.round(maxScroll));
-    }
-    const nextOffsets = offsets.length ? offsets.sort((a, b) => a - b) : [0];
-    offsetsRef.current = nextOffsets;
-    setPageOffsets(nextOffsets);
+    // Use raw offsetLeft per card so index maps 1:1 with DOM slide order.
+    // Previously we capped each value at maxScroll, but on wide viewports
+    // (PC) where several cards fit at once, that collapsed the last real
+    // card and the clone onto the same offset — breaking the loop logic
+    // and stalling auto-advance.
+    const offsets = cards.length
+      ? cards.map((card) => card.offsetLeft)
+      : [0];
+    offsetsRef.current = offsets;
+    setPageOffsets(offsets);
   }, []);
 
   const instantScrollTo = useCallback((scrollLeft: number) => {
@@ -138,69 +126,100 @@ export default function GalleryCarousel({
   const advance = useCallback(() => {
     const container = scrollRef.current;
     const offsets = offsetsRef.current;
-    if (!container || offsets.length < totalDom) return;
+    if (!container || offsets.length === 0) return;
     clearPendingSnap();
 
     const current = activeRealIndexRef.current;
 
     if (useLoop && current === realCount - 1) {
-      // Forward wrap: smooth-scroll to clone (forward motion), then snap to real first.
-      container.scrollTo({
-        left: offsets[realCount]!,
-        behavior: "smooth",
-      });
+      // Forward wrap. If the clone slide is actually reachable (its offset
+      // can be scrolled to — i.e. the carousel doesn't fit on screen all at
+      // once), smooth-scroll there and snap back: that's the seamless
+      // mobile case. On wide PC viewports the clone offset is beyond
+      // maxScroll, so scrollTo gets clamped and the user just sees the
+      // last visible cards. In that case skip the smooth-scroll and reset
+      // instantly — still loops, just without the rewind illusion.
+      const maxScroll = Math.max(
+        0,
+        container.scrollWidth - container.clientWidth,
+      );
+      const cloneOffset = offsets[realCount];
+      const firstOffset = offsets[0]!;
+      const cloneReachable =
+        cloneOffset !== undefined && cloneOffset <= maxScroll + 1;
+
       activeRealIndexRef.current = 0;
       setActiveRealIndex(0);
-      pendingSnapRef.current = window.setTimeout(() => {
-        instantScrollTo(offsets[0]!);
-        pendingSnapRef.current = null;
-      }, 700);
+
+      if (cloneReachable) {
+        container.scrollTo({ left: cloneOffset!, behavior: "smooth" });
+        pendingSnapRef.current = window.setTimeout(() => {
+          instantScrollTo(firstOffset);
+          pendingSnapRef.current = null;
+        }, 700);
+      } else {
+        instantScrollTo(firstOffset);
+      }
       return;
     }
 
     const next = useLoop ? (current + 1) % realCount : current + 1;
     if (next >= realCount) return;
+    const targetOffset = offsets[next];
+    if (targetOffset === undefined) return;
     activeRealIndexRef.current = next;
     setActiveRealIndex(next);
-    container.scrollTo({ left: offsets[next]!, behavior: "smooth" });
-  }, [
-    clearPendingSnap,
-    instantScrollTo,
-    realCount,
-    totalDom,
-    useLoop,
-  ]);
+    container.scrollTo({ left: targetOffset, behavior: "smooth" });
+  }, [clearPendingSnap, instantScrollTo, realCount, useLoop]);
 
   const reverse = useCallback(() => {
     const container = scrollRef.current;
     const offsets = offsetsRef.current;
-    if (!container || offsets.length < totalDom) return;
+    if (!container || offsets.length === 0) return;
     clearPendingSnap();
 
     const current = activeRealIndexRef.current;
 
     if (useLoop && current === 0) {
-      // Backward wrap: instantly teleport to clone position (visually identical to
-      // real first), then smooth-scroll backward to real last.
-      instantScrollTo(offsets[realCount]!);
+      // Backward wrap. Same idea as advance: if the clone is reachable,
+      // teleport to it (instant) then smooth-scroll back to the real last
+      // card (mobile, seamless). If not, instant-jump to real last (PC).
+      const maxScroll = Math.max(
+        0,
+        container.scrollWidth - container.clientWidth,
+      );
+      const cloneOffset = offsets[realCount];
+      const lastRealOffset = offsets[realCount - 1];
+      if (lastRealOffset === undefined) return;
+      const cloneReachable =
+        cloneOffset !== undefined && cloneOffset <= maxScroll + 1;
+
       activeRealIndexRef.current = realCount - 1;
       setActiveRealIndex(realCount - 1);
-      window.requestAnimationFrame(() => {
+
+      if (cloneReachable) {
+        instantScrollTo(cloneOffset!);
         window.requestAnimationFrame(() => {
-          const c = scrollRef.current;
-          if (!c) return;
-          c.scrollTo({ left: offsets[realCount - 1]!, behavior: "smooth" });
+          window.requestAnimationFrame(() => {
+            const c = scrollRef.current;
+            if (!c) return;
+            c.scrollTo({ left: lastRealOffset, behavior: "smooth" });
+          });
         });
-      });
+      } else {
+        instantScrollTo(lastRealOffset);
+      }
       return;
     }
 
     const prev = current - 1;
     if (prev < 0) return;
+    const targetOffset = offsets[prev];
+    if (targetOffset === undefined) return;
     activeRealIndexRef.current = prev;
     setActiveRealIndex(prev);
-    container.scrollTo({ left: offsets[prev]!, behavior: "smooth" });
-  }, [clearPendingSnap, instantScrollTo, realCount, totalDom, useLoop]);
+    container.scrollTo({ left: targetOffset, behavior: "smooth" });
+  }, [clearPendingSnap, instantScrollTo, realCount, useLoop]);
 
   const goToReal = useCallback(
     (realIdx: number) => {
