@@ -13,6 +13,7 @@ Before making any edit/write that modifies committed code:
    - `refactor/<short-name>` — restructuring with no behavior change
    - `cleanup/<short-name>` — small tidy-ups
    - `chore/<short-name>` — tooling, deps, config, docs
+   - `req/<id>-<slug>` — **reserved for a future request/publish pipeline; do not use for ordinary work yet.** See the "Future request/publish pipeline" section below.
 3. Confirm the name with the user, then `git checkout -b <name>`.
 
 When the change is done:
@@ -50,6 +51,10 @@ Run before opening a PR:
 
 All three must pass. The build is part of the gate, not optional.
 
+**No test script is configured** in this repo (`package.json` has no `test` entry). If one is added later, document it here and add it to the gate list and to the CI workflow.
+
+The same three commands run in CI on every PR to `main` and every push to `main` via [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Local gates first, CI as a backstop.
+
 ## Keep documentation in sync
 
 **Docs that describe what the code is or how it works must be updated in the same PR as the code change.** Stale docs are worse than no docs — they actively mislead.
@@ -60,11 +65,14 @@ Doc surfaces in this repo, and what should trigger an update:
 |---|---|
 | `README.md` | Run/build/deploy instructions change, new top-level scripts, env vars added, repo URL or stack basics change. |
 | `CLAUDE.md` | Conventions, workflow rules, or tech stack basics shift. |
+| `spec/README.md` | Entry point / navigation for the spec folder. Update if the spec folder structure or a spec doc's purpose changes. |
 | `spec/design-spec.md` | Visual system, themes, motifs, tokens, or layout/spine architecture changes. |
 | `spec/implementation-spec.md` | New routes, milestone scope shifts, completed/added/dropped PRs in the roadmap. |
 | `spec/decisions-and-open-questions.md` | A new architectural decision is made, an open question is resolved, or a previously-resolved decision is revisited. |
 | `docs/DESIGN-SYSTEM.md` | Design tokens, components, color/spacing/typography rules, or motif inventory changes. |
 | `docs/LEARNINGS.md` | A non-obvious gotcha, browser quirk, or pattern-that-bit-us emerges and is worth not repeating. |
+
+If an `archive/` or `legacy/` directory is added in the future, docs under those paths are **historical reference only** — they do not need to be kept in sync with current code, and the doc-surface rule does not apply to them.
 
 Process at PR time:
 
@@ -86,6 +94,22 @@ Standalone docs-only PRs are reserved for:
 - When the user explicitly asks for a docs-only PR.
 
 In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleading doc compounds.
+
+## Future request/publish pipeline
+
+**This repo does not currently have a request/publish pipeline.**
+
+If such a pipeline is added later, the same PR that adds it must update this `CLAUDE.md` to document:
+
+- The active request branch prefix, likely `req/<id>-<slug>`.
+- Any metadata-write exception to the branch-first rule (i.e., whether a runtime is allowed to push directly to `main`, and under what scope).
+- The exact metadata path (e.g., `requests/<id>.json`), if any.
+- Which runtime is allowed to write that metadata.
+- Operator mode and safety rules (dry-run vs. live, etc.).
+- Safe edit paths — directories the pipeline is permitted to modify.
+- The approval / rejection / improvement flow for incoming requests.
+
+Until that pipeline exists, do **not** treat `req/<id>-<slug>` as a normal branch prefix and do **not** make direct `main` metadata writes from any runtime or script. The branch-first rule applies without exception.
 
 ## Rolling status file (auto-update, don't wait to be asked)
 
@@ -112,3 +136,14 @@ The user keeps a rolling project-status file at `/home/spawn/temp/output_nastara
 - Deferred / outstanding items (terse bullet list).
 
 Do not include: every past PR, the full diff of any commit, the full text of conventions (link to `CLAUDE.md` instead), or session-internal chatter.
+
+## Project-specific hard rules
+
+These apply unconditionally unless I override them in-session.
+
+- **Do not touch archived/old repos or project paths unless I explicitly ask.** The old Nastaran project at `/home/spawn/Apps/nastaran-web` is archived reference only — do not modify it. Use this repo (`/home/spawn/Apps/projects/nastaran-web`, `vampyren/nastaran-web`) as the single source of truth.
+- **Do not start request/publish pipeline adaptation unless I explicitly ask.** The "Future request/publish pipeline" section above documents what changes when such a pipeline is added; until then, the branch-first rule applies without exception.
+- **Do not change Vercel settings or env vars unless I explicitly ask.**
+- **Do not paste secrets into chat, docs, commits, logs, or PR bodies.**
+- **Do not create PATs, secrets, deployment settings, or OAuth/app integrations without explicit approval.**
+- **Treat the old Nastaran project/repo/path as archived reference only.** Do not modify it. Use the current repo/project as the source of truth.
