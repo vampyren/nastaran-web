@@ -107,11 +107,10 @@ export default function GalleryCarousel({
     let raf = 0;
     let last: number | null = null;
     let pausedUntil = 0;
-    let hovered = false;
 
     const tick = (now: number) => {
       const realWidth = realWidthRef.current;
-      if (realWidth <= 0 || hovered || now < pausedUntil) {
+      if (realWidth <= 0 || now < pausedUntil) {
         last = now;
         raf = window.requestAnimationFrame(tick);
         return;
@@ -131,44 +130,26 @@ export default function GalleryCarousel({
       raf = window.requestAnimationFrame(tick);
     };
 
+    // Only pause on intentional interaction. Hover and wheel were too noisy
+    // on PC — normal page scrolling fires wheel events over the gallery and
+    // a stationary cursor landing on the gallery when it enters the viewport
+    // counts as mouseenter, so both effectively suppressed all motion.
     const pauseFor = (ms: number) => {
       pausedUntil = performance.now() + ms;
       last = null;
     };
     const onPointerDown = () => pauseFor(INTERACTION_PAUSE_MS);
-    const onWheel = () => pauseFor(INTERACTION_PAUSE_MS);
-    const onMouseEnter = () => {
-      hovered = true;
-    };
-    const onMouseLeave = () => {
-      hovered = false;
-      last = null;
-    };
-    const onFocusIn = () => {
-      hovered = true;
-    };
-    const onFocusOut = () => {
-      hovered = false;
-      last = null;
-    };
+    const onFocusIn = () => pauseFor(INTERACTION_PAUSE_MS);
 
     container.addEventListener("pointerdown", onPointerDown);
-    container.addEventListener("wheel", onWheel, { passive: true });
-    container.addEventListener("mouseenter", onMouseEnter);
-    container.addEventListener("mouseleave", onMouseLeave);
     container.addEventListener("focusin", onFocusIn);
-    container.addEventListener("focusout", onFocusOut);
 
     raf = window.requestAnimationFrame(tick);
 
     return () => {
       window.cancelAnimationFrame(raf);
       container.removeEventListener("pointerdown", onPointerDown);
-      container.removeEventListener("wheel", onWheel);
-      container.removeEventListener("mouseenter", onMouseEnter);
-      container.removeEventListener("mouseleave", onMouseLeave);
       container.removeEventListener("focusin", onFocusIn);
-      container.removeEventListener("focusout", onFocusOut);
     };
   }, [useLoop]);
 
