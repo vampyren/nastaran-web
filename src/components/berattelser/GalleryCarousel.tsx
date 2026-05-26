@@ -98,12 +98,35 @@ export default function GalleryCarousel({
   }, [realCount, useLoop]);
 
   useEffect(() => {
-    measureRealWidth();
     const container = scrollRef.current;
     if (!container) return undefined;
+
+    // Defer the initial measurement two animation frames so layout has
+    // fully settled. On a hard reload this isn't needed (layout is final
+    // when useEffect runs), but on App Router client-side mounts the
+    // first useEffect-time read of offsetLeft can fire before the new
+    // tree is fully laid out — measureRealWidth would then capture a
+    // partially-positioned DOM and the marquee tick would bail forever.
+    let r1 = 0;
+    let r2 = 0;
+    r1 = window.requestAnimationFrame(() => {
+      r2 = window.requestAnimationFrame(measureRealWidth);
+    });
+
+    // Observe the container AND each rendered item, so size shifts on
+    // the figures (e.g., when images finish loading) also re-trigger a
+    // measurement, not only changes to the container itself.
     const ro = new ResizeObserver(measureRealWidth);
     ro.observe(container);
-    return () => ro.disconnect();
+    container
+      .querySelectorAll<HTMLElement>("[data-gallery-index]")
+      .forEach((item) => ro.observe(item));
+
+    return () => {
+      window.cancelAnimationFrame(r1);
+      window.cancelAnimationFrame(r2);
+      ro.disconnect();
+    };
   }, [measureRealWidth]);
 
   // Continuous auto-scroll with interaction-driven pause.
@@ -119,11 +142,23 @@ export default function GalleryCarousel({
       return undefined;
     }
 
+    // Reset pause state at the start of the effect — defensive, in case
+    // the previous mount cycle ended with a future timestamp here.
+    pausedUntilRef.current = 0;
+
     let raf = 0;
     let last: number | null = null;
 
     const tick = (now: number) => {
-      const realWidth = realWidthRef.current;
+      let realWidth = realWidthRef.current;
+      if (realWidth <= 0) {
+        // The deferred initial measurement may not have landed yet (or
+        // may have run against a not-yet-laid-out DOM). Retry every
+        // frame until measurement succeeds, so the rAF loop doesn't
+        // bail forever on client-side mounts.
+        measureRealWidth();
+        realWidth = realWidthRef.current;
+      }
       if (realWidth <= 0 || now < pausedUntilRef.current) {
         last = now;
         raf = window.requestAnimationFrame(tick);
@@ -159,7 +194,7 @@ export default function GalleryCarousel({
       container.removeEventListener("pointerdown", pauseManual);
       container.removeEventListener("focusin", pauseManual);
     };
-  }, [useLoop, pauseManual]);
+  }, [measureRealWidth, pauseManual, useLoop]);
 
   // Compute the active real index from scrollLeft. Pure read; no scroll mutation.
   useEffect(() => {
