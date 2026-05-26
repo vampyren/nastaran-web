@@ -121,10 +121,11 @@ export default function GalleryCarousel({
         if (next >= realWidth) {
           next -= realWidth;
         }
-        // Direct scrollLeft assignment is instant regardless of CSS
-        // scroll-behavior:smooth — the smoothness comes from the per-frame
-        // increment, not from browser interpolation.
-        container.scrollLeft = next;
+        // scrollTo with explicit behavior:"auto" so Firefox / other browsers
+        // can't fall back to the inherited scroll-behavior:smooth from html
+        // and animate each per-frame target asynchronously (which would stall
+        // the loop).
+        container.scrollTo({ left: next, behavior: "auto" });
       }
       last = now;
       raf = window.requestAnimationFrame(tick);
@@ -265,7 +266,7 @@ export default function GalleryCarousel({
       <div
         ref={scrollRef}
         aria-label="Exempelbilder, scrolla i sidled"
-        className="grid grid-flow-col [grid-auto-columns:clamp(260px,29vw,340px)] gap-5 overflow-x-auto overscroll-x-contain pb-[18px] [scrollbar-color:var(--color-accent)_transparent] max-[560px]:[grid-auto-columns:minmax(260px,82vw)]"
+        className="grid grid-flow-col [grid-auto-columns:clamp(260px,29vw,340px)] gap-5 overflow-x-auto overscroll-x-contain pb-[18px] [scroll-behavior:auto] [scrollbar-color:var(--color-accent)_transparent] max-[560px]:[grid-auto-columns:minmax(260px,82vw)]"
       >
         {renderedImages.map((image, idx) => {
           const isClone = useLoop && idx >= realCount;
