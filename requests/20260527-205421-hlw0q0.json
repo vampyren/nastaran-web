@@ -4,20 +4,20 @@
   "description": "Kan du lägga in dessa i bild karusellen också",
   "page": "berattelser",
   "createdBy": "anonymous",
-  "status": "in_progress",
+  "status": "review",
   "createdAt": "2026-05-27T20:54:21.831Z",
-  "updatedAt": "2026-05-27T21:01:36.000Z",
+  "updatedAt": "2026-05-27T21:04:30.000Z",
   "claimedAt": "2026-05-27T21:01:36.000Z",
-  "reviewReadyAt": null,
+  "reviewReadyAt": "2026-05-27T21:04:30.000Z",
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
-  "branch": null,
-  "pullRequestUrl": null,
-  "pullRequestNumber": null,
-  "previewUrl": null,
-  "latestCommitSha": null,
+  "branch": "req/20260527-205421-hlw0q0-kan-du-lagga-in-dessa-i-bild-karuse",
+  "pullRequestUrl": "https://github.com/vampyren/nastaran-web/pull/23",
+  "pullRequestNumber": 23,
+  "previewUrl": "https://nastaran-web-git-req-20260527-205421-hlw0q0-k-0a8dc6-aryan-tech.vercel.app",
+  "latestCommitSha": "9f1aec465a0dca9fbafc0c02629a99a68952266f",
   "productionCommitSha": null,
   "productionDeploymentUrl": null,
   "attachments": [
@@ -52,6 +52,12 @@
       "actor": "loop",
       "event": "loop_picked_up",
       "message": "Classified safe (source-asset attachment, owner-authorized destination public/assets/generated/). Will copy 2 PNGs and append entries to src/content/berattelser.ts ceremonyImages."
+    },
+    {
+      "at": "2026-05-27T21:04:30.000Z",
+      "actor": "loop",
+      "event": "loop_pushed_pr",
+      "message": "Branch + PR + preview ready. 2 PNGs copied to public/assets/generated/, 2 entries appended to berattelser.ts ceremonyImages."
     }
   ]
 }
