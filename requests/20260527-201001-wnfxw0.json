@@ -4,20 +4,20 @@
   "description": "Kan du byta order Sandelträ i bilden till något bättre.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "in_progress",
+  "status": "review",
   "createdAt": "2026-05-27T20:10:01.865Z",
-  "updatedAt": "2026-05-27T20:12:13.000Z",
+  "updatedAt": "2026-05-27T20:14:07.000Z",
   "claimedAt": "2026-05-27T20:12:13.000Z",
-  "reviewReadyAt": null,
+  "reviewReadyAt": "2026-05-27T20:14:07.000Z",
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
-  "branch": null,
-  "pullRequestUrl": null,
-  "pullRequestNumber": null,
-  "previewUrl": null,
-  "latestCommitSha": null,
+  "branch": "req/20260527-201001-wnfxw0-kan-du-byta-order-sandeltra-i-bilden",
+  "pullRequestUrl": "https://github.com/vampyren/nastaran-web/pull/21",
+  "pullRequestNumber": 21,
+  "previewUrl": "https://nastaran-web-git-req-20260527-201001-wnfxw0-k-b1153b-aryan-tech.vercel.app",
+  "latestCommitSha": "b9c1fe6a804300ab4bfad586a5367be71d0e15c1",
   "productionCommitSha": null,
   "productionDeploymentUrl": null,
   "history": [
@@ -32,6 +32,12 @@
       "actor": "loop",
       "event": "loop_picked_up",
       "message": "Classified safe: src/content/home.ts ritualCaption. Replacement candidate: Lavendel."
+    },
+    {
+      "at": "2026-05-27T20:14:07.000Z",
+      "actor": "loop",
+      "event": "loop_pushed_pr",
+      "message": "Branch + PR + preview ready. ritualCaption: Sandelträ → Lavendel."
     }
   ]
 }
