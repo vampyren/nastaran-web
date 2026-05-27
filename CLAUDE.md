@@ -126,13 +126,14 @@ In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleadin
 
 ## Request/publish pipeline rules
 
-**Status:** Planned in this PR (PR A — docs/spec only). Runtime arrives in PRs B–E.
+**Status:** Shipped (PRs A–E). Anonymous production smoke + clean-room docs comprehension both pass on `main`. Live-run end-to-end smoke is ready to execute once Vercel env vars land — see [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md).
 
 The pipeline is documented in:
 
 - [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) — data model, state machine, API contracts, safe edit surface, validation stack.
 - [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) — Mode A foreground listener pattern. Mode B parked.
-- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough (env vars, PAT, validation smoke test).
+- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough + canonical operator starter prompt (§ 6).
+- [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md) — validation plan + recorded test results.
 - [`docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](./docs/REUSABLE-REQUEST-QUEUE-PATTERN.md) — cross-project abstract pattern.
 - [`requests/README.md`](./requests/README.md) — metadata directory + `main`-write exception.
 - [`.env.example`](./.env.example) — env var template.
@@ -175,6 +176,14 @@ The user keeps a working output file at `/home/spawn/temp/output_nastaran.md`. *
 - One short line at the bottom: next step or open question, or `Standing by.` if nothing's queued.
 
 The file is meant to be read cold by a reviewer who hasn't seen the chat. Make it self-contained for that round. Git history preserves the project trail; this file is the working tray.
+
+## Setup / config requests — answer in chat with the actionable checklist
+
+When the owner asks for env-var / key / password / PAT / Vercel setup help, **deliver the actionable checklist directly in chat** using the Quick Start at [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) § 0. Do not just point them at the doc and wait for them to read it — the owner is trying to set things up, not read documentation.
+
+Mirror the Quick Start's structure in chat: numbered steps with exact commands (`openssl rand …`), exact field values, exact URLs, exact env-var names. The long-form walkthrough in `docs/PIPELINE-HANDOFF.md` § 1 onward is for first-principles reading; chat is for action. Same rule applies to ad-hoc PAT-scope reminders, Vercel UI walkthroughs, redeploy clarifications, and any other one-time setup the human runs in a browser or local terminal.
+
+Still: never paste real secret values into chat. Tell the owner to run the `openssl` commands in their local terminal and paste the output directly into Vercel — that's the secret-handling rule from the standing-rules block above, and it still applies inside an actionable checklist.
 
 ## Project-specific hard rules
 
