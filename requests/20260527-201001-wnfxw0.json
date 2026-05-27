@@ -4,10 +4,10 @@
   "description": "Kan du byta order Sandelträ i bilden till något bättre.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "queued",
+  "status": "in_progress",
   "createdAt": "2026-05-27T20:10:01.865Z",
-  "updatedAt": "2026-05-27T20:10:01.865Z",
-  "claimedAt": null,
+  "updatedAt": "2026-05-27T20:12:13.000Z",
+  "claimedAt": "2026-05-27T20:12:13.000Z",
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
@@ -26,6 +26,12 @@
       "actor": "user",
       "event": "created",
       "message": "Submitted anonymously"
+    },
+    {
+      "at": "2026-05-27T20:12:13.000Z",
+      "actor": "loop",
+      "event": "loop_picked_up",
+      "message": "Classified safe: src/content/home.ts ritualCaption. Replacement candidate: Lavendel."
     }
   ]
 }
