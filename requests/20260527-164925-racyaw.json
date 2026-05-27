@@ -4,16 +4,16 @@
   "description": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trevligare.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "queued",
+  "status": "in_progress",
   "createdAt": "2026-05-27T16:49:25.681Z",
-  "updatedAt": "2026-05-27T16:49:25.681Z",
-  "claimedAt": null,
+  "updatedAt": "2026-05-27T16:53:24.853561245Z",
+  "claimedAt": "2026-05-27T16:53:24.853561245Z",
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
-  "branch": null,
+  "branch": "req/20260527-164925-racyaw-andra-texten-oppna-kontaktsidan-pa",
   "pullRequestUrl": null,
   "pullRequestNumber": null,
   "previewUrl": null,
@@ -26,6 +26,12 @@
       "actor": "user",
       "event": "created",
       "message": "Submitted anonymously"
+    },
+    {
+      "at": "2026-05-27T16:53:24.853561245Z",
+      "actor": "loop",
+      "event": "loop_picked_up",
+      "message": "claimed for processing"
     }
   ]
 }
