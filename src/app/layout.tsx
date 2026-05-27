@@ -61,8 +61,19 @@ export default function RootLayout({
         <ThemeDecorations />
         <HeaderFrost />
         {/* Global top safe-area for the fixed floating nav pill.
-            All routes get this padding so content starts below the pill. */}
-        <div className="pt-[96px] lg:pt-[112px]">{children}</div>
+            All routes get this padding so content starts below the pill.
+
+            `flex min-h-screen flex-col` sets up the sticky-footer
+            pattern: pages whose <main> uses `flex-1` will grow to
+            fill the viewport so the SiteFooter sits at the bottom
+            on short pages (admin / admin-login / onskemal /
+            onskemal-kogen have minimal content; without this they'd
+            render the footer mid-viewport). Public pages that
+            don't add `flex-1` to main are unaffected — they already
+            have enough content to fill the viewport. */}
+        <div className="flex min-h-screen flex-col pt-[96px] lg:pt-[112px]">
+          {children}
+        </div>
         <ThemeSwitcher />
         {/* AdminFAB renders only for logged-in admins (probes /api/admin/me
             on mount). Anonymous visitors never see it — see
