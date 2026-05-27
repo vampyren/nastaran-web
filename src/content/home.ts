@@ -86,6 +86,6 @@ export const home = {
     prelude: "Nästa steg",
     heading: "En lugn kontaktväg, utan press.",
     body: "Kontaktsidan samlar hur du kan skriva, vad som är bra att nämna och den viktiga gränsen: komplementärt välmående ersätter inte sjukvård.",
-    cta: { href: "/kontakt", label: "Öppna kontaktsidan" },
+    cta: { href: "/kontakt", label: "Kontakta mig" },
   },
 } as const;
