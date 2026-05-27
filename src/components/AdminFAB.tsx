@@ -96,7 +96,11 @@ export default function AdminFAB() {
     pageId === "hela-sajten" ? "/onskemal" : `/onskemal?page=${pageId}`;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+    // Positioned ABOVE the ThemeSwitcher (which lives at bottom-4 right-4
+    // desktop / bottom-3 right-3 mobile). Both share the same right edge so
+    // they stack as a clean vertical pair. z-50 matches ThemeSwitcher so
+    // neither hides the other if a layout shift ever brings them close.
+    <div className="fixed bottom-20 right-4 z-50 max-[640px]:bottom-[68px] max-[640px]:right-3">
       <button
         ref={buttonRef}
         type="button"

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { hasAdminSession } from "@/lib/auth";
+import SkipLink from "@/components/SkipLink";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import { navItems } from "@/content/site";
 import { ALL_SITE_PAGE_ID, pageLabel, sanitizePageId } from "@/lib/pages";
 import { OnskemalForm } from "./OnskemalForm";
 
@@ -43,33 +47,38 @@ export default async function Page({
   const isWholeSiteDefault = initialPageId === ALL_SITE_PAGE_ID;
 
   return (
-    <main
-      id="main-content"
-      className="mx-auto w-full max-w-2xl px-6 py-16 md:py-24"
-    >
-      <header>
-        <span className="mb-3 inline-block text-[0.78rem] font-medium uppercase tracking-[0.08em] text-accent">
-          Admin
-        </span>
-        <h1 className="text-[clamp(2.1rem,4.5vw,3.1rem)] font-bold leading-[1.2] tracking-[-0.025em] text-ink">
-          Skicka önskemål
-        </h1>
-        <p className="mt-5 text-[1.05rem] leading-relaxed text-ink-muted">
-          Beskriv en ändring eller ett tillägg du vill ha gjort på sajten. En
-          operator plockar upp önskemålet och förbereder ändringen som ett
-          förslag du sedan godkänner eller avvisar.
-        </p>
-        <p className="mt-3 text-[0.95rem] leading-relaxed text-ink-muted">
-          Inget publiceras direkt — varje ändring går genom en granskning med
-          en preview-länk innan den når produktion.
-        </p>
-      </header>
+    <>
+      <SkipLink href="#main-content">Hoppa till innehåll</SkipLink>
+      <SiteHeader items={navItems} />
+      <main
+        id="main-content"
+        className="relative z-[1] mx-auto w-full max-w-2xl px-6 py-16 md:py-24"
+      >
+        <header>
+          <span className="mb-3 inline-block text-[0.78rem] font-medium uppercase tracking-[0.08em] text-accent">
+            Admin
+          </span>
+          <h1 className="text-[clamp(2.1rem,4.5vw,3.1rem)] font-bold leading-[1.2] tracking-[-0.025em] text-ink">
+            Skicka önskemål
+          </h1>
+          <p className="mt-5 text-[1.05rem] leading-relaxed text-ink-muted">
+            Beskriv en ändring eller ett tillägg du vill ha gjort på sajten. En
+            operator plockar upp önskemålet och förbereder ändringen som ett
+            förslag du sedan godkänner eller avvisar.
+          </p>
+          <p className="mt-3 text-[0.95rem] leading-relaxed text-ink-muted">
+            Inget publiceras direkt — varje ändring går genom en granskning med
+            en preview-länk innan den når produktion.
+          </p>
+        </header>
 
-      <OnskemalForm
-        initialPageId={initialPageId}
-        initialPageLabel={initialPageLabel}
-        defaultedToWholeSite={isWholeSiteDefault}
-      />
-    </main>
+        <OnskemalForm
+          initialPageId={initialPageId}
+          initialPageLabel={initialPageLabel}
+          defaultedToWholeSite={isWholeSiteDefault}
+        />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
