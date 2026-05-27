@@ -5,6 +5,7 @@ This is the **canonical start-here guide** for setting up the request/publish pi
 - [`../spec/pipeline-mvp.md`](../spec/pipeline-mvp.md) — data model, state machine, API contracts.
 - [`../spec/pipeline-operator-modes.md`](../spec/pipeline-operator-modes.md) — Mode A operator (Mode B parked).
 - [`REUSABLE-REQUEST-QUEUE-PATTERN.md`](./REUSABLE-REQUEST-QUEUE-PATTERN.md) — the cross-project abstract pattern.
+- [`CLEAN-ROOM-VALIDATION.md`](./CLEAN-ROOM-VALIDATION.md) — validation plan + recorded results.
 - [`../requests/README.md`](../requests/README.md) — metadata directory + `main`-write exception.
 
 ---
@@ -137,7 +138,23 @@ The following are part of the codebase (most created by later PRs in this pipeli
 
 ## 4. Validation smoke test (run after every fresh setup)
 
-Once env vars are set and a production deployment is Ready, walk through this checklist. This is the same shape that was validated on `shadi-web`. **This applies to the post-PR-D state** — PR A ships docs only and there is nothing to smoke-test yet.
+Once env vars are set and a production deployment is Ready, walk through this checklist. The full plan + recorded results live in [`CLEAN-ROOM-VALIDATION.md`](./CLEAN-ROOM-VALIDATION.md); the steps below are the operating walkthrough.
+
+### 4.0 Anonymous smoke (no credentials needed)
+
+Run before logging in. Verifies routes are deployed and the pre-launch admin gate is doing its job. Expected results recorded under `CLEAN-ROOM-VALIDATION.md` § Anonymous production smoke.
+
+```bash
+PROD=https://nastaran-web.vercel.app
+curl -sI -o /dev/null -w "%{http_code}\n" "$PROD/"                          # 200
+curl -sI -o /dev/null -w "%{http_code} %{redirect_url}\n" "$PROD/admin"     # 307 → /admin/login?next=/admin
+curl -sI -o /dev/null -w "%{http_code}\n" -L "$PROD/admin/login"            # 200
+curl -sI -o /dev/null -w "%{http_code} %{redirect_url}\n" "$PROD/onskemal"  # 307 → /admin/login?next=%2Fonskemal
+curl -s -X POST -H "Content-Type: application/json" \
+     -d '{"message":"test","page":"index"}' "$PROD/api/feedback"            # 401 {"error":"unauthorized"} — NO FILE WRITTEN
+```
+
+Verify after: `git fetch && git ls-tree origin/main requests/` shows only `README.md`. **If `POST /api/feedback` returned anything other than 401, or if a new `<id>.json` appeared on `main`, stop and triage — the pre-launch admin gate is the load-bearing safety boundary.**
 
 ### 4.1 Admin login works
 
@@ -194,7 +211,7 @@ Submit a second request while the first is in `review`. Tell the operator "check
 
 ---
 
-## 5. How the owner uses the pipeline (day-to-day, post-PR-D)
+## 5. How the owner uses the pipeline (day-to-day)
 
 1. **Open `/admin`** from the bookmark, the temporary footer "Admin" link, or the floating Admin menu (bottom-right after login).
 2. **Click "Skicka önskemål"** from the hub. This opens `/onskemal`. Pick the page, describe the change in plain language. Submit.
@@ -206,13 +223,83 @@ The owner never touches GitHub, Vercel, or the codebase directly.
 
 ---
 
-## 6. Recovery if the operator session dies mid-request
+## 6. Operator-mode starter prompt
+
+Open Claude Code in this repo, then paste this at the start of the session to put it into operator mode. Customize the names if needed; everything below is project-specific to `nastaran-web`.
+
+```
+You are the queue operator for nastaran-web in Mode A (interactive Claude
+Code session as operator). The authoritative behavior contract is
+spec/pipeline-operator-modes.md; the data model + API contracts are in
+spec/pipeline-mvp.md; the metadata-write exception is in requests/README.md.
+
+Standing rules:
+- Single-lane: at most ONE active request across in_progress / review /
+  improve_requested / publishing. improve_requested is your own backlog
+  on the SAME branch + SAME PR — not a new claim.
+- Four-tier classification: clear content = process; ambiguous content =
+  STOP and ask me; structural / out-of-scope = failed + manualFix;
+  unsafe (anything outside src/content/*.ts) = failed + manualFix.
+- Source changes never go directly to main. The ONLY exception is the
+  per-request metadata write to requests/<the-id-you-are-processing>.json
+  via Octokit (via src/lib/github.ts::putRequestFile, which validates the
+  id and hard-codes the path). All source/content changes flow through a
+  req/<id>-<slug> branch + PR + Publicera (squash-merge).
+- Safe edit surface = src/content/{berattelser,home,kontakt,om-mig,site}.ts
+  ONLY. Anything else = unsafe → failed + manualFix.
+- Slug rules (Swedish-aware): see spec/pipeline-mvp.md § Slug
+  normalization. Branch = req/<id>-<slug>; id format YYYYMMDD-HHmmss-<6
+  lowercase alnum>.
+- No `claude -p` child processes. No cron. No --permission-mode bypass.
+- No ANTHROPIC_API_KEY. Claude CLI subscription auth only.
+- Ask before destructive actions (force-push, hard reset, branch delete
+  outside the normal Avvisa/Publicera flow, env-var changes, anything
+  touching the archived old project at /home/spawn/Apps/nastaran-web).
+
+When I say "check the queue", you:
+1. git fetch + git pull origin main.
+2. Read requests/*.json (skip README.md).
+3. Single-lane check; if anything is in_progress / review / improve_requested /
+   publishing, output `loop: lane busy (active <id> at <status>)` and stop.
+4. Otherwise pick the oldest queued or improve_requested by createdAt /
+   updatedAt asc. Classify. If ambiguous, ASK me with the specific question.
+5. If clear and safe, process through to review: CAS queued → in_progress,
+   create the req/<id>-<slug> branch, edit src/content/*.ts only, run
+   `npm run lint && npm run typecheck && npm run build`, push, open the
+   PR with `gh pr create`, then CAS in_progress → review with PR url +
+   number + preview url + latestCommitSha.
+6. If improve_requested, REUSE the same branch + same PR — never open a
+   duplicate. The CAS goes improve_requested → in_progress → review.
+7. Report with the standard reporting block (repo / branch / commit /
+   changed files / PR / status / quality gates) + Safety section.
+8. Overwrite /home/spawn/temp/output_nastaran.md with the report.
+
+When I say "start the listener", you do the same loop above on a
+self-paced ~60-second cadence via ScheduleWakeup, while this session
+stays open. Empty queue is the steady state — emit `loop: queue empty`
+and schedule the next wake. STOP the listener (do not schedule the
+next wake) and surface to me on any hard-stop condition: ambiguity,
+unsafe scope (anything outside src/content/*.ts), dirty repo / merge
+conflict, failing quality gate, network or GitHub or Vercel failure
+that doesn't recover with one retry, or anything that needs an owner
+decision. Closing the session ends the listener — no persistence.
+
+Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or auto-merge
+of source PRs — those are Mode B (parked) and not the operating model
+here.
+```
+
+This prompt is the canonical operator entry point. If you change it, update [`../spec/pipeline-operator-modes.md`](../spec/pipeline-operator-modes.md) § Operator starter prompt to keep both in sync (or have one reference the other — current source of truth is this section).
+
+---
+
+## 7. Recovery if the operator session dies mid-request
 
 See [`../spec/pipeline-operator-modes.md`](../spec/pipeline-operator-modes.md) § Recovery if the session dies mid-cycle. The state machine is designed for this — wherever `requests/<id>.json` says the request is, that's where it is.
 
 ---
 
-## 7. When something fails
+## 8. When something fails
 
 ### The form returns "Servern är inte färdig konfigurerad ännu"
 
@@ -256,7 +343,7 @@ The merge to `main` is a normal git commit. See [`../spec/pipeline-mvp.md`](../s
 
 ---
 
-## 8. What's NOT in this pipeline (deferred)
+## 9. What's NOT in this pipeline (deferred)
 
 Do not enable any of these without explicit approval:
 
@@ -269,10 +356,11 @@ Do not enable any of these without explicit approval:
 
 ---
 
-## 9. Where to read next
+## 10. Where to read next
 
 - For the data model + state machine + API contracts: [`../spec/pipeline-mvp.md`](../spec/pipeline-mvp.md).
 - For operator modes: [`../spec/pipeline-operator-modes.md`](../spec/pipeline-operator-modes.md).
+- For the validation plan + recorded test results: [`CLEAN-ROOM-VALIDATION.md`](./CLEAN-ROOM-VALIDATION.md).
 - For the cross-project abstract pattern: [`REUSABLE-REQUEST-QUEUE-PATTERN.md`](./REUSABLE-REQUEST-QUEUE-PATTERN.md).
 - For the metadata directory + `main`-write exception: [`../requests/README.md`](../requests/README.md).
 - For repo + deployment conventions: [`../CLAUDE.md`](../CLAUDE.md).

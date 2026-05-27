@@ -126,13 +126,14 @@ In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleadin
 
 ## Request/publish pipeline rules
 
-**Status:** Planned in this PR (PR A — docs/spec only). Runtime arrives in PRs B–E.
+**Status:** Shipped (PRs A–E). Anonymous production smoke + clean-room docs comprehension both pass on `main`. Live-run end-to-end smoke is ready to execute once Vercel env vars land — see [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md).
 
 The pipeline is documented in:
 
 - [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) — data model, state machine, API contracts, safe edit surface, validation stack.
 - [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) — Mode A foreground listener pattern. Mode B parked.
-- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough (env vars, PAT, validation smoke test).
+- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough + canonical operator starter prompt (§ 6).
+- [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md) — validation plan + recorded test results.
 - [`docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](./docs/REUSABLE-REQUEST-QUEUE-PATTERN.md) — cross-project abstract pattern.
 - [`requests/README.md`](./requests/README.md) — metadata directory + `main`-write exception.
 - [`.env.example`](./.env.example) — env var template.

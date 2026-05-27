@@ -142,6 +142,8 @@ Until those land, Mode B is **out of scope**. No `.loop/` directory is created. 
 
 ## Operator starter prompt
 
+> **Canonical location:** [`../docs/PIPELINE-HANDOFF.md`](../docs/PIPELINE-HANDOFF.md) § 6. The version below mirrors it; if the two ever drift, the handoff doc is authoritative.
+
 The owner can paste this at the start of a Claude Code session in this repo to put it into operator mode:
 
 ```
@@ -195,4 +197,3 @@ auto-merge of source PRs — those are Mode B (parked) and not the
 operating model here.
 ```
 
-The final form of this prompt may evolve; PR E ships the canonical version after clean-room validation.

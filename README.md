@@ -6,7 +6,7 @@ Clean Tailwind-first rebuild of Nastaran's site. Premium Swedish-first landing f
 
 - **MS1 shipped.** All routes live: home, `/om-mig`, `/berattelser`, `/kontakt`, plus the `/testimonials` → `/berattelser` redirect.
 - **MS2 shipped.** Theme selector with four themes: `nuvarande`, `ornament`, `elementen`, `bage`. Default (`nuvarande`) preserves the original deployed look.
-- **Request/publish pipeline — planned (PR A docs/spec lands first).** Adapts the validated `shadi-web` pattern: owner submits requests at `/onskemal` (admin-gated pre-launch), a Claude Code operator session processes each request on a per-request branch, owner approves on the queue board at `/onskemal-kogen`. See [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md), [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md), and [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md).
+- **Request/publish pipeline — shipped (PRs A–E).** Owner submits requests at `/onskemal` (admin-gated pre-launch), a Claude Code operator session processes each request on a per-request branch, owner approves on the queue board at `/onskemal-kogen`. Anonymous production smoke + clean-room docs comprehension both pass; live-run end-to-end smoke is ready to execute once Vercel env vars land — full plan + recorded results in [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md). Setup walkthrough: [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md). Spec: [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md), [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md).
 - **In production** at https://nastaran-web.vercel.app (auto-deploy from `main` via Vercel ↔ GitHub integration).
 - **Deferred.** Real assets to replace Unsplash gallery placeholders, ContactForm backend (currently mailto-only), perf + a11y + SEO audits. See [`spec/`](./spec) for the full living spec.
 
@@ -99,7 +99,8 @@ See [`CLAUDE.md`](./CLAUDE.md) for the project conventions Claude Code follows i
 
 ## Request/publish pipeline docs
 
-- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough (env vars, PAT, validation smoke test).
+- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough (env vars, PAT, validation smoke test, operator starter prompt).
+- [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md) — validation plan + recorded test results.
 - [`docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](./docs/REUSABLE-REQUEST-QUEUE-PATTERN.md) — cross-project abstract pattern.
 - [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) — data model, state machine, API contracts, safe edit surface.
 - [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) — Mode A operator (Mode B parked).
