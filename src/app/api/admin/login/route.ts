@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { cookies } from "next/headers";
 import {
   SESSION_COOKIE,
   SESSION_TTL_SEC,
@@ -50,14 +49,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "server_misconfigured" }, { status: 500 });
   }
 
-  const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
+  // Set the session cookie on the response itself.
+  //
+  // The `cookies()` helper from `next/headers` is reliable for reads,
+  // but in Route Handlers the documented path for emitting Set-Cookie
+  // is `NextResponse.cookies.set()`. Going through `cookies().set()`
+  // here was observed to drop attributes (notably `maxAge`), turning
+  // the persistent 7-day cookie into a session cookie that died on
+  // page refresh. Setting it on the response directly guarantees the
+  // full attribute set lands in the Set-Cookie header.
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",
     maxAge: SESSION_TTL_SEC,
     path: "/",
   });
-
-  return NextResponse.json({ ok: true });
+  return res;
 }
