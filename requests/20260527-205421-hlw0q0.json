@@ -4,13 +4,13 @@
   "description": "Kan du lägga in dessa i bild karusellen också",
   "page": "berattelser",
   "createdBy": "anonymous",
-  "status": "publishing",
+  "status": "done",
   "createdAt": "2026-05-27T20:54:21.831Z",
-  "updatedAt": "2026-05-27T21:07:18.117Z",
+  "updatedAt": "2026-05-27T21:07:22.037Z",
   "claimedAt": "2026-05-27T21:01:36.000Z",
   "reviewReadyAt": "2026-05-27T21:04:30.000Z",
   "approvedAt": "2026-05-27T21:07:18.117Z",
-  "publishedAt": null,
+  "publishedAt": "2026-05-27T21:07:22.037Z",
   "rejectedAt": null,
   "failedAt": null,
   "branch": "req/20260527-205421-hlw0q0-kan-du-lagga-in-dessa-i-bild-karuse",
@@ -18,7 +18,7 @@
   "pullRequestNumber": 23,
   "previewUrl": "https://nastaran-web-git-req-20260527-205421-hlw0q0-k-0a8dc6-aryan-tech.vercel.app",
   "latestCommitSha": "9f1aec465a0dca9fbafc0c02629a99a68952266f",
-  "productionCommitSha": null,
+  "productionCommitSha": "125e1aebf2a8d5c4067843f86646222a6293ad21",
   "productionDeploymentUrl": null,
   "attachments": [
     {
@@ -63,6 +63,11 @@
       "at": "2026-05-27T21:07:18.117Z",
       "actor": "admin",
       "event": "approval_started"
+    },
+    {
+      "at": "2026-05-27T21:07:22.037Z",
+      "actor": "admin",
+      "event": "merged"
     }
   ]
 }
