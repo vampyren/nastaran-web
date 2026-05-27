@@ -4,14 +4,14 @@
   "description": "I del 05 det finn ett linje mellan  \n\"Viktigt\" och texten som kommer efter\nDe andra 2 raderna har inte den raden. Kan du lägga till den horisontella raden på de andra två rader också.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "failed",
+  "status": "rejected",
   "createdAt": "2026-05-27T19:50:31.584Z",
-  "updatedAt": "2026-05-27T19:59:24.000Z",
+  "updatedAt": "2026-05-27T20:06:00.477Z",
   "claimedAt": null,
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
-  "rejectedAt": null,
+  "rejectedAt": "2026-05-27T20:06:00.477Z",
   "failedAt": "2026-05-27T19:59:24.000Z",
   "branch": null,
   "pullRequestUrl": null,
@@ -34,6 +34,13 @@
       "actor": "loop",
       "event": "failed",
       "message": "unsafe_request: rendering accent in section 05 is controlled by InformationLedger.tsx, not src/content/home.ts — outside safe edit surface, requires manual component edit."
+    },
+    {
+      "at": "2026-05-27T20:06:00.477Z",
+      "actor": "admin",
+      "event": "rejected",
+      "message": "Strider mot regel"
     }
-  ]
+  ],
+  "rejectionReason": "Strider mot regel"
 }
