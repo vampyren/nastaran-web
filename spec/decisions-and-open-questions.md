@@ -5,7 +5,7 @@
 | Decision | Reason |
 |---|---|
 | New repo instead of branch | Old PR became a hybrid CSS migration not worth continuing |
-| Repo name: `vampyren/nastaran-web-clean` | Avoid the `-v2` suffix that ages awkwardly |
+| Repo name: `vampyren/nastaran-web` (originally proposed as `nastaran-web-clean`; settled on the shorter form before PR1 landed) | Avoid the `-v2` suffix that ages awkwardly |
 | Old site (Cloudflare tunnel) remains the stable preview | Don't risk the working site during rebuild |
 | New site targets Vercel previews later | Cleaner GitHub-integrated preview workflow for a new project |
 | Tailwind-first fresh implementation | The whole point of the rebuild |
@@ -67,7 +67,7 @@ These were added as ornaments only — **no `data-theme` attribute, no theme swi
 
 ### 5. GitHub repo creation — at PR1 if `gh` is authenticated
 
-**Recommendation:** At the start of MS1 PR1, run `gh auth status`. If authenticated, create `vampyren/nastaran-web-clean` as a private repo with `gh repo create … --private --source=. --remote=origin`. If not authenticated, initialize locally with `git init` and print the exact `gh repo create` command for the user to run manually.
+**Recommendation:** At the start of MS1 PR1, run `gh auth status`. If authenticated, create `vampyren/nastaran-web` as a private repo with `gh repo create … --private --source=. --remote=origin`. If not authenticated, initialize locally with `git init` and print the exact `gh repo create` command for the user to run manually.
 
 **Reason:** Commits push to GitHub from the start, which is cleaner than a late-stage migration.
 
@@ -90,7 +90,7 @@ These were added as ornaments only — **no `data-theme` attribute, no theme swi
 - `src/content/site.ts` (nav, contact email, site meta)
 - Empty `/` page rendering the shell
 - `/testimonials` redirect to `/` (retargets to `/berattelser` in MS1.2)
-- GitHub repo created at `vampyren/nastaran-web-clean` if `gh` is authenticated
+- GitHub repo created at `vampyren/nastaran-web` if `gh` is authenticated
 - `spec/` docs (this folder) committed
 
 **Expected files:**
@@ -229,7 +229,8 @@ Adapts the validated `shadi-web` MS3 pattern. Five-PR chain:
 | Single-lane invariant: at most ONE active request across `in_progress / review / improve_requested / publishing`. | Avoids parallel-branch conflicts in `src/content/*.ts`; matches the validated `shadi-web` behavior. |
 | Temporary visible footer "Admin" link during pre-launch, marked `TEMPORARY` in code comment. | Site is private/pre-launch; owner needs the bookmark prompt. Remove before public launch alongside the auth-gate removal. |
 | `productionDeploymentUrl` stays `null` in v1 | Vercel function timeout risk on synchronous deploy polling. `productionCommitSha` is the audit anchor; Vercel auto-deploys `main` independently. |
-| Skip in v1: `EditableText`, granular `edit-registry`, `LatestChangesWidget`, `/api/git/log`, branch protection on `main`, dropping `framer-motion`, fixing `package.json#name` drift, public request intake. | Each adds scope without changing the core pipeline. Track for later. |
+| Skip in v1: `EditableText`, granular `edit-registry`, `LatestChangesWidget`, `/api/git/log`, branch protection on `main`, dropping `framer-motion`, public request intake. | Each adds scope without changing the core pipeline. Track for later. |
+| **Reversed mid-PR-A:** the `package.json#name` rename (`nastaran-web-clean` → `nastaran-web`) is now folded into PR A as a small concurrent cleanup, since the lint output flagged it during the gates run. The rename also covers `package-lock.json`, `spec/README.md`, and the historical references in this file. | Owner caught the drift during PR A review; trivial scope add. |
 | Standalone docs-only PR allowed for PR A (this PR) and PR E (closeout) under the existing "Pipeline / infrastructure setup phases" allowance in `CLAUDE.md`. | PR A sets the contract before code lands; PR E validates after code lands. |
 
 **Output file rule clarified (2026-05-27):** `/home/spawn/temp/output_nastaran.md` is a temporary handoff tray for ChatGPT / Jarvis review, **not** repo documentation and **not** a permanent status artifact. It lives outside the repo, is never committed, and is overwritten completely after each meaningful Claude Code round. The CLAUDE.md "Rolling output file" section captures the rule.
