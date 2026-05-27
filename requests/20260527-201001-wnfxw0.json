@@ -4,12 +4,12 @@
   "description": "Kan du byta order Sandelträ i bilden till något bättre.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "review",
+  "status": "publishing",
   "createdAt": "2026-05-27T20:10:01.865Z",
-  "updatedAt": "2026-05-27T20:14:07.000Z",
+  "updatedAt": "2026-05-27T20:15:12.953Z",
   "claimedAt": "2026-05-27T20:12:13.000Z",
   "reviewReadyAt": "2026-05-27T20:14:07.000Z",
-  "approvedAt": null,
+  "approvedAt": "2026-05-27T20:15:12.953Z",
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
@@ -38,6 +38,11 @@
       "actor": "loop",
       "event": "loop_pushed_pr",
       "message": "Branch + PR + preview ready. ritualCaption: Sandelträ → Lavendel."
+    },
+    {
+      "at": "2026-05-27T20:15:12.953Z",
+      "actor": "admin",
+      "event": "approval_started"
     }
   ]
 }
