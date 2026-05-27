@@ -432,7 +432,7 @@ If sensitive content slips through:
 A single shared admin password, set as `ADMIN_PASSWORD` env var. `/admin/login` POSTs the password to `/api/admin/login`:
 
 1. `crypto.timingSafeEqual` compares plaintext input to `ADMIN_PASSWORD`. No DB.
-2. On match, sets an httpOnly + secure + `SameSite=strict` cookie `nastaran-admin` whose value is `<expiryMs>.<hmac-sha256-hex>` (HMAC keyed by `ADMIN_SESSION_SECRET`).
+2. On match, sets an httpOnly + secure + `SameSite=lax` cookie `nastaran-admin` whose value is `<expiryMs>.<hmac-sha256-hex>` (HMAC keyed by `ADMIN_SESSION_SECRET`). (Lax — not strict — because strict blocks the cookie on certain same-site top-level navigations, causing `/api/admin/me` and server-side `hasAdminSession()` to disagree on the same session. The mutative POST routes additionally enforce `assertSameOrigin(req)` as a second CSRF defense layer; SameSite=lax + assertSameOrigin is the layered pattern matching modern session-cookie practice.)
 3. Cookie TTL: 7 days.
 
 Every admin endpoint calls `requireAdmin()` (validates the cookie) then `assertSameOrigin(req)` (CSRF defense-in-depth — `Origin` host vs request host). Mismatch → 401 or 403.
