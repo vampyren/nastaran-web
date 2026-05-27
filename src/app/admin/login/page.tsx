@@ -42,7 +42,7 @@ export default async function Page({
       <SiteHeader items={navItems} />
       <main
         id="main-content"
-        className="relative z-[1] mx-auto w-full max-w-md px-6 py-[4.5rem]"
+        className="relative z-[1] mx-auto w-full max-w-md flex-1 px-6 py-[4.5rem]"
       >
         <header>
           <span className="mb-3 inline-block text-[0.78rem] font-medium uppercase tracking-[0.08em] text-accent">

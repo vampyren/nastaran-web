@@ -37,7 +37,7 @@ export default async function Page() {
       <SiteHeader items={navItems} />
       <main
         id="main-content"
-        className="relative z-[1] mx-auto w-full max-w-[1200px] px-6 py-12 md:py-16"
+        className="relative z-[1] mx-auto w-full max-w-[1200px] flex-1 px-6 py-12 md:py-16"
       >
         <header className="mb-8">
           <span className="mb-3 inline-block text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-accent">
