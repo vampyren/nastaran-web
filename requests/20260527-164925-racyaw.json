@@ -1,0 +1,31 @@
+{
+  "id": "20260527-164925-racyaw",
+  "title": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trev",
+  "description": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trevligare.",
+  "page": "index",
+  "createdBy": "anonymous",
+  "status": "queued",
+  "createdAt": "2026-05-27T16:49:25.681Z",
+  "updatedAt": "2026-05-27T16:49:25.681Z",
+  "claimedAt": null,
+  "reviewReadyAt": null,
+  "approvedAt": null,
+  "publishedAt": null,
+  "rejectedAt": null,
+  "failedAt": null,
+  "branch": null,
+  "pullRequestUrl": null,
+  "pullRequestNumber": null,
+  "previewUrl": null,
+  "latestCommitSha": null,
+  "productionCommitSha": null,
+  "productionDeploymentUrl": null,
+  "history": [
+    {
+      "at": "2026-05-27T16:49:25.681Z",
+      "actor": "user",
+      "event": "created",
+      "message": "Submitted anonymously"
+    }
+  ]
+}
