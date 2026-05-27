@@ -4,9 +4,9 @@
   "description": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trevligare.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "improve_requested",
+  "status": "in_progress",
   "createdAt": "2026-05-27T16:49:25.681Z",
-  "updatedAt": "2026-05-27T16:57:41.660Z",
+  "updatedAt": "2026-05-27T16:59:45.937296744Z",
   "claimedAt": "2026-05-27T16:53:24.853561245Z",
   "reviewReadyAt": "2026-05-27T16:55:44.210412315Z",
   "approvedAt": null,
@@ -44,6 +44,12 @@
       "actor": "admin",
       "event": "improve_requested",
       "message": "Det ska inte vara fråge tecken efter ! Jag menade om du hade bättre ordval. Om inte sätt bara Kontakta mig!"
+    },
+    {
+      "at": "2026-05-27T16:59:45.937296744Z",
+      "actor": "loop",
+      "event": "loop_picked_up",
+      "message": "iterating"
     }
   ]
 }
