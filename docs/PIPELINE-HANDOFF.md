@@ -10,6 +10,51 @@ This is the **canonical start-here guide** for setting up the request/publish pi
 
 ---
 
+## 0. Quick start (TL;DR)
+
+Six steps to bring the pipeline live. Run them in order. Detailed walkthrough + troubleshooting lives in § 1 onward.
+
+1. **Create a fine-grained GitHub PAT** at <https://github.com/settings/personal-access-tokens/new>
+   - **Repository:** `vampyren/nastaran-web` only.
+   - **Permissions:** Contents → **Read and write**; Pull requests → **Read and write**.
+   - **Nothing else** unless explicitly needed.
+   - Copy the `github_pat_…` value — GitHub shows it once. Paste it directly into Vercel in step 3.
+
+2. **Generate the two random secrets locally** (not via Claude Code's Bash tool — keeps the values out of chat history):
+
+   ```bash
+   openssl rand -base64 24    # value for ADMIN_PASSWORD
+   openssl rand -hex 32       # value for ADMIN_SESSION_SECRET
+   ```
+
+   Save both to your password manager.
+
+3. **Set the four env vars in Vercel** at <https://vercel.com/aryan-tech/nastaran-web/settings/environment-variables>
+
+   | Name | Value |
+   |---|---|
+   | `GITHUB_TOKEN` | the `github_pat_…` from step 1 |
+   | `GITHUB_REPO` | `vampyren/nastaran-web` |
+   | `ADMIN_PASSWORD` | the `openssl rand -base64 24` value from step 2 |
+   | `ADMIN_SESSION_SECRET` | the `openssl rand -hex 32` value from step 2 |
+
+   Scope each to **Production + Preview + Development** unless there's a specific reason not to.
+
+4. **Redeploy Production** so the new build picks up the env vars:
+   - Vercel → **Deployments**.
+   - Find the row with the **Production** badge on `main`.
+   - Menu (⋯) → **Redeploy**.
+   - **Don't redeploy a random Preview row** unless you're intentionally testing Preview env vars. The production URL only serves the Production deployment.
+   - Wait ~30 s for **Ready**.
+
+5. **Verify by logging in:** open <https://nastaran-web.vercel.app/admin/login> in a browser and type `ADMIN_PASSWORD`. You should land at `/admin` and see the four-card hub.
+
+6. **(Optional) Sanity-check anonymous endpoints** with the `curl` walkthrough in § 4.0 below — confirms the pre-launch admin gate is doing its job under direct probe.
+
+If anything fails in steps 4–6, see § 8 ("When something fails") for the most common causes.
+
+---
+
 ## Standing rules (read before any setup step)
 
 These apply throughout. They're the rules that, if broken, cause the most pain.
@@ -103,7 +148,14 @@ Optional: `NEXT_PUBLIC_PREVIEW_MODE=1` for future preview-mode UI niceties. Neve
 
 **Run `openssl` commands locally**, not via Claude Code's Bash tool — that puts the value in chat history. Save to your password manager AND paste into Vercel. Then forget locally; the Vercel dashboard is the source of truth.
 
-**After saving:** Vercel snapshots env vars at build time. To apply to the current production deployment, **redeploy** it: Deployments → `...` menu on the latest → Redeploy → wait ~30 s for Ready.
+**After saving:** Vercel snapshots env vars at build time. Existing deployments don't pick up env-var changes until they rebuild. To apply to the live site:
+
+1. Vercel → **Deployments**.
+2. **Find the row with the `Production` badge on `main`** — that's the deployment serving `https://nastaran-web.vercel.app`. The top-of-list row is often a Preview branch; don't redeploy a random Preview row unless you're intentionally testing Preview env vars.
+3. Menu (⋯) → **Redeploy**.
+4. Wait ~30 s for **Ready**.
+
+Alternative: any new commit landing on `main` triggers a fresh production build that automatically picks up the new env vars — so merging any PR after env-var changes also works.
 
 **Verify:** open `https://nastaran-web.vercel.app/admin/login` in a browser, type `ADMIN_PASSWORD`. You should land on `/admin` and see the hub. If login returns "Felaktigt lösenord" with the correct password, the deploy didn't pick up the env var — redeploy again. If it returns a 500, check `ADMIN_SESSION_SECRET` length (must be ≥16 chars).
 

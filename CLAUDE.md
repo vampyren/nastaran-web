@@ -177,6 +177,14 @@ The user keeps a working output file at `/home/spawn/temp/output_nastaran.md`. *
 
 The file is meant to be read cold by a reviewer who hasn't seen the chat. Make it self-contained for that round. Git history preserves the project trail; this file is the working tray.
 
+## Setup / config requests — answer in chat with the actionable checklist
+
+When the owner asks for env-var / key / password / PAT / Vercel setup help, **deliver the actionable checklist directly in chat** using the Quick Start at [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) § 0. Do not just point them at the doc and wait for them to read it — the owner is trying to set things up, not read documentation.
+
+Mirror the Quick Start's structure in chat: numbered steps with exact commands (`openssl rand …`), exact field values, exact URLs, exact env-var names. The long-form walkthrough in `docs/PIPELINE-HANDOFF.md` § 1 onward is for first-principles reading; chat is for action. Same rule applies to ad-hoc PAT-scope reminders, Vercel UI walkthroughs, redeploy clarifications, and any other one-time setup the human runs in a browser or local terminal.
+
+Still: never paste real secret values into chat. Tell the owner to run the `openssl` commands in their local terminal and paste the output directly into Vercel — that's the secret-handling rule from the standing-rules block above, and it still applies inside an actionable checklist.
+
 ## Project-specific hard rules
 
 These apply unconditionally unless I override them in-session.
