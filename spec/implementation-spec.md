@@ -190,4 +190,56 @@ All three must pass before any PR is opened or merged:
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | `next build` — must succeed cleanly, no warnings about deprecated APIs or missing types |
 
-No CI in MS1. Developer (and Claude) runs these locally before pushing.
+No CI in MS1. Developer (and Claude) runs these locally before pushing. (CI added in MS2 via `.github/workflows/ci.yml` — same three commands; see [`CLAUDE.md`](../CLAUDE.md) § Quality gates.)
+
+## MS3 — request/publish pipeline (planned)
+
+Adapts the validated `shadi-web` request/publish pipeline. Full implementation spec at [`./pipeline-mvp.md`](./pipeline-mvp.md). Operator mode at [`./pipeline-operator-modes.md`](./pipeline-operator-modes.md). From-zero setup at [`../docs/PIPELINE-HANDOFF.md`](../docs/PIPELINE-HANDOFF.md).
+
+### New routes (lands across PR C + PR D)
+
+| Route | MS | Purpose |
+|---|---|---|
+| `/admin` | MS3 PR C | Owner hub. Cookie-gated; anonymous → `/admin/login`. |
+| `/admin/login` | MS3 PR C | Login form. POSTs to `/api/admin/login`. |
+| `/onskemal` | MS3 PR C | Request form. **Pre-launch admin-gated** — anonymous → `/admin/login?next=...`. |
+| `/onskemal-kogen` | MS3 PR C | Admin queue board (four sections: `Väntar i kö`, `Aktivt i review`, `Fel`, `Klart`). Cookie-gated. |
+| `/api/admin/login` `/logout` `/me` | MS3 PR B | Session lifecycle. |
+| `/api/feedback` | MS3 PR D | Request intake. **Pre-launch admin-gated.** Hard-codes write path to `requests/<id>.json`. |
+| `/api/list` | MS3 PR D | Queue read. Cookie-gated. |
+| `/api/approve/[id]` `/reject/[id]` `/iterate/[id]` | MS3 PR D | Terminal actions. Cookie + same-origin. |
+| `/api/admin/retry/[id]` | MS3 PR D | `failed → queued`. Cookie + same-origin. |
+
+### New top-level paths
+
+- `requests/` — per-request JSON metadata. `requests/<id>.json` is the single source of truth on `main`. Hard-coded write path; no other paths under `requests/` are ever touched. See [`../requests/README.md`](../requests/README.md).
+- `.env.example` — Vercel env var template (`GITHUB_TOKEN`, `GITHUB_REPO`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`).
+
+### New components
+
+- `src/components/AdminFAB.tsx` (PR C) — floating Admin menu, bottom-right, **logged-in-only** (probes `/api/admin/me` on mount; hides if anonymous).
+- `src/app/admin/{page,AdminHub}.tsx` (PR C) — owner hub with four cards.
+- `src/app/admin/login/{page,LoginForm}.tsx` (PR C).
+- `src/app/onskemal/{page,OnskemalForm}.tsx` (PR C) — request form with Swedish sensitive-content warning above the textarea (see `pipeline-mvp.md`).
+- `src/app/onskemal-kogen/{page,QueueBoard}.tsx` (PR C) — queue board with auto-refresh every 30 s.
+
+### New library
+
+- `src/lib/auth.ts` (PR B) — `requireAdmin`, `hasAdminSession`, `assertSameOrigin`, `timingSafeCompare`, `createSession`, `verifySession`. Cookie `nastaran-admin`.
+- `src/lib/request-types.ts` (PR B) — `Request` type + `RequestStatus` union.
+- `src/lib/request-store.ts` (PR B) — SHA-CAS write helper with state-machine recheck on 409.
+- `src/lib/github.ts` (PR B) — Octokit wrapper.
+- `src/lib/pages.ts` (PR B) — `ALLOWED_PAGE_IDS`, `PAGE_LABELS`, `sanitizePageId`, `routeForPage`.
+
+### Modified components
+
+- `src/app/layout.tsx` (PR C) — renders `<AdminFAB />`.
+- `src/components/SiteFooter.tsx` (PR C) — adds a TEMPORARY visible "Admin" link with code comment for removal before public launch.
+
+### New runtime dependency
+
+- `octokit@^4` (PR B). No other runtime deps added.
+
+### Quality gates remain unchanged
+
+Same three gates (`lint`, `typecheck`, `build`). All pipeline code must pass before push, both locally and in CI. The pipeline does not add a test script — manual smoke test per [`../docs/PIPELINE-HANDOFF.md`](../docs/PIPELINE-HANDOFF.md) § 4.

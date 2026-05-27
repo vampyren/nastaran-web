@@ -6,8 +6,9 @@ Clean Tailwind-first rebuild of Nastaran's site. Premium Swedish-first landing f
 
 - **MS1 shipped.** All routes live: home, `/om-mig`, `/berattelser`, `/kontakt`, plus the `/testimonials` → `/berattelser` redirect.
 - **MS2 shipped.** Theme selector with four themes: `nuvarande`, `ornament`, `elementen`, `bage`. Default (`nuvarande`) preserves the original deployed look.
+- **Request/publish pipeline — planned (PR A docs/spec lands first).** Adapts the validated `shadi-web` pattern: owner submits requests at `/onskemal` (admin-gated pre-launch), a Claude Code operator session processes each request on a per-request branch, owner approves on the queue board at `/onskemal-kogen`. See [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md), [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md), and [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md).
 - **In production** at https://nastaran-web.vercel.app (auto-deploy from `main` via Vercel ↔ GitHub integration).
-- **Deferred.** Request/approval pipeline (Shadi-style flow), real assets to replace Unsplash gallery placeholders, ContactForm backend (currently mailto-only), perf + a11y + SEO audits. See [`spec/`](./spec) for the full living spec.
+- **Deferred.** Real assets to replace Unsplash gallery placeholders, ContactForm backend (currently mailto-only), perf + a11y + SEO audits. See [`spec/`](./spec) for the full living spec.
 
 ## Routes
 
@@ -94,7 +95,16 @@ The Unsplash patterns are whitelisted in `next.config.mjs` via `images.remotePat
 
 ## Conventions
 
-See [`CLAUDE.md`](./CLAUDE.md) for the project conventions Claude Code follows in this repo (branch-first workflow, conventional commit prefixes, quality-gates-before-PR, keep-docs-in-sync rule).
+See [`CLAUDE.md`](./CLAUDE.md) for the project conventions Claude Code follows in this repo (branch-first workflow, conventional commit prefixes, quality-gates-before-PR, keep-docs-in-sync rule, internal-English / visible-Swedish naming rule, request/publish pipeline rules).
+
+## Request/publish pipeline docs
+
+- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough (env vars, PAT, validation smoke test).
+- [`docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](./docs/REUSABLE-REQUEST-QUEUE-PATTERN.md) — cross-project abstract pattern.
+- [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) — data model, state machine, API contracts, safe edit surface.
+- [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) — Mode A operator (Mode B parked).
+- [`requests/README.md`](./requests/README.md) — metadata directory + `main`-write exception.
+- [`.env.example`](./.env.example) — env var template.
 
 ## Spec
 
