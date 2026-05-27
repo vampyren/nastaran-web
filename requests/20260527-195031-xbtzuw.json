@@ -4,15 +4,15 @@
   "description": "I del 05 det finn ett linje mellan  \n\"Viktigt\" och texten som kommer efter\nDe andra 2 raderna har inte den raden. Kan du lägga till den horisontella raden på de andra två rader också.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "queued",
+  "status": "failed",
   "createdAt": "2026-05-27T19:50:31.584Z",
-  "updatedAt": "2026-05-27T19:50:31.584Z",
+  "updatedAt": "2026-05-27T19:59:24.000Z",
   "claimedAt": null,
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
-  "failedAt": null,
+  "failedAt": "2026-05-27T19:59:24.000Z",
   "branch": null,
   "pullRequestUrl": null,
   "pullRequestNumber": null,
@@ -20,12 +20,20 @@
   "latestCommitSha": null,
   "productionCommitSha": null,
   "productionDeploymentUrl": null,
+  "failureReason": "unsafe_request: src/components/home/InformationLedger.tsx — the conditional copper-accent rendering lives in the component, outside the operator's safe edit surface (src/content/*.ts). Adding the accent to all three rows requires editing the component, not the content. Owner will route this separately.",
+  "manualFix": true,
   "history": [
     {
       "at": "2026-05-27T19:50:31.584Z",
       "actor": "user",
       "event": "created",
       "message": "Submitted anonymously"
+    },
+    {
+      "at": "2026-05-27T19:59:24.000Z",
+      "actor": "loop",
+      "event": "failed",
+      "message": "unsafe_request: rendering accent in section 05 is controlled by InformationLedger.tsx, not src/content/home.ts — outside safe edit surface, requires manual component edit."
     }
   ]
 }
