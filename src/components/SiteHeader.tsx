@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { NavItem } from "@/content/site";
@@ -113,6 +113,27 @@ export default function SiteHeader({ items }: Props) {
     };
   }, [open]);
 
+  // Same-route home click → scroll to top. Next.js Link skips navigation
+  // when the target href matches the current pathname, which made the
+  // logo and the "Hem" nav item a no-op once you were already on "/".
+  // We catch that case and scroll to top instead (respecting
+  // prefers-reduced-motion). Hash anchors like "/#behandlingar" keep
+  // their existing browser-default scroll behavior because the target
+  // href is not "/".
+  const handleNavClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    targetHref: string,
+  ) => {
+    if (targetHref === "/" && pathname === "/") {
+      event.preventDefault();
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    }
+    setOpen(false);
+  };
+
   const renderNav = (variant: "desktop" | "mobile") => (
     <nav
       aria-label="Huvudmeny"
@@ -130,7 +151,7 @@ export default function SiteHeader({ items }: Props) {
               key={item.href}
               href={item.href}
               aria-current={current ? "page" : undefined}
-              onClick={() => setOpen(false)}
+              onClick={(event) => handleNavClick(event, item.href)}
               className={[
                 "relative inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap text-eyebrow uppercase tracking-[0.075em] tabular-nums",
                 "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4",
@@ -149,7 +170,7 @@ export default function SiteHeader({ items }: Props) {
             key={item.href}
             href={item.href}
             aria-current={current ? "page" : undefined}
-            onClick={() => setOpen(false)}
+            onClick={(event) => handleNavClick(event, item.href)}
             className={[
               "grid min-h-[56px] grid-cols-[46px_minmax(0,1fr)] items-center gap-3.5 border-b border-hairline text-[17px] tracking-[-0.01em]",
               "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4",
@@ -184,7 +205,7 @@ export default function SiteHeader({ items }: Props) {
         <Link
           href="/"
           aria-label="Till startsidan"
-          onClick={() => setOpen(false)}
+          onClick={(event) => handleNavClick(event, "/")}
           className="inline-flex min-w-0 max-w-[54%] items-center gap-2.5 overflow-hidden whitespace-nowrap font-extrabold text-ink focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
         >
           <span
