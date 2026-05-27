@@ -203,6 +203,37 @@ These were added as ornaments only — **no `data-theme` attribute, no theme swi
 
 **Quality gates:** CI green.
 
+### MS3 — request/publish pipeline (planned, 2026-05-27)
+
+Adapts the validated `shadi-web` MS3 pattern. Five-PR chain:
+
+| PR | Title | Scope |
+|---|---|---|
+| **A** (this PR) | `chore(pipeline): docs + spec + env example + CLAUDE.md draft` | Docs/spec only. No runtime. Branch: `chore/pipeline-docs-setup`. |
+| **B** | `feat(pipeline): auth + request store + GitHub helper + admin login API` | `src/lib/{auth,request-types,request-store,github,pages}.ts`, `/api/admin/{login,logout,me}`. Add `octokit` dep. |
+| **C** | `feat(pipeline): /admin hub + login + AdminFAB + onskemal form + queue UI shell` | `src/app/admin/*`, `src/components/AdminFAB.tsx` (+ layout wire-in), `src/app/onskemal/*`, `src/app/onskemal-kogen/*`. Temporary footer Admin link added here. |
+| **D** | `feat(pipeline): request lifecycle APIs (feedback, list, approve, reject, iterate, retry)` | Remaining API routes. Pipeline goes end-to-end functional. |
+| **E** | `docs(pipeline): clean-room validation + operator starter prompt + closeout` | Clean-room validation pass, finalized operator starter prompt, smoke test report. |
+
+**Locked decisions for the pipeline chain (2026-05-27):**
+
+| Decision | Reason |
+|---|---|
+| Pipeline is admin-only pre-launch (both `/onskemal` page and `/api/feedback` endpoint) | Only the owner submits during pre-launch; defense at both UI and data-write boundaries. Public-intake unlock requires the documented removal trigger (post-pre-launch, footer Admin link removed, validation stack re-verified). |
+| Internal English / visible Swedish — every variable/type/JSON-key/status/env-var is English; only visible UI copy is Swedish | Project may become multilingual; cheap to do at the start, expensive later. Centralized Swedish-label mapping lives in `spec/pipeline-mvp.md` § Swedish UI vocabulary. |
+| Safe edit surface = `src/content/{berattelser,home,kontakt,om-mig,site}.ts` only | Matches Nastaran's existing content layer. Anything else = unsafe → `failed + manualFix`. |
+| Cookie name `nastaran-admin` (not `shadi-admin`) | Project-scoped session identifier. |
+| Page-ID allowlist: `index`, `om-mig`, `berattelser`, `kontakt`, `hela-sajten` (catch-all). `/testimonials` excluded — redirect with no editable surface. | Matches actual editable routes. |
+| Mode A only (interactive Claude Code session as operator). Mode B (cron wrapper) parked. No `.loop/` directory. | Avoids the wrapper-output-contract + permission-handoff hardening that Mode B still needs. Owner is present during request processing. |
+| Foreground listener cadence: ~60 s via `ScheduleWakeup` while session is open. Closing the session ends the listener — no persistence. | Within prompt-cache TTL window; cheap per-wake. |
+| Single-lane invariant: at most ONE active request across `in_progress / review / improve_requested / publishing`. | Avoids parallel-branch conflicts in `src/content/*.ts`; matches the validated `shadi-web` behavior. |
+| Temporary visible footer "Admin" link during pre-launch, marked `TEMPORARY` in code comment. | Site is private/pre-launch; owner needs the bookmark prompt. Remove before public launch alongside the auth-gate removal. |
+| `productionDeploymentUrl` stays `null` in v1 | Vercel function timeout risk on synchronous deploy polling. `productionCommitSha` is the audit anchor; Vercel auto-deploys `main` independently. |
+| Skip in v1: `EditableText`, granular `edit-registry`, `LatestChangesWidget`, `/api/git/log`, branch protection on `main`, dropping `framer-motion`, fixing `package.json#name` drift, public request intake. | Each adds scope without changing the core pipeline. Track for later. |
+| Standalone docs-only PR allowed for PR A (this PR) and PR E (closeout) under the existing "Pipeline / infrastructure setup phases" allowance in `CLAUDE.md`. | PR A sets the contract before code lands; PR E validates after code lands. |
+
+**Output file rule clarified (2026-05-27):** `/home/spawn/temp/output_nastaran.md` is a temporary handoff tray for ChatGPT / Jarvis review, **not** repo documentation and **not** a permanent status artifact. It lives outside the repo, is never committed, and is overwritten completely after each meaningful Claude Code round. The CLAUDE.md "Rolling output file" section captures the rule.
+
 ## D. Risks that could leak legacy CSS debt into the rebuild
 
 | Risk | Mitigation |

@@ -27,6 +27,10 @@ A clean Tailwind-first rebuild of Nastaran's website. The old project remains th
 | `design-spec.md` | Extracted design source of truth: colors, type scale, spacing, motifs, image direction, motion, anti-goals. |
 | `implementation-spec.md` | How MS1 is built: tech stack, `globals.css` contract, forbidden CSS patterns, component structure, routes, content/asset strategy, Vercel plan, quality gates. |
 | `decisions-and-open-questions.md` | Locked decisions, recommended defaults for open questions, full PR/milestone breakdown, risks that could leak legacy CSS debt into the rebuild. |
+| `pipeline-mvp.md` | Request/publish pipeline spec: data model, state machine, API contracts, safe edit surface, validation stack, acceptance criteria. |
+| `pipeline-operator-modes.md` | Mode A foreground listener pattern (current). Mode B (cron wrapper) parked. |
+
+For the from-zero setup walkthrough, the cross-project pattern, and the metadata-directory conventions, see [`../docs/PIPELINE-HANDOFF.md`](../docs/PIPELINE-HANDOFF.md), [`../docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](../docs/REUSABLE-REQUEST-QUEUE-PATTERN.md), and [`../requests/README.md`](../requests/README.md).
 
 ## Update rule
 
@@ -40,5 +44,7 @@ A clean Tailwind-first rebuild of Nastaran's website. The old project remains th
 | PR scope or milestone | `decisions-and-open-questions.md` |
 | New locked decision | `decisions-and-open-questions.md` |
 | New risk discovered | `decisions-and-open-questions.md` |
+| Pipeline data model, state machine, API contract, or safe edit surface | `pipeline-mvp.md` |
+| Operator mode behavior, listener cadence, or four-tier classification rule | `pipeline-operator-modes.md` |
 
 Keep these docs honest.
