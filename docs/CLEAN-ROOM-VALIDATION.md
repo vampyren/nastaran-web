@@ -159,9 +159,9 @@ Failure escape hatches if any step deviates:
 - **Step 7 (Publicera returns `not_mergeable_*`):** PR not ready — wait for CI green, then click again. Status stays at `review`, never stuck in `publishing`. See `PIPELINE-HANDOFF.md` § 7.
 - **Step 8 (Förbättra opens a duplicate PR):** operator bug. Stop immediately, file under "operator deviation from spec" and triage before further runs.
 
-### Live-run end-to-end smoke — PARTIAL (2026-05-27)
+### Live-run end-to-end smoke — CORE LOOP PASSING (2026-05-27)
 
-First live exercise of the pipeline. Reference request id: `20260527-164925-racyaw`. The core queued → in_progress → review → improve_requested → review loop was validated end-to-end against the deployed production app. Two bugs surfaced during the run and were fixed in PR #17 (merged as `acd88cc`).
+First live exercise of the pipeline. Reference request id: `20260527-164925-racyaw`. The full **queued → in_progress → review → improve_requested → review → publishing → done** loop is validated end-to-end against the deployed production app. **Three bugs surfaced during the run; all three were fixed (PR #17 + PR #18).** After PR #18 deployed, the owner re-tested and confirmed login persistence + Publicera all work cleanly. PR #16 squash-merged to `main` as commit `d081c2f` ("Ändra texten ..."); request status is now `done` with `productionCommitSha = d081c2f`, `approvedAt = 2026-05-27T18:28:55Z`, `publishedAt = 2026-05-27T18:28:58Z`.
 
 **Steps exercised:**
 
@@ -173,32 +173,42 @@ First live exercise of the pipeline. Reference request id: `20260527-164925-racy
 | 4 | Request file appears on `main` as `requests/<id>.json` with `status: "queued"` | ✅ | |
 | 5 | Operator picks up via "check the queue" | ✅ | Branched `req/20260527-164925-racyaw-andra-texten-oppna-kontaktsidan-pa` off `main`, edited `src/content/home.ts` (`home.contactTeaser.cta.label`), ran gates, pushed commit `a5cdb4b`, opened PR #16, CAS `in_progress → review` with PR + preview URL. |
 | 6 | Card moves to `Aktivt i review` on the board | ✅ | |
-| 7 | **Publicera** — owner clicks → squash-merge + production deploy | ⏳ | **Not yet exercised** — owner has not clicked Publicera on PR #16 as of this writing. Code path is implemented per `spec/pipeline-mvp.md` § `POST /api/approve/[id]` but the end-to-end live run is pending the owner's terminal action. |
+| 7 | **Publicera** — owner clicks → squash-merge + production deploy | ✅ | Owner clicked Publicera on PR #16 after PR #18's SameSite fix deployed (initial attempt pre-PR-#18 silently failed — see bug #3 below). Pre-merge gate passed (PR mergeable, checks green). CAS `review → publishing → done` on `main` via `/api/approve/[id]`. Squash-merge commit on `main`: `d081c2f` ("Ändra texten 'Öppna kontantsidan' på knappen till något trev"). `productionCommitSha = d081c2f`. Card moved from `Aktivt i review` to `Klart`. PR #16 state `MERGED` at 2026-05-27T18:28:57Z. Vercel production rebuilt with the "Kontakta mig" CTA change. `req/*` branch deleted. |
 | 8 | **Förbättra** — owner submits refinement, operator reuses **same branch + same PR** | ✅ | Refinement message processed; second commit `6eca008` pushed to the same `req/*` branch. PR #16 commit count = 2. No duplicate PR opened. CAS `review → improve_requested → in_progress → review` with refreshed `latestCommitSha`. |
 | 9 | **Avvisa** — owner closes a card; PR closes unmerged | ⏳ | Not yet exercised. |
 | 10 | **Försök igen** — deliberately unsafe request → `failed + manualFix` → retry → `queued` | ⏳ | Not yet exercised. |
 | 11 | **Single-lane invariant** with a second concurrent submission | ⏳ | Partially: the single-lane invariant was respected during the Förbättra iteration (improve_requested → in_progress → review on the same request, not a new claim). Not yet stress-tested with a second concurrent submission. |
 | 12 | **Listener mode** (`start the listener` → ~60 s `ScheduleWakeup` cadence) | ⏳ | Not yet exercised. The on-demand `check the queue` shape was used for steps 5 + 8. |
 
-**Two bugs surfaced during the live run, both fixed in PR #17 (merged as `acd88cc`):**
+**Three bugs surfaced during the live run; all three fixed:**
 
-1. **Admin session cookie didn't survive page refresh.** Root cause: `src/app/api/admin/login/route.ts` was setting the cookie via `(await cookies()).set(...)` from `next/headers`. In Next.js Route Handlers this pattern was observed to drop the `maxAge` attribute, turning the intended 7-day persistent cookie into a session cookie that died on refresh. **Fix:** switched to `res.cookies.set()` on the `NextResponse.json(...)` directly — sets the cookie on the response object explicitly. Same fix applied to `src/app/api/admin/logout/route.ts` for consistency (`res.cookies.delete()`). Auth attributes (`httpOnly`, `secure`, `sameSite: "strict"`, `maxAge: 7d`, `path: "/"`) all unchanged — the bug was that those documented attributes weren't reaching the browser.
+1. **Admin session cookie didn't survive page refresh.** Root cause: `src/app/api/admin/login/route.ts` was setting the cookie via `(await cookies()).set(...)` from `next/headers`. In Next.js Route Handlers this pattern was observed to drop the `maxAge` attribute, turning the intended 7-day persistent cookie into a session cookie. **Fix in PR #17 (merged as `acd88cc`):** switched to `res.cookies.set()` on the `NextResponse.json(...)` directly. Same fix applied to `src/app/api/admin/logout/route.ts` for consistency. Auth attributes (`httpOnly`, `secure`, `sameSite`, `maxAge: 7d`, `path: "/"`) all unchanged — the bug was that those documented attributes weren't reaching the browser.
 
-2. **Logo and "Hem" did nothing when already on `/`.** Root cause: Next.js `<Link href="/">` skips navigation when the current pathname matches the target href, so clicking the logo or "Hem" while scrolled down on the home page was a silent no-op. **Fix:** added a `handleNavClick(event, targetHref)` helper to `src/components/SiteHeader.tsx` that, when `targetHref === "/" && pathname === "/"`, calls `event.preventDefault()` and `window.scrollTo({ top: 0, behavior })` with `behavior` gated on `prefers-reduced-motion`. Applied to the logo `<Link>` and to the desktop + mobile nav renders. Hash anchors like `/#behandlingar` and cross-route navigation are unaffected.
+2. **Logo and "Hem" did nothing when already on `/`.** Root cause: Next.js `<Link href="/">` skips navigation when the current pathname matches the target href. **Fix in PR #17 (merged as `acd88cc`):** added a `handleNavClick(event, targetHref)` helper to `src/components/SiteHeader.tsx` that, when `targetHref === "/" && pathname === "/"`, calls `event.preventDefault()` and `window.scrollTo({ top: 0, behavior })` with `behavior` gated on `prefers-reduced-motion`. Applied to the logo `<Link>` and to the desktop + mobile nav renders. Hash anchors like `/#behandlingar` and cross-route navigation are unaffected.
 
-**Net status after the partial run:**
+3. **`SameSite=Strict` blocked the cookie on certain same-site top-level navigations — refresh of admin-gated pages still 307'd to `/admin/login` even with PR #17 in place.** This surfaced after PR #17 deployed and the cookie's `maxAge` was correctly persistent. Symptom: `/api/admin/me` (same-document `fetch`) returned 200, but page refresh of `/onskemal` / `/onskemal-kogen` returned 307 to login. Owner browser inspection confirmed the cookie had `SameSite: Strict` and was being blocked on the top-level GET. The same blocking made the **first Publicera click silently fail** — the `POST /api/approve/[id]` was rejected because the cookie wasn't sent on the cross-context POST, returning 401 from `requireAdmin`; the queue board's 8-second auto-clearing error banner masked the failure. **Fix in PR #18 (merged as `366cb60`):** changed cookie `sameSite` from `"strict"` to `"lax"` in `src/app/api/admin/login/route.ts`. Also tightened the logout delete to pass `{ name, path: "/" }` so the cookie clear matches the set's path attribute. CSRF protection remains intact: lax doesn't send the cookie on cross-site POSTs (the dangerous case), and the mutative admin POST routes already enforce `assertSameOrigin(req)` as a second CSRF layer. SameSite=lax + assertSameOrigin matches the modern recommended pattern. Spec line in `spec/pipeline-mvp.md` § Admin auth updated to match.
 
-- The pipeline shape, safety boundaries, and the core `queued → in_progress → review → improve_requested → review` loop are validated end-to-end on production.
-- The two surfaced bugs are runtime issues, not state-machine bugs — they were UI/cookie-emission issues fixed in PR #17.
-- PR #16 remains OPEN at `review` awaiting the owner's terminal action (Publicera / Förbättra / Avvisa). When the owner Publicera's, the `review → publishing → done` transitions can be appended to this section.
-- The remaining unexercised steps (Avvisa, Försök igen, single-lane with a concurrent submission, listener mode) are operational paths the owner can exercise as needed; they're not closeout-blocking.
+**Post-PR-#18 retest (owner-confirmed):**
+
+- Log out + log in fresh ✅ (cookie clears reliably with the path-matched delete; new cookie has `SameSite: Lax`).
+- Refresh `/admin`, `/onskemal`, `/onskemal-kogen` ✅ — all stay logged in after PR #18.
+- Click Publicera on PR #16 ✅ — completed end-to-end. Request → `done`, PR #16 → MERGED at `d081c2f`, Vercel production rebuilt with the "Kontakta mig" CTA change.
+
+**Net status:**
+
+- The pipeline's full state machine (Submit → operator pickup → review → Förbättra → review → Publicera → done) is **validated end-to-end on production**.
+- All three surfaced bugs were runtime issues (cookie emission + nav UX + cookie SameSite scope), not state-machine bugs. None required changing the spec's behavioral contracts.
+- PR #16 was Publicera'd cleanly; the live request lifecycle now has a real `done` example with both metadata commit (`97519e3`) and the squash-merge commit (`d081c2f`) on `main`.
+- Remaining unexercised steps (Avvisa, Försök igen, single-lane with a concurrent submission, listener mode) are operational paths that can be exercised opportunistically; they're not closeout-blocking since the core loop is proven.
+
+**Independent UX gap noted (not part of this PR):** queue board's `actionError` auto-clears after 8 s (`src/app/onskemal-kogen/QueueBoard.tsx`). That auto-clear masked the first Publicera failure caused by bug #3 — the owner saw the brief error banner but it disappeared before they could read it. Worth a separate small chore PR raising the timeout to ~30 s or making the error persistent until manually dismissed. Tracking outside PR #14.
 
 ---
 
-## Status — 2026-05-27 (updated)
+## Status — 2026-05-27 (final)
 
 - ✅ Anonymous production smoke: passing.
 - ✅ Clean-room docs comprehension: passing.
-- 🟡 Live-run end-to-end smoke: **partial**. Submit + Förbättra validated; Publicera / Avvisa / Försök igen / single-lane-with-second-queue / listener mode pending. Two bugs surfaced + fixed (PR #17). See § Results > Live-run end-to-end smoke above.
+- ✅ Live-run end-to-end smoke: **core loop passing**. Submit + Förbättra + Publicera all validated end-to-end against production. Three bugs surfaced and were fixed (PRs #17 + #18). Remaining operational paths (Avvisa, Försök igen, single-lane-with-concurrent, listener mode) are documented as ⏳ to-do for future runs but are not closeout-blocking.
 
-The pipeline shape, safety boundaries, and the core state-machine loop are validated. The remaining unexercised paths can be filled in over time as the owner runs them — append new `### Live-run end-to-end smoke — <date>` headings to the Results section above.
+The pipeline shape, safety boundaries, and the core state-machine loop are validated. Future live-run additions (the remaining ⏳ steps, or follow-up runs as the pipeline gets ongoing use) can be appended as new `### Live-run end-to-end smoke — <date>` headings under the Results section above.
