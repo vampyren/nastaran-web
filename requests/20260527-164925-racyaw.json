@@ -4,12 +4,12 @@
   "description": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trevligare.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "review",
+  "status": "publishing",
   "createdAt": "2026-05-27T16:49:25.681Z",
-  "updatedAt": "2026-05-27T17:00:42.946082645Z",
+  "updatedAt": "2026-05-27T18:28:55.199Z",
   "claimedAt": "2026-05-27T16:53:24.853561245Z",
   "reviewReadyAt": "2026-05-27T16:55:44.210412315Z",
-  "approvedAt": null,
+  "approvedAt": "2026-05-27T18:28:55.199Z",
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
@@ -56,6 +56,11 @@
       "actor": "loop",
       "event": "loop_iterated",
       "message": "iteration pushed: 6eca0089cf2216e9f39316e4de03aeb8f7c6bc72"
+    },
+    {
+      "at": "2026-05-27T18:28:55.199Z",
+      "actor": "admin",
+      "event": "approval_started"
     }
   ]
 }
