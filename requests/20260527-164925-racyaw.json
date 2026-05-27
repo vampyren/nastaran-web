@@ -4,20 +4,20 @@
   "description": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trevligare.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "in_progress",
+  "status": "review",
   "createdAt": "2026-05-27T16:49:25.681Z",
-  "updatedAt": "2026-05-27T16:53:24.853561245Z",
+  "updatedAt": "2026-05-27T16:55:44.210412315Z",
   "claimedAt": "2026-05-27T16:53:24.853561245Z",
-  "reviewReadyAt": null,
+  "reviewReadyAt": "2026-05-27T16:55:44.210412315Z",
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
   "branch": "req/20260527-164925-racyaw-andra-texten-oppna-kontaktsidan-pa",
-  "pullRequestUrl": null,
-  "pullRequestNumber": null,
-  "previewUrl": null,
-  "latestCommitSha": null,
+  "pullRequestUrl": "https://github.com/vampyren/nastaran-web/pull/16",
+  "pullRequestNumber": 16,
+  "previewUrl": "https://nastaran-web-git-req-20260527-164925-racyaw-a-4e52e4-aryan-tech.vercel.app",
+  "latestCommitSha": "a5cdb4b007346a41f2da9f5c6dce22ca03877efa",
   "productionCommitSha": null,
   "productionDeploymentUrl": null,
   "history": [
@@ -32,6 +32,12 @@
       "actor": "loop",
       "event": "loop_picked_up",
       "message": "claimed for processing"
+    },
+    {
+      "at": "2026-05-27T16:55:44.210412315Z",
+      "actor": "loop",
+      "event": "loop_pushed_pr",
+      "message": "PR opened: https://github.com/vampyren/nastaran-web/pull/16"
     }
   ]
 }
