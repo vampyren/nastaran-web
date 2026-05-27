@@ -4,13 +4,13 @@
   "description": "Kan du byta order Sandelträ i bilden till något bättre.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "publishing",
+  "status": "done",
   "createdAt": "2026-05-27T20:10:01.865Z",
-  "updatedAt": "2026-05-27T20:15:12.953Z",
+  "updatedAt": "2026-05-27T20:15:16.816Z",
   "claimedAt": "2026-05-27T20:12:13.000Z",
   "reviewReadyAt": "2026-05-27T20:14:07.000Z",
   "approvedAt": "2026-05-27T20:15:12.953Z",
-  "publishedAt": null,
+  "publishedAt": "2026-05-27T20:15:16.816Z",
   "rejectedAt": null,
   "failedAt": null,
   "branch": "req/20260527-201001-wnfxw0-kan-du-byta-order-sandeltra-i-bilden",
@@ -18,7 +18,7 @@
   "pullRequestNumber": 21,
   "previewUrl": "https://nastaran-web-git-req-20260527-201001-wnfxw0-k-b1153b-aryan-tech.vercel.app",
   "latestCommitSha": "b9c1fe6a804300ab4bfad586a5367be71d0e15c1",
-  "productionCommitSha": null,
+  "productionCommitSha": "6db0feed7247b75cfd9e430d084d4386405a55a6",
   "productionDeploymentUrl": null,
   "history": [
     {
@@ -43,6 +43,11 @@
       "at": "2026-05-27T20:15:12.953Z",
       "actor": "admin",
       "event": "approval_started"
+    },
+    {
+      "at": "2026-05-27T20:15:16.816Z",
+      "actor": "admin",
+      "event": "merged"
     }
   ]
 }
