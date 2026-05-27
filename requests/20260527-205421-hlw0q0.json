@@ -1,0 +1,51 @@
+{
+  "id": "20260527-205421-hlw0q0",
+  "title": "Kan du lägga in dessa i bild karusellen också",
+  "description": "Kan du lägga in dessa i bild karusellen också",
+  "page": "berattelser",
+  "createdBy": "anonymous",
+  "status": "queued",
+  "createdAt": "2026-05-27T20:54:21.831Z",
+  "updatedAt": "2026-05-27T20:54:21.831Z",
+  "claimedAt": null,
+  "reviewReadyAt": null,
+  "approvedAt": null,
+  "publishedAt": null,
+  "rejectedAt": null,
+  "failedAt": null,
+  "branch": null,
+  "pullRequestUrl": null,
+  "pullRequestNumber": null,
+  "previewUrl": null,
+  "latestCommitSha": null,
+  "productionCommitSha": null,
+  "productionDeploymentUrl": null,
+  "attachments": [
+    {
+      "originalFilename": "Massage.png",
+      "storedFilename": "1-t4jila.png",
+      "storedPath": "requests/20260527-205421-hlw0q0/attachments/1-t4jila.png",
+      "mimeType": "image/png",
+      "sizeBytes": 1777339,
+      "sha": "714ab438994689d7d3ded5ff2be28e82db4ae4f4",
+      "uploadedAt": "2026-05-27T20:54:21.831Z"
+    },
+    {
+      "originalFilename": "meditation.png",
+      "storedFilename": "2-4nxyjw.png",
+      "storedPath": "requests/20260527-205421-hlw0q0/attachments/2-4nxyjw.png",
+      "mimeType": "image/png",
+      "sizeBytes": 2076437,
+      "sha": "b21e02f4700ba1602c7c6bf6ca2f9c071c7b2f11",
+      "uploadedAt": "2026-05-27T20:54:21.831Z"
+    }
+  ],
+  "history": [
+    {
+      "at": "2026-05-27T20:54:21.831Z",
+      "actor": "user",
+      "event": "created",
+      "message": "Submitted anonymously with 2 attachment(s)"
+    }
+  ]
+}
