@@ -13,7 +13,7 @@ export const home = {
     intro: "En varm plats för stillhet, beröring och återhämtning.",
     body: "Ett lugnt svenskt möte där lavendel, sandelträstoner och varsamma ritualer får ge form åt stillheten — utan överlöften.",
     cta: { href: "/kontakt", label: "Kontakta Nastaran" },
-    ritualCaption: "Sandelträ · stillhet · omsorg",
+    ritualCaption: "Lavendel · stillhet · omsorg",
     image: {
       src: "/assets/generated/nastaran_space.jpeg",
       alt: "",
