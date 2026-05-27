@@ -4,13 +4,13 @@
   "description": "Ändra texten \"Öppna kontantsidan\" på knappen till något trevligare, kanske Kontakta mig ? Det är mer personligt och trevligare.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "publishing",
+  "status": "done",
   "createdAt": "2026-05-27T16:49:25.681Z",
-  "updatedAt": "2026-05-27T18:28:55.199Z",
+  "updatedAt": "2026-05-27T18:28:58.718Z",
   "claimedAt": "2026-05-27T16:53:24.853561245Z",
   "reviewReadyAt": "2026-05-27T16:55:44.210412315Z",
   "approvedAt": "2026-05-27T18:28:55.199Z",
-  "publishedAt": null,
+  "publishedAt": "2026-05-27T18:28:58.718Z",
   "rejectedAt": null,
   "failedAt": null,
   "branch": "req/20260527-164925-racyaw-andra-texten-oppna-kontaktsidan-pa",
@@ -18,7 +18,7 @@
   "pullRequestNumber": 16,
   "previewUrl": "https://nastaran-web-git-req-20260527-164925-racyaw-a-4e52e4-aryan-tech.vercel.app",
   "latestCommitSha": "6eca0089cf2216e9f39316e4de03aeb8f7c6bc72",
-  "productionCommitSha": null,
+  "productionCommitSha": "d081c2ffbbb9c66edaf9478b7731a7c680413c2e",
   "productionDeploymentUrl": null,
   "history": [
     {
@@ -61,6 +61,11 @@
       "at": "2026-05-27T18:28:55.199Z",
       "actor": "admin",
       "event": "approval_started"
+    },
+    {
+      "at": "2026-05-27T18:28:58.718Z",
+      "actor": "admin",
+      "event": "merged"
     }
   ]
 }
