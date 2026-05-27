@@ -19,12 +19,25 @@ export default function SiteFooter() {
           <LotusRosette className="h-4 w-4 text-marigold" />
           Nastaran · © {new Date().getFullYear()}
         </span>
-        <Link
-          href="/"
-          className="inline-flex min-h-[44px] items-center focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-        >
-          Hem
-        </Link>
+        <span className="inline-flex items-center gap-5">
+          {/* TEMPORARY — admin shortcut for pre-launch only. Remove
+              before public launch (alongside lifting the /onskemal page
+              + /api/feedback admin-gating per spec/pipeline-mvp.md
+              § Pre-launch admin-gating, removal trigger). Visible to
+              everyone right now because the whole site is pre-launch. */}
+          <Link
+            href="/admin"
+            className="inline-flex min-h-[44px] items-center focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+          >
+            Admin
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex min-h-[44px] items-center focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+          >
+            Hem
+          </Link>
+        </span>
       </div>
     </footer>
   );

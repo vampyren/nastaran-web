@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
+import AdminFAB from "@/components/AdminFAB";
 import BodyBackground from "@/components/BodyBackground";
 import HeaderFrost from "@/components/HeaderFrost";
 import ThemeBootScript from "@/components/theme/ThemeBootScript";
@@ -63,6 +64,10 @@ export default function RootLayout({
             All routes get this padding so content starts below the pill. */}
         <div className="pt-[96px] lg:pt-[112px]">{children}</div>
         <ThemeSwitcher />
+        {/* AdminFAB renders only for logged-in admins (probes /api/admin/me
+            on mount). Anonymous visitors never see it — see
+            spec/pipeline-mvp.md § Routes and AdminFAB itself. */}
+        <AdminFAB />
       </body>
     </html>
   );
