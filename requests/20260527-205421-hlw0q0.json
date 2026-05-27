@@ -4,12 +4,12 @@
   "description": "Kan du lägga in dessa i bild karusellen också",
   "page": "berattelser",
   "createdBy": "anonymous",
-  "status": "review",
+  "status": "publishing",
   "createdAt": "2026-05-27T20:54:21.831Z",
-  "updatedAt": "2026-05-27T21:04:30.000Z",
+  "updatedAt": "2026-05-27T21:07:18.117Z",
   "claimedAt": "2026-05-27T21:01:36.000Z",
   "reviewReadyAt": "2026-05-27T21:04:30.000Z",
-  "approvedAt": null,
+  "approvedAt": "2026-05-27T21:07:18.117Z",
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
@@ -58,6 +58,11 @@
       "actor": "loop",
       "event": "loop_pushed_pr",
       "message": "Branch + PR + preview ready. 2 PNGs copied to public/assets/generated/, 2 entries appended to berattelser.ts ceremonyImages."
+    },
+    {
+      "at": "2026-05-27T21:07:18.117Z",
+      "actor": "admin",
+      "event": "approval_started"
     }
   ]
 }
