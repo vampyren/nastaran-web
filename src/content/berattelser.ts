@@ -31,6 +31,18 @@ export const ceremonyImages = [
     src: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1400&q=80",
     credit: "Exempelbild från Unsplash",
   },
+  {
+    title: "Massage",
+    tone: "Beröring, omsorg och lugn rytm",
+    src: "/assets/generated/berattelser-massage.png",
+    credit: "Eget arbete",
+  },
+  {
+    title: "Meditation",
+    tone: "Andning, stillhet och inre fokus",
+    src: "/assets/generated/berattelser-meditation.png",
+    credit: "Eget arbete",
+  },
 ] as const;
 
 export type CeremonyImage = (typeof ceremonyImages)[number];
