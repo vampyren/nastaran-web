@@ -159,14 +159,46 @@ Failure escape hatches if any step deviates:
 - **Step 7 (Publicera returns `not_mergeable_*`):** PR not ready — wait for CI green, then click again. Status stays at `review`, never stuck in `publishing`. See `PIPELINE-HANDOFF.md` § 7.
 - **Step 8 (Förbättra opens a duplicate PR):** operator bug. Stop immediately, file under "operator deviation from spec" and triage before further runs.
 
+### Live-run end-to-end smoke — PARTIAL (2026-05-27)
+
+First live exercise of the pipeline. Reference request id: `20260527-164925-racyaw`. The core queued → in_progress → review → improve_requested → review loop was validated end-to-end against the deployed production app. Two bugs surfaced during the run and were fixed in PR #17 (merged as `acd88cc`).
+
+**Steps exercised:**
+
+| # | Step | Status | Notes |
+|---|---|---|---|
+| 1 | Vercel env vars set + Production redeploy Ready | ✅ | After diagnosing and correcting the GitHub fine-grained PAT scope to `Contents: Read and write` — the default Read-only made `POST /api/feedback` return a 404 from GitHub ("missing `contents=write`"). |
+| 2 | Owner logs in at `/admin/login` → `/admin` renders + `AdminFAB` visible | ✅ | First login worked; first refresh exposed bug #1 below. |
+| 3 | Owner submits a tiny test request from `/onskemal` | ✅ | "Tack — det är skickat ✓" with reference id `20260527-164925-racyaw`. |
+| 4 | Request file appears on `main` as `requests/<id>.json` with `status: "queued"` | ✅ | |
+| 5 | Operator picks up via "check the queue" | ✅ | Branched `req/20260527-164925-racyaw-andra-texten-oppna-kontaktsidan-pa` off `main`, edited `src/content/home.ts` (`home.contactTeaser.cta.label`), ran gates, pushed commit `a5cdb4b`, opened PR #16, CAS `in_progress → review` with PR + preview URL. |
+| 6 | Card moves to `Aktivt i review` on the board | ✅ | |
+| 7 | **Publicera** — owner clicks → squash-merge + production deploy | ⏳ | **Not yet exercised** — owner has not clicked Publicera on PR #16 as of this writing. Code path is implemented per `spec/pipeline-mvp.md` § `POST /api/approve/[id]` but the end-to-end live run is pending the owner's terminal action. |
+| 8 | **Förbättra** — owner submits refinement, operator reuses **same branch + same PR** | ✅ | Refinement message processed; second commit `6eca008` pushed to the same `req/*` branch. PR #16 commit count = 2. No duplicate PR opened. CAS `review → improve_requested → in_progress → review` with refreshed `latestCommitSha`. |
+| 9 | **Avvisa** — owner closes a card; PR closes unmerged | ⏳ | Not yet exercised. |
+| 10 | **Försök igen** — deliberately unsafe request → `failed + manualFix` → retry → `queued` | ⏳ | Not yet exercised. |
+| 11 | **Single-lane invariant** with a second concurrent submission | ⏳ | Partially: the single-lane invariant was respected during the Förbättra iteration (improve_requested → in_progress → review on the same request, not a new claim). Not yet stress-tested with a second concurrent submission. |
+| 12 | **Listener mode** (`start the listener` → ~60 s `ScheduleWakeup` cadence) | ⏳ | Not yet exercised. The on-demand `check the queue` shape was used for steps 5 + 8. |
+
+**Two bugs surfaced during the live run, both fixed in PR #17 (merged as `acd88cc`):**
+
+1. **Admin session cookie didn't survive page refresh.** Root cause: `src/app/api/admin/login/route.ts` was setting the cookie via `(await cookies()).set(...)` from `next/headers`. In Next.js Route Handlers this pattern was observed to drop the `maxAge` attribute, turning the intended 7-day persistent cookie into a session cookie that died on refresh. **Fix:** switched to `res.cookies.set()` on the `NextResponse.json(...)` directly — sets the cookie on the response object explicitly. Same fix applied to `src/app/api/admin/logout/route.ts` for consistency (`res.cookies.delete()`). Auth attributes (`httpOnly`, `secure`, `sameSite: "strict"`, `maxAge: 7d`, `path: "/"`) all unchanged — the bug was that those documented attributes weren't reaching the browser.
+
+2. **Logo and "Hem" did nothing when already on `/`.** Root cause: Next.js `<Link href="/">` skips navigation when the current pathname matches the target href, so clicking the logo or "Hem" while scrolled down on the home page was a silent no-op. **Fix:** added a `handleNavClick(event, targetHref)` helper to `src/components/SiteHeader.tsx` that, when `targetHref === "/" && pathname === "/"`, calls `event.preventDefault()` and `window.scrollTo({ top: 0, behavior })` with `behavior` gated on `prefers-reduced-motion`. Applied to the logo `<Link>` and to the desktop + mobile nav renders. Hash anchors like `/#behandlingar` and cross-route navigation are unaffected.
+
+**Net status after the partial run:**
+
+- The pipeline shape, safety boundaries, and the core `queued → in_progress → review → improve_requested → review` loop are validated end-to-end on production.
+- The two surfaced bugs are runtime issues, not state-machine bugs — they were UI/cookie-emission issues fixed in PR #17.
+- PR #16 remains OPEN at `review` awaiting the owner's terminal action (Publicera / Förbättra / Avvisa). When the owner Publicera's, the `review → publishing → done` transitions can be appended to this section.
+- The remaining unexercised steps (Avvisa, Försök igen, single-lane with a concurrent submission, listener mode) are operational paths the owner can exercise as needed; they're not closeout-blocking.
+
 ---
 
-## Status — 2026-05-27
+## Status — 2026-05-27 (updated)
 
 - ✅ Anonymous production smoke: passing.
 - ✅ Clean-room docs comprehension: passing.
-- ⏳ Live-run end-to-end smoke: ready to execute, waiting on Vercel env vars.
+- 🟡 Live-run end-to-end smoke: **partial**. Submit + Förbättra validated; Publicera / Avvisa / Försök igen / single-lane-with-second-queue / listener mode pending. Two bugs surfaced + fixed (PR #17). See § Results > Live-run end-to-end smoke above.
 
-The pipeline shape and safety boundaries are validated. The remaining unknown is the GitHub/Vercel integration in production — that's the live-run test, and it's a human-driven walkthrough rather than an automated one.
-
-When the live-run test is run, append the results here under a `### Live-run end-to-end smoke — <result>` heading dated for the run.
+The pipeline shape, safety boundaries, and the core state-machine loop are validated. The remaining unexercised paths can be filled in over time as the owner runs them — append new `### Live-run end-to-end smoke — <date>` headings to the Results section above.
