@@ -14,7 +14,8 @@
 import {
   getMainFile,
   githubClient,
-  putMainFile,
+  putRequestFile,
+  requestPath,
   type GithubConfig,
 } from "@/lib/github";
 import type {
@@ -45,8 +46,19 @@ export async function updateRequest(
   precondition: (current: Request) => Request | null,
   commitMessage: string
 ): Promise<UpdateOutcome> {
+  // Validate the id once up front. requestPath() throws on malformed ids;
+  // we collapse that into "not_found" so callers don't need a separate
+  // outcome variant. Same id flows to putRequestFile below, so the
+  // validation only needs to happen here.
+  let path: string;
+  try {
+    path = requestPath(id);
+  } catch {
+    return { ok: false, reason: "not_found" };
+  }
+
   for (let attempt = 0; attempt < BACKOFFS_MS.length + 1; attempt++) {
-    const file = await getMainFile<Request>(gh, `requests/${id}.json`);
+    const file = await getMainFile<Request>(gh, path);
     if (!file) return { ok: false, reason: "not_found" };
 
     const next = precondition(file.data);
@@ -59,7 +71,7 @@ export async function updateRequest(
     }
 
     try {
-      await putMainFile(gh, `requests/${id}.json`, commitMessage, next, file.sha);
+      await putRequestFile(gh, id, commitMessage, next, file.sha);
       return { ok: true, record: next };
     } catch (err: unknown) {
       const status =
