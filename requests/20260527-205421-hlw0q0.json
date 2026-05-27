@@ -4,10 +4,10 @@
   "description": "Kan du lägga in dessa i bild karusellen också",
   "page": "berattelser",
   "createdBy": "anonymous",
-  "status": "queued",
+  "status": "in_progress",
   "createdAt": "2026-05-27T20:54:21.831Z",
-  "updatedAt": "2026-05-27T20:54:21.831Z",
-  "claimedAt": null,
+  "updatedAt": "2026-05-27T21:01:36.000Z",
+  "claimedAt": "2026-05-27T21:01:36.000Z",
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
@@ -46,6 +46,12 @@
       "actor": "user",
       "event": "created",
       "message": "Submitted anonymously with 2 attachment(s)"
+    },
+    {
+      "at": "2026-05-27T21:01:36.000Z",
+      "actor": "loop",
+      "event": "loop_picked_up",
+      "message": "Classified safe (source-asset attachment, owner-authorized destination public/assets/generated/). Will copy 2 PNGs and append entries to src/content/berattelser.ts ceremonyImages."
     }
   ]
 }
