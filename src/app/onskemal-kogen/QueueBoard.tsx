@@ -1,19 +1,14 @@
 "use client";
 
 /**
- * Queue board client component. Fetches /api/list (lands in PR D), groups
- * the response into the four sections defined in spec/pipeline-mvp.md
- * § Swedish UI vocabulary, and renders cards with the four review
- * actions:
+ * Queue board client component. Fetches /api/list, groups the response
+ * into the four sections defined in spec/pipeline-mvp.md § Swedish UI
+ * vocabulary, and renders cards with the four review actions:
  *
  *   - Publicera (POST /api/approve/:id)
  *   - Förbättra (POST /api/iterate/:id, body { message })
  *   - Avvisa    (POST /api/reject/:id,  body { reason })
  *   - Försök igen (POST /api/admin/retry/:id)
- *
- * Until PR D ships the lifecycle APIs, /api/list returns 404 — the board
- * detects that case and renders the empty steady state. Once the APIs
- * ship, the same code path handles the real responses.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -205,15 +200,6 @@ export function QueueBoard() {
         setState("unauthorized");
         return;
       }
-      // Pre-PR-D: /api/list endpoint not shipped yet. Render empty
-      // steady state instead of an alarming error banner. Once PR D
-      // lands this branch becomes dead code and can be removed.
-      if (res.status === 404) {
-        setItems([]);
-        setState("ready");
-        setLastUpdated(new Date());
-        return;
-      }
       const data = (await res.json()) as ListResponse;
       if (!res.ok || "error" in data) {
         setError("error" in data ? data.error : `http_${res.status}`);
@@ -251,10 +237,13 @@ export function QueueBoard() {
     return () => window.clearInterval(t);
   }, []);
 
-  // Auto-clear action errors after ~8s.
+  // Auto-clear action errors after 30s. Long enough that a failed
+  // Publicera / Förbättra / Avvisa message stays readable while the
+  // owner is still looking at the board; short enough that a stale
+  // banner doesn't linger forever after the issue is fixed.
   useEffect(() => {
     if (!actionError) return;
-    const t = window.setTimeout(() => setActionError(null), 8000);
+    const t = window.setTimeout(() => setActionError(null), 30_000);
     return () => window.clearTimeout(t);
   }, [actionError]);
 

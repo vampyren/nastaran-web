@@ -37,6 +37,10 @@ When the change is done:
 
 If a hook fails during commit, **fix the underlying issue and create a new commit** — never `--no-verify` and never `--amend` a failed commit.
 
+## Include the Vercel preview URL when opening a PR
+
+When you open a PR, include the Vercel preview URL in the chat handoff (and the PR body if you have it at create-time) as soon as it's available. Vercel comments the preview link onto the PR within ~30 s of the push — quote it back so the owner doesn't have to dig for it.
+
 ## Tech stack quick-ref
 
 - Next.js 16 (App Router, Turbopack)

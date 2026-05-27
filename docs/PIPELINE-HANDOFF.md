@@ -357,6 +357,21 @@ See [`../spec/pipeline-operator-modes.md`](../spec/pipeline-operator-modes.md) �
 
 `/api/feedback` couldn't initialize the GitHub client. Cause: `GITHUB_TOKEN` or `GITHUB_REPO` missing/mistyped, or the deployment wasn't redeployed after the env var was added. See § 2.3.
 
+### `/api/feedback` or request creation returns 404 from GitHub
+
+Symptom: the form submission fails with "Vi kunde inte spara önskemålet" (or a queue action returns `http_404` / `not_found`), and Vercel logs show GitHub responding `404 Not Found` on a `PUT /repos/.../contents/requests/...` call. Response headers often include `x-accepted-github-permissions: contents=write`.
+
+**Most likely cause:** the fine-grained PAT in `GITHUB_TOKEN` is missing **`Contents: Read and write`**. GitHub returns 404 (not 403) when a token lacks the permission needed to access a path — even when the repo name and ID are correct — so the error message is misleading.
+
+**Required PAT permissions** (least privilege, must be set together):
+
+- `Contents: Read and write`
+- `Pull requests: Read and write`
+
+Edit them at `https://github.com/settings/personal-access-tokens/<token-id>` → **Repository permissions**. Full token setup is in § 2.2.
+
+**You do NOT need to update the Vercel env var or redeploy** if the token *value* didn't change — editing the PAT's permission set takes effect immediately on the next call. Only if the token string itself was rotated (you generated a new `github_pat_...`) do you also need to update `GITHUB_TOKEN` in Vercel and redeploy the Production `main` deployment per § 2.3.
+
 ### The admin board returns 401 for `/api/list`
 
 `ADMIN_SESSION_SECRET` is missing, or the cookie expired (7-day TTL). Log in again at `/admin/login` and check the env var.
