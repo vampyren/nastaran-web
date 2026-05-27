@@ -36,10 +36,17 @@ export async function POST(
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
 
+  // Reason is optional. Accept empty body cleanly:
+  //   empty body            -> body = {}
+  //   valid JSON body       -> parse it
+  //   invalid non-empty body -> 400 invalid_json
+  // We read the raw text first so a missing/zero Content-Length header
+  // doesn't matter — the absence of payload is what we care about.
   let body: { reason?: unknown } = {};
   try {
-    if (req.headers.get("content-length") !== "0") {
-      body = (await req.json()) as { reason?: unknown };
+    const raw = await req.text();
+    if (raw.trim().length > 0) {
+      body = JSON.parse(raw) as { reason?: unknown };
     }
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });

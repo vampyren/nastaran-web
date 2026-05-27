@@ -17,7 +17,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import crypto from "node:crypto";
-import { requireAdmin } from "@/lib/auth";
+import { assertSameOrigin, requireAdmin } from "@/lib/auth";
 import {
   getMainFile,
   githubClient,
@@ -107,11 +107,19 @@ function isString(v: unknown): v is string {
 // ---------------- Route ----------------
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  // 0. Admin gate (pre-launch). MUST run before any body read, validation,
-  // rate-limit accounting, or Octokit call — anonymous direct submission
-  // must be rejected with no side effects.
+  // 0a. Admin gate (pre-launch). MUST run before any body read,
+  // validation, rate-limit accounting, or Octokit call — anonymous
+  // direct submission must be rejected with no side effects.
   const authFail = await requireAdmin();
   if (authFail) return authFail;
+
+  // 0b. Same-origin defense-in-depth. /api/feedback is a mutative
+  // admin-gated POST; refuse authenticated cross-origin POSTs the same
+  // way every other mutative admin route does. Must precede body read,
+  // rate-limit accounting, GitHub config init, and any Octokit call.
+  if (!assertSameOrigin(req)) {
+    return NextResponse.json({ error: "bad_origin" }, { status: 403 });
+  }
 
   // 1. Body size guard.
   let raw: string;
