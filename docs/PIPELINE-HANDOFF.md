@@ -99,6 +99,13 @@ The site owner submits change requests through the in-product form. The requests
 
 **One active request at a time** (single-lane). Parallel work is intentionally out of scope.
 
+**Image attachments.** Requests may include 1–3 image attachments (PNG/JPG/WebP, ≤ 5 MB each). Two valid uses:
+
+1. **Reference / clarification** — screenshots showing a layout bug, examples, or exactly where a change is needed.
+2. **Source assets for the website** — an image the owner wants used as (or substituted for) an actual web asset on a page.
+
+The operator inspects attachments before classifying. If the request clearly asks to use/replace/add an uploaded image AND the destination is within the safe edit surface, the operator may copy it from `requests/<id>/attachments/...` into the appropriate project asset/content location on the per-request branch. Attachments do NOT expand the safe edit surface — see `spec/pipeline-mvp.md` § Attachments.
+
 ---
 
 ## 2. Prerequisites (outside the repo — done manually)

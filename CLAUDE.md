@@ -153,6 +153,12 @@ Short version of the rules that apply across the codebase:
 7. **Single-lane.** At most one active request across `in_progress | review | improve_requested | publishing`. `improve_requested` reuses **same request, same branch, same PR** — never duplicates a PR.
 8. **Safe edit surface:** `src/content/{berattelser,home,kontakt,om-mig,site}.ts`. Anything else = `failed + manualFix`. The operator never edits `src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, `.github/`, `public/`, `docs/`, `spec/`, or any other `requests/*.json` than the one being processed.
 9. **No real request processing inside infrastructure PRs unless explicitly approved.** PRs B–E ship the runtime; do not exercise the pipeline end-to-end with real owner requests during setup.
+10. **Image attachments** (1–3 per request, PNG/JPG/WebP, ≤ 5 MB each) live at `requests/<id>/attachments/<server-generated-name>` and are referenced from `requests/<id>.json`. Operator rules:
+    - Inspect every attachment before classifying.
+    - Distinguish reference images (screenshots showing where/what) from source-asset images (the owner wants this used/replaced/added on a page) by reading the request wording.
+    - An uploaded image may be copied into the project's asset/content path on the request branch ONLY when the request clearly says to use/replace/add the image AND the destination is within the safe edit surface.
+    - **Attachments do NOT expand the safe edit surface.** If the destination is outside `src/content/*.ts`, or placement is ambiguous, or the change needs cropping/retouching/heavy optimization, or it requires design judgment — stop and ask, or `failed + manualFix`.
+    - Full data model + storage layout in `spec/pipeline-mvp.md` § Attachments.
 
 ## Temporary footer "Admin" link (pre-launch only)
 

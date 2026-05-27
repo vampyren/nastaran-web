@@ -1,7 +1,30 @@
 /**
  * Request-record type. Lives on `main` at `requests/<id>.json`.
  * See spec/pipeline-mvp.md § Request data model.
+ *
+ * Optional image attachments are stored as separate repo files under
+ * `requests/<id>/attachments/<safe-filename>` and referenced via the
+ * `attachments` field below. See spec/pipeline-mvp.md § Attachments.
  */
+
+/** Allowed mime types for image attachments. */
+export type AttachmentMime = "image/png" | "image/jpeg" | "image/webp";
+
+/**
+ * Metadata about a single uploaded attachment. The binary lives in the
+ * repo at `storedPath`; this record holds only the metadata embedded in
+ * the request JSON. Original filename is sanitized for display but never
+ * used as a file-system path component.
+ */
+export type Attachment = {
+  originalFilename: string;
+  storedFilename: string;
+  storedPath: string;
+  mimeType: AttachmentMime;
+  sizeBytes: number;
+  sha: string;
+  uploadedAt: string;
+};
 
 export type RequestStatus =
   | "queued"
@@ -70,6 +93,11 @@ export type Request = {
   // Failure context
   failureReason?: string;
   manualFix?: boolean;
+
+  // Optional image attachments (1–3 per request when present).
+  // Stored under `requests/<id>/attachments/...`; this array holds only
+  // the metadata. Absent on text-only requests for backward compat.
+  attachments?: ReadonlyArray<Attachment>;
 
   history: ReadonlyArray<RequestHistoryEntry>;
 };
