@@ -101,10 +101,10 @@ The site owner submits change requests through the in-product form. The requests
 
 **Image attachments.** Requests may include 1–3 image attachments (PNG/JPG/WebP, ≤ 5 MB each). Two valid uses:
 
-1. **Reference / clarification** — screenshots showing a layout bug, examples, or exactly where a change is needed.
-2. **Source assets for the website** — an image the owner wants used as (or substituted for) an actual web asset on a page.
+1. **Reference / clarification** — screenshots showing a layout bug, examples, or exactly where a change is needed. Operator inspects but never copies.
+2. **Source assets for the website** — an image the owner wants used as (or substituted for) an actual web asset on a page. When the request clearly says **use / add / replace** (e.g. "lägg in dessa i bild karusellen", "byt bilden mot denna", "add this image to <page>"), the operator IS allowed to copy the file from `requests/<id>/attachments/...` into the correct project asset folder (preferably `public/assets/generated/<safe-generated-filename>`) AND reference it from the appropriate safe content/data file (`src/content/*.ts`). This is NOT an unsafe request just because the binary lands outside `src/content/` — it is the intended source-asset path.
 
-The operator inspects attachments before classifying. If the request clearly asks to use/replace/add an uploaded image AND the destination is within the safe edit surface, the operator may copy it from `requests/<id>/attachments/...` into the appropriate project asset/content location on the per-request branch. Attachments do NOT expand the safe edit surface — see `spec/pipeline-mvp.md` § Attachments.
+Guardrails: target page/section/image must be unambiguous; destination must be a known asset folder; filename must be operator-generated; no cropping/retouching/design judgment; no edits to unsafe components. **The asset-copy allowance covers exactly the binary copy + the path reference in `src/content/*.ts` — nothing more.** Attachments do NOT expand the whole safe edit surface. Full rules in `spec/pipeline-mvp.md` § Attachments § Operator handling of attachments.
 
 ---
 

@@ -356,12 +356,42 @@ The request JSON is the source of truth for which blob each URL serves. The rout
 
 ### Operator handling of attachments
 
-See [`pipeline-operator-modes.md`](./pipeline-operator-modes.md) § Attachments for the operator-side rule. Short version:
+See [`pipeline-operator-modes.md`](./pipeline-operator-modes.md) § Attachments for the operator-side rule. Authoritative summary:
 
-- The operator **inspects** every attachment before classifying a request.
-- If the wording clearly says "use this image" / "replace the image with this" / "add this image to the page", the operator MAY copy the file from `requests/<id>/attachments/...` into the appropriate project asset/content location on the per-request branch — but ONLY when the target placement is unambiguous AND the destination is within the safe edit surface.
-- Reference-only attachments (screenshots showing where to change, examples) are inspected, not copied.
-- If placement is ambiguous, design judgment is required, or the destination is outside the safe edit surface → `failed + manualFix`. **Attachments do not expand the safe edit surface.**
+**Two intake shapes — operator picks one from the request wording.**
+
+#### Reference / clarification
+
+Screenshots showing a layout bug, examples, "here's exactly where I want the change". The operator **inspects** the attachment to understand the request, but does NOT copy it anywhere. The request is then judged on the text alone against the normal four-tier rule.
+
+Typical wording: "see screenshot", "look at this", "as shown in the image", "this is where the issue is".
+
+#### Source asset for the website
+
+The owner attached an image they want **used on a page** (added, replaced, or substituted as an actual web asset). The operator IS allowed to copy the uploaded file from `requests/<id>/attachments/...` into the correct project asset folder AND reference it from the appropriate safe content/data file. **This is NOT an unsafe request just because the binary lands outside `src/content/`** — it is the intended source-asset path.
+
+Typical wording: "lägg in dessa", "byt bilden mot denna", "använd denna bild", "lägg till denna på <section>", "replace the X with this", "add this image to <page>".
+
+**Allowed asset-copy operations:**
+
+1. Copy the binary from `requests/<id>/attachments/<storedFilename>` into a **known project asset folder**. Preferred: `public/assets/generated/<safe-generated-filename>`. The destination filename is operator-generated (lowercase, ASCII, hyphenated, descriptive — e.g. `<page>-<topic>.<ext>`); never the raw user filename.
+2. Add or update a reference to the new local path in a safe content/data file (`src/content/*.ts`).
+
+That's it — the asset-copy allowance covers exactly those two things.
+
+**Guardrails (all must hold):**
+
+- ✅ Owner's wording clearly says **use / add / replace** / put-this-image-on-page. Don't read into "look at this" — that's reference, not source.
+- ✅ Target page/section/current image is **unambiguous** from the request text. If unclear → stop and ask, or `failed + manualFix`. Never guess placement.
+- ✅ Destination is a known project asset folder, preferably `public/assets/generated/`. Anywhere outside the established asset layout → stop and ask.
+- ✅ Destination filename is a **safe generated** name. Original user filename is for the JSON manifest's `originalFilename` field only.
+- ❌ No cropping, retouching, color-grading, heavy optimization, or design-sensitive image choices unless the owner explicitly asked AND the operation stays inside the safe edit surface.
+- ❌ No edits to unsafe components or rendering code. Asset copy + safe content/data reference only.
+- ❌ Need a new component, layout change, new section, design judgment? Outside the source-asset path → stop and ask, or `failed + manualFix`.
+
+**Attachments still do not expand the whole safe edit surface.** The asset-copy allowance is narrow: binary into the known asset folder, plus a path reference in `src/content/*.ts`. Everything else still falls under the normal four-tier rule.
+
+**Cross-project portability.** When this attachment feature is ported to Shadi (`shadi-web`), the same source-asset rule carries forward verbatim — same destination convention (`public/assets/generated/`), same guardrails. Note it in the Shadi spec when porting; the cross-project pattern lives in [`../docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](../docs/REUSABLE-REQUEST-QUEUE-PATTERN.md).
 
 ---
 
