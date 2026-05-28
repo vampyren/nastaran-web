@@ -1,0 +1,31 @@
+{
+  "id": "20260528-175314-tqtgw0",
+  "title": "Ta bort healing på nr 1 och lägg till ayurveda istället.",
+  "description": "Ta bort healing på nr 1 och lägg till ayurveda istället.",
+  "page": "index",
+  "createdBy": "anonymous",
+  "status": "queued",
+  "createdAt": "2026-05-28T17:53:14.761Z",
+  "updatedAt": "2026-05-28T17:53:14.761Z",
+  "claimedAt": null,
+  "reviewReadyAt": null,
+  "approvedAt": null,
+  "publishedAt": null,
+  "rejectedAt": null,
+  "failedAt": null,
+  "branch": null,
+  "pullRequestUrl": null,
+  "pullRequestNumber": null,
+  "previewUrl": null,
+  "latestCommitSha": null,
+  "productionCommitSha": null,
+  "productionDeploymentUrl": null,
+  "history": [
+    {
+      "at": "2026-05-28T17:53:14.761Z",
+      "actor": "user",
+      "event": "created",
+      "message": "Submitted anonymously"
+    }
+  ]
+}
