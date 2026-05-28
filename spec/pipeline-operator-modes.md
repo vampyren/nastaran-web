@@ -38,6 +38,8 @@ Owner says **"start the listener"** (or equivalent). Claude Code then self-sched
 
 Each wake runs the loop body above; the listener stops the moment any hard-stop condition fires, or when the session itself closes.
 
+**Output discipline — poll quietly.** The ~60 s poll runs silently. On an idle tick (empty queue, nothing meaningful changed) the listener emits **no chat output** — it just re-checks and re-arms. It speaks immediately only when something actionable happens: a `queued`/`improve_requested` request appears, real work is done, a hard stop fires, or lane/queue state meaningfully changes. While idle it emits a short "listener alive" heartbeat **at most about every ~10 minutes**, never every cycle. (The `loop: queue empty` token from the parked Mode B output contract is not surfaced per-tick in interactive Mode A.)
+
 **Closing the session ends the listener — no persistence.** Next session starts cold; the owner explicitly opts in again with "start the listener" if they want the polling shape rather than on-demand.
 
 ### Authentication
@@ -88,7 +90,7 @@ After every cycle that did real work, the operator reports:
 - **Single-lane confirmation:** which request is currently the lane occupant, or "lane clear".
 - **Anything unexpected:** ambiguities surfaced, gates that failed and how, retries, deviations from the default flow.
 
-The operator also overwrites `/home/spawn/temp/output_nastaran.md` with the latest report (see [`../CLAUDE.md`](../CLAUDE.md) § rolling status file).
+**The operator does NOT write `/home/spawn/temp/output_nastaran.md` during Önskemål request-queue processing.** For queue/operator work the source of truth is the request metadata (`requests/<id>.json`), the `req/<id>-<slug>` branch/PR, and GitHub/Vercel state — the per-cycle report goes to the owner in chat, not to the handoff file. `output_nastaran.md` is reserved for **direct owner ↔ Claude Code collaboration outside the queue** (setup, PR review, debugging, docs, refactors, closeout/handoff summaries, or an explicit owner request for a status summary). See [`../CLAUDE.md`](../CLAUDE.md) § Rolling output file.
 
 ### Negations — what the foreground listener is NOT
 
@@ -178,19 +180,28 @@ When I say "check the queue", you:
    → edit → gates → push → PR → flip to review).
 6. If improve_requested, REUSE same branch + same PR for the next
    commit.
-7. Report with the standard reporting block (repo / branch / commit
-   / changed files / PR / status / quality gates) + Safety section.
-8. Overwrite /home/spawn/temp/output_nastaran.md with the report.
+7. Report the standard reporting block (repo / branch / commit /
+   changed files / PR / status / quality gates) + Safety section to
+   me IN CHAT.
+8. Do NOT write /home/spawn/temp/output_nastaran.md for queue cycles
+   — the request metadata + branch/PR + GitHub/Vercel are the record.
+   That file is only for direct owner <-> Claude Code work outside
+   the queue (setup, PR review, debugging, docs, closeout, or an
+   explicit handoff request).
 
 When I say "start the listener", you do the same loop above on a
 self-paced ~60-second cadence via ScheduleWakeup, while this session
-stays open. Empty queue is the steady state — emit `loop: queue empty`
-and schedule the next wake. STOP the listener (do not schedule the
-next wake) and surface to me on any hard-stop condition: ambiguity,
-unsafe scope (anything outside src/content/*.ts), dirty repo / merge
-conflict, network or GitHub or Vercel failure that doesn't recover
-with one retry, or anything that needs an owner decision. Closing the
-session ends the listener — no persistence.
+stays open. Poll QUIETLY: an empty queue is the steady state, so on
+an idle tick emit no chat — just re-check and re-arm. Speak only when
+a queued/improve_requested request appears, real work happens, a hard
+stop fires, or lane/queue state meaningfully changes; while idle, a
+short "listener alive" heartbeat at most about every ~10 minutes, not
+every cycle. STOP the listener (do not schedule the next wake) and
+surface to me on any hard-stop condition: ambiguity, unsafe scope
+(anything outside src/content/*.ts), dirty repo / merge conflict,
+network or GitHub or Vercel failure that doesn't recover with one
+retry, or anything that needs an owner decision. Closing the session
+ends the listener — no persistence.
 
 Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or
 auto-merge of source PRs — those are Mode B (parked) and not the

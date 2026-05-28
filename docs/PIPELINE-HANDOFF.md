@@ -329,18 +329,27 @@ When I say "check the queue", you:
    number + preview url + latestCommitSha.
 6. If improve_requested, REUSE the same branch + same PR — never open a
    duplicate. The CAS goes improve_requested → in_progress → review.
-7. Report with the standard reporting block (repo / branch / commit /
-   changed files / PR / status / quality gates) + Safety section.
-8. Overwrite /home/spawn/temp/output_nastaran.md with the report.
+7. Report the standard reporting block (repo / branch / commit /
+   changed files / PR / status / quality gates) + Safety section to
+   me IN CHAT.
+8. Do NOT write /home/spawn/temp/output_nastaran.md for queue cycles
+   — the request metadata + branch/PR + GitHub/Vercel are the record.
+   That file is only for direct owner <-> Claude Code work outside
+   the queue (setup, PR review, debugging, docs, closeout, or an
+   explicit handoff request).
 
 When I say "start the listener", you do the same loop above on a
 self-paced ~60-second cadence via ScheduleWakeup, while this session
-stays open. Empty queue is the steady state — emit `loop: queue empty`
-and schedule the next wake. STOP the listener (do not schedule the
-next wake) and surface to me on any hard-stop condition: ambiguity,
-unsafe scope (anything outside src/content/*.ts), dirty repo / merge
-conflict, failing quality gate, network or GitHub or Vercel failure
-that doesn't recover with one retry, or anything that needs an owner
+stays open. Poll QUIETLY: an empty queue is the steady state, so on
+an idle tick emit no chat — just re-check and re-arm. Speak only when
+a queued/improve_requested request appears, real work happens, a hard
+stop fires, or lane/queue state meaningfully changes; while idle, a
+short "listener alive" heartbeat at most about every ~10 minutes, not
+every cycle. STOP the listener (do not schedule the next wake) and
+surface to me on any hard-stop condition: ambiguity, unsafe scope
+(anything outside src/content/*.ts), dirty repo / merge conflict,
+failing quality gate, network or GitHub or Vercel failure that
+doesn't recover with one retry, or anything that needs an owner
 decision. Closing the session ends the listener — no persistence.
 
 Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or auto-merge

@@ -235,6 +235,8 @@ Adapts the validated `shadi-web` MS3 pattern. Five-PR chain:
 
 **Output file rule clarified (2026-05-27):** `/home/spawn/temp/output_nastaran.md` is a temporary handoff tray for ChatGPT / Jarvis review, **not** repo documentation and **not** a permanent status artifact. It lives outside the repo, is never committed, and is overwritten completely after each meaningful Claude Code round. The CLAUDE.md "Rolling output file" section captures the rule.
 
+**Output file rule refined (2026-05-28):** the "meaningful round" trigger is scoped by the *kind* of work. **Active Önskemål request-queue processing (the Mode A operator cycle) does NOT update `output_nastaran.md`** — for queue work the source of truth is `requests/<id>.json` + the `req/<id>` branch/PR + GitHub/Vercel state, and the per-cycle report goes to the owner in chat. The file is reserved for **direct owner ↔ Claude Code collaboration outside the queue** (setup, PR review, debugging, docs, refactors, closeout, explicit status requests). The foreground listener also polls quietly: no chat on idle ticks, speak only on actionable/meaningful events, idle heartbeat at most ~every 10 minutes. Captured in CLAUDE.md § Rolling output file and `pipeline-operator-modes.md` § Reporting after each cycle / § Foreground listener.
+
 ## D. Risks that could leak legacy CSS debt into the rebuild
 
 | Risk | Mitigation |
