@@ -28,6 +28,12 @@ export const kontakt = {
     heading: "Boka ett första lugnt steg.",
     body: "Välj behandling, skriv kort vad du söker och markera upp till tre tider som kan passa. Nastaran återkommer och bekräftar vilken tid som fungerar.",
   },
+  nextSteps: {
+    headingId: "next-steps-heading",
+    prelude: "Nästa steg",
+    heading: "Vad händer sen?",
+    body: "När du har skickat din förfrågan återkommer Nastaran personligen till dig. Tiden bokas inte automatiskt — den bekräftas manuellt så att den passar er båda. Du behöver inte dela några känsliga detaljer i den första kontakten; berätta bara så mycket som känns tryggt för dig.",
+  },
   flow: {
     headingId: "flow-heading",
     prelude: "Så kan du skriva",
