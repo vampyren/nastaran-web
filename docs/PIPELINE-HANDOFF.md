@@ -315,7 +315,8 @@ Standing rules:
   outside the normal Avvisa/Publicera flow, env-var changes, anything
   touching the archived old project at /home/spawn/Apps/nastaran-web).
 
-When I say "check the queue", you:
+When I say "check the queue" (or "check the queue now" / "pick it
+up" / "process the queue" / similar), you check immediately:
 1. git fetch + git pull origin main.
 2. Read requests/*.json (skip README.md).
 3. Single-lane check; if anything is in_progress / review / improve_requested /
@@ -339,9 +340,12 @@ When I say "check the queue", you:
    explicit handoff request).
 
 When I say "start the listener", you do the same loop above on a
-self-paced ~60-second cadence via ScheduleWakeup, while this session
-stays open. Poll QUIETLY: an empty queue is the steady state, so on
-an idle tick emit no chat — just re-check and re-arm. Speak only when
+self-paced ~10-minute cadence via ScheduleWakeup, while this session
+stays open. (Pickup needn't be near-instant; ~10 min keeps idle token
+spend low — and I can force an immediate check anytime with "check
+the queue now" / "pick it up".) Poll QUIETLY: an empty queue is the
+steady state, so on an idle poll emit no chat — just re-check and
+re-arm. Speak only when
 a queued/improve_requested request appears, real work happens, a hard
 stop fires, or lane/queue state meaningfully changes; while idle, a
 short "listener alive" heartbeat at most about every ~10 minutes, not
