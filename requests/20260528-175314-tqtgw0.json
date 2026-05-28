@@ -4,13 +4,13 @@
   "description": "Ta bort healing på nr 1 och lägg till ayurveda istället.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "publishing",
+  "status": "done",
   "createdAt": "2026-05-28T17:53:14.761Z",
-  "updatedAt": "2026-05-28T18:14:18.965Z",
+  "updatedAt": "2026-05-28T18:14:23.057Z",
   "claimedAt": "2026-05-28T18:01:57.077Z",
   "reviewReadyAt": "2026-05-28T18:04:01.852Z",
   "approvedAt": "2026-05-28T18:14:18.965Z",
-  "publishedAt": null,
+  "publishedAt": "2026-05-28T18:14:23.057Z",
   "rejectedAt": null,
   "failedAt": null,
   "branch": "req/20260528-175314-tqtgw0-ta-bort-healing-pa-nr-1-och-lagg-till",
@@ -18,7 +18,7 @@
   "pullRequestNumber": 31,
   "previewUrl": "https://nastaran-web-git-req-20260528-175314-tqtgw0-t-bba388-aryan-tech.vercel.app",
   "latestCommitSha": "72727dafd3241fc3897c37968b5c62babd710868",
-  "productionCommitSha": null,
+  "productionCommitSha": "0f7a2a048bc63eee1035330ab75e557d1ef13f18",
   "productionDeploymentUrl": null,
   "history": [
     {
@@ -43,6 +43,11 @@
       "at": "2026-05-28T18:14:18.965Z",
       "actor": "admin",
       "event": "approval_started"
+    },
+    {
+      "at": "2026-05-28T18:14:23.057Z",
+      "actor": "admin",
+      "event": "merged"
     }
   ]
 }
