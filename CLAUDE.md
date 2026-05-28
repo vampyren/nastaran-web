@@ -183,6 +183,7 @@ The user keeps a working output file at `/home/spawn/temp/output_nastaran.md`. *
 
 - It lives **outside the repo**. Never commit it. Never reference it from repo docs except this one paragraph.
 - **Overwrite completely** after each meaningful Claude Code round. **Do not append. Do not preserve history.**
+- **Scope — direct collaboration only, NOT Önskemål queue processing.** Active Mode A request-queue processing (the operator cycle: claim → `req/<id>` branch → edit → PR → status flips) does **not** count as a "meaningful round" for this file — do **not** write `output_nastaran.md` for queue cycles. For queue/operator work the source of truth is `requests/<id>.json` + the `req/<id>` branch/PR + GitHub/Vercel state, and the per-cycle report goes to the owner in chat. Direct owner ↔ Claude Code work outside the queue (setup, PR review, debugging, docs, refactors, closeout/handoff summaries, an explicit status request) **does** count — update the file as usual. See [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) § Reporting after each cycle.
 - **Do not create a second output file** unless the user explicitly asks.
 
 **What to include each turn:**
