@@ -56,7 +56,6 @@ When the owner signals they're wrapping up — e.g. **"stop the listener and sav
 The handoff must be self-contained for a cold reader / next session and include:
 
 - Active repo path: `/home/spawn/Apps/projects/nastaran-web`.
-- A warning to **not** use the archived `/home/spawn/Apps/nastaran-web`.
 - Current branch.
 - Current HEAD (short SHA + subject).
 - Working tree clean/dirty state.
@@ -75,8 +74,8 @@ The handoff must be self-contained for a cold reader / next session and include:
 **Suggested restart prompt** (adapt the specifics to the handoff):
 
 ```
-Resume as the nastaran-web Mode A operator. Work ONLY in
-/home/spawn/Apps/projects/nastaran-web (NOT /home/spawn/Apps/nastaran-web).
+Resume as the nastaran-web Mode A operator. Work in
+/home/spawn/Apps/projects/nastaran-web.
 Read /home/spawn/temp/output_nastaran.md for the last handoff, then confirm
 branch / HEAD / clean tree / open PRs / queue state. If a request is mid-flight,
 resume it per spec/pipeline-operator-modes.md § Recovery. Otherwise "start the
@@ -126,7 +125,7 @@ Empty queue is **not** a stop condition — emit `loop: queue empty` and schedul
 After every cycle that did real work, the operator reports:
 
 - **Standard block:** repo / branch (`req/*`) / commit / changed files / PR URL / status on `main` / quality gates (lint, typecheck, build all green).
-- **Safety section:** old project path not touched (✓/✗), no source change on `main` (only on the `req/*` branch + preview URL).
+- **Safety section:** no source change on `main` (only on the `req/*` branch + preview URL).
 - **Cadence:** whether `ScheduleWakeup` is armed and for how long, or "paused".
 - **Single-lane confirmation:** which request is currently the lane occupant, or "lane clear".
 - **Anything unexpected:** ambiguities surfaced, gates that failed and how, retries, deviations from the default flow.
@@ -207,8 +206,7 @@ Standing rules:
 - No `claude -p` child processes. No cron. No --permission-mode bypass.
 - No ANTHROPIC_API_KEY. Claude CLI subscription auth only.
 - Ask before destructive actions (force-push, hard reset, branch delete
-  outside the normal Avvisa/Publicera flow, env-var changes, anything
-  touching the archived old project at /home/spawn/Apps/nastaran-web).
+  outside the normal Avvisa/Publicera flow, env-var changes).
 
 When I say "check the queue" (or "check the queue now" / "pick it
 up" / "process the queue" / similar), you check immediately:
@@ -253,7 +251,7 @@ and save project info" / "pause operator and write restart handoff" /
 "I need to exit Claude, save restart state" / similar), you: stop the
 listener, do NOT schedule another wakeup, do NOT process any request,
 and write /home/spawn/temp/output_nastaran.md as a closeout handoff —
-active repo path + a warning not to use /home/spawn/Apps/nastaran-web,
+the active repo path,
 branch, HEAD, clean/dirty tree, open PRs, queue state, any active
 request + status, whether a req/<id> branch/PR is mid-flight, CI/Vercel
 if quick, confirmation the listener is stopped, and the exact restart

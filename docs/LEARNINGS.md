@@ -1,6 +1,6 @@
 # Learnings + MS2 theme system (shipped)
 
-Captures original-site theme/design learnings (extracted read-only from `/home/spawn/Apps/nastaran-web`) and the rules the MS2 theme selector followed. **MS2 shipped** — the guardrails below are kept as the contract for any future theme additions or changes. Pairs with [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) which records the current accepted look.
+Captures original-site theme/design learnings (extracted read-only from the original Nastaran site project) and the rules the MS2 theme selector followed. **MS2 shipped** — the guardrails below are kept as the contract for any future theme additions or changes. Pairs with [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) which records the current accepted look.
 
 ---
 

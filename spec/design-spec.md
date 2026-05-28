@@ -1,6 +1,6 @@
 # Design spec — Nastaran clean rebuild
 
-The design source of truth for the new project. All values were extracted directly from the old project at `/home/spawn/Apps/nastaran-web`. No values were eyeballed.
+The design source of truth for the new project. All values were extracted directly from the old project. No values were eyeballed.
 
 ## Visual identity
 

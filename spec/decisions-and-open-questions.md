@@ -18,7 +18,7 @@
 | **CI in MS2** (lint + typecheck + build on PR) | Once scaffold and first meaningful route ship |
 | **MS1 local quality gates only:** `npm run lint`, `npm run typecheck`, `npm run build` | Developer-run, not enforced by automation yet |
 | Tech stack: Next.js App Router · React 19 · TS strict · Tailwind v4 CSS-first · `next/image` · Framer Motion (restrained) | All chosen and locked |
-| Source of truth for design extraction: old local project at `/home/spawn/Apps/nastaran-web` (not the Cloudflare URL) | Direct file access, exact hex values |
+| Source of truth for design extraction: the old local project (not the Cloudflare URL) | Direct file access, exact hex values |
 | Swedish copy ported verbatim by copy-paste from old source files | Avoid manual retyping → copy drift |
 | Old `globals.css` architecture forbidden in new project | Cascade-heavy semantic class system was the original problem |
 
@@ -239,7 +239,7 @@ Adapts the validated `shadi-web` MS3 pattern. Five-PR chain:
 
 **Listener cadence changed (2026-05-28):** default idle poll moved from **~60 s to ~10 min**. The owner can still force immediate pickup by command ("check the queue now", "pick it up", "process the queue"). Reason: near-instant pickup isn't needed for this project and a 60-second poll wasted tokens. Captured in CLAUDE.md § Request/publish pipeline rules (rule 5) and `pipeline-operator-modes.md` § Foreground listener / § Manual immediate check.
 
-**Stop/restart handoff command added (2026-05-28):** owner phrases like "stop the listener and save handoff" / "stop listening and save project info" / "pause operator and write restart handoff" / "I need to exit Claude, save restart state" trigger a clean shutdown — stop the listener, no re-arm, no request processing — and write `output_nastaran.md` as a closeout handoff (active repo path + old-path warning, branch, HEAD, clean/dirty tree, open PRs, queue state, any active request + status, whether a `req/<id>` branch/PR is mid-flight, CI/Vercel if quick, listener-stopped confirmation, exact restart prompt). Mid-flight requests get an explicit safe-next-step and are never reported as idle. Captured in CLAUDE.md § Rolling output file and `pipeline-operator-modes.md` § Stop / restart handoff.
+**Stop/restart handoff command added (2026-05-28):** owner phrases like "stop the listener and save handoff" / "stop listening and save project info" / "pause operator and write restart handoff" / "I need to exit Claude, save restart state" trigger a clean shutdown — stop the listener, no re-arm, no request processing — and write `output_nastaran.md` as a closeout handoff (active repo path, branch, HEAD, clean/dirty tree, open PRs, queue state, any active request + status, whether a `req/<id>` branch/PR is mid-flight, CI/Vercel if quick, listener-stopped confirmation, exact restart prompt). Mid-flight requests get an explicit safe-next-step and are never reported as idle. Captured in CLAUDE.md § Rolling output file and `pipeline-operator-modes.md` § Stop / restart handoff.
 
 ## D. Risks that could leak legacy CSS debt into the rebuild
 

@@ -60,10 +60,9 @@ If anything fails in steps 4–6, see § 8 ("When something fails") for the most
 These apply throughout. They're the rules that, if broken, cause the most pain.
 
 - **Never paste real secret values into chat.** Tokens, passwords, session secrets, API keys belong in the Vercel dashboard or in a local `.env.local` — never in a conversation transcript, commit, doc, log, or PR body. If you must compute a secret (e.g. `openssl rand -hex 32`), run the command in your local terminal, not via Claude Code's Bash tool. If a Claude Code session needs to know "is the secret set?", the answer is yes/no — never the value.
-- **Ask before destructive actions.** Claude Code (the operator) must ask before: `git push --force` of any kind, `rm -rf`, deleting branches that aren't `req/*`, deleting tags, dropping/altering env vars, anything that touches the archived old project at `/home/spawn/Apps/nastaran-web`. Routine `req/*` branch deletion after Avvisa/Publicera is done cleanly by the admin API — that's not destructive.
+- **Ask before destructive actions.** Claude Code (the operator) must ask before: `git push --force` of any kind, `rm -rf`, deleting branches that aren't `req/*`, deleting tags, dropping/altering env vars. Routine `req/*` branch deletion after Avvisa/Publicera is done cleanly by the admin API — that's not destructive.
 - **Source changes never go directly to `main`.** Always via `req/*` or `feat/*`/`fix/*`/`chore/*` branch + PR + squash-merge. The ONE documented exception: metadata-only commits to `requests/<id>.json` via Octokit (that's how the state machine records transitions).
 - **Single-lane.** At most ONE active request across `in_progress` / `review` / `improve_requested` / `publishing`. The operator does NOT claim a new `queued` request while one is in flight.
-- **Old project untouched.** `/home/spawn/Apps/nastaran-web` is archived reference only. Treat as read-only.
 - **Pre-launch: form is admin-only.** Both `/onskemal` (page) and `/api/feedback` (endpoint) are admin-gated. Do not lift either gate without the documented removal trigger (see [`../spec/pipeline-mvp.md`](../spec/pipeline-mvp.md) § Pre-launch admin-gating).
 
 ---
@@ -312,8 +311,7 @@ Standing rules:
 - No `claude -p` child processes. No cron. No --permission-mode bypass.
 - No ANTHROPIC_API_KEY. Claude CLI subscription auth only.
 - Ask before destructive actions (force-push, hard reset, branch delete
-  outside the normal Avvisa/Publicera flow, env-var changes, anything
-  touching the archived old project at /home/spawn/Apps/nastaran-web).
+  outside the normal Avvisa/Publicera flow, env-var changes).
 
 When I say "check the queue" (or "check the queue now" / "pick it
 up" / "process the queue" / similar), you check immediately:
@@ -361,7 +359,7 @@ and save project info" / "pause operator and write restart handoff" /
 "I need to exit Claude, save restart state" / similar), you: stop the
 listener, do NOT schedule another wakeup, do NOT process any request,
 and write /home/spawn/temp/output_nastaran.md as a closeout handoff —
-active repo path + a warning not to use /home/spawn/Apps/nastaran-web,
+the active repo path,
 branch, HEAD, clean/dirty tree, open PRs, queue state, any active
 request + status, whether a req/<id> branch/PR is mid-flight, CI/Vercel
 if quick, confirmation the listener is stopped, and the exact restart

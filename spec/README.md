@@ -13,10 +13,9 @@ A clean Tailwind-first rebuild of Nastaran's website. The old project remains th
 
 ## Paths
 
-- **Old reference project (read-only):** `/home/spawn/Apps/nastaran-web`
-- **New project root (this repo):** `/home/spawn/Apps/projects/nastaran-web`
+- **Project root (this repo):** `/home/spawn/Apps/projects/nastaran-web`
 - **Target GitHub repo:** `vampyren/nastaran-web` (private)
-- **Old preview (untouched):** Cloudflare tunnel from the old project remains the stable preview.
+- **Old preview (historical):** during the rebuild the old project ran a Cloudflare tunnel as the stable preview.
 - **New preview target:** Vercel preview deployments (configured in MS2).
 
 ## Files in this folder

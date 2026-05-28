@@ -724,5 +724,4 @@ The original `requests/<id>.json` stays at `done` for audit accuracy. Append a h
 - **Operator only edits `src/content/*.ts` on request branches.** Anything else → unsafe → `failed`.
 - **No automatic merges from API routes.** Only the explicit `Publicera` action merges.
 - **No state-machine bypass.** If a request is `done` or `rejected`, admin actions return 409.
-- **Old project paths untouched.** `/home/spawn/Apps/nastaran-web` is archived reference; never read or write there.
 - **No `ANTHROPIC_API_KEY`.** Mode A uses the local Claude CLI subscription session.
