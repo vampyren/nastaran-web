@@ -42,6 +42,8 @@ Each wake runs the loop body above; the listener stops the moment any hard-stop 
 
 **Output discipline — poll quietly.** The ~10-minute poll runs silently. On an idle poll (empty queue, nothing meaningful changed) the listener emits **no chat output** — it just re-checks and re-arms. It speaks immediately only when something actionable happens: a `queued`/`improve_requested` request appears, real work is done, a hard stop fires, or lane/queue state meaningfully changes. While idle it emits at most an occasional short "listener alive" heartbeat — no more often than about every ~10 minutes. (The `loop: queue empty` token from the parked Mode B output contract is not surfaced per-poll in interactive Mode A.)
 
+**Review-state decision-watch (faster quiet cadence).** Mode A has **no push signal** from the website/API — the admin API updates request metadata on `main`, but Claude Code only notices owner button actions (Publicera / Förbättra / Avvisa) on a wake/check. We do **not** add a daemon, webhook service, cron, child `claude -p`, or background worker to close that gap. Instead: while a request the operator pushed sits at `review` awaiting a decision, the listener MAY poll on a faster **quiet ~60 s** cadence until that request becomes `done`, `improve_requested`, `rejected`, or `failed`. Decision-watch ticks stay **quiet** — no chat output unless the request's state changes or a hard stop / error fires. Once the reviewed request is terminal (or the lane is otherwise clear), the listener returns to the normal quiet **~10 min** idle cadence. This faster cadence applies **only** to a review-state decision-watch; the steady-state idle poll stays ~10 min. Still Mode A, foreground-only, session-only. *Live evidence (2026-05-28): a Publicera click was first detected on a later ~10 min listener wake — correct but slower than ideal, which is exactly why the review-state decision-watch is useful. Owner-facing note lives in `docs/PIPELINE-HANDOFF.md`.*
+
 **Closing the session ends the listener — no persistence.** Next session starts cold; the owner explicitly opts in again with "start the listener" if they want the polling shape rather than on-demand.
 
 ### Stop / restart handoff (owner command)
@@ -103,9 +105,29 @@ When the operator picks up a request, it classifies into one of four buckets:
 | **Clear content-only** | "Change the word X to Y in paragraph Z on /om-mig" | Process normally: claim, edit `src/content/<page>.ts`, gate, push, open PR, flip to `review`. |
 | **Minor content ambiguity** | The request references text that doesn't exist on the target page; or "tweak the intro" without saying how | **STOP and ask the owner.** Do NOT mark `failed`. Do NOT invent text. Do NOT mutate the request file. Leave at `queued`. |
 | **Structural / out-of-scope** | Asks to add a new page, rename a route, change navigation, alter theme tokens | CAS to `failed + manualFix` with a clear `failureReason` describing what's structural. Surfaces in the `Fel` section of the board. |
-| **Unsafe** | Wants to edit `src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, scripts, workflows — anything outside `src/content/*.ts` | CAS to `failed + manualFix` with `failureReason` naming the unsafe path. Same `Fel` landing. |
+| **Unsafe** | Wants to edit `src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, scripts, workflows — anything outside `src/content/*.ts` (beyond the content-driven renderer glue allowance below) | CAS to `failed + manualFix` with `failureReason` naming the unsafe path. Same `Fel` landing. |
 
 The rule is intentionally conservative on ambiguity: an ambiguous-but-safe-in-intent request gets a clarifying question, not an auto-resolution or auto-failure.
+
+#### Content-driven renderer glue (allowed, no per-request approval)
+
+The main safe edit surface stays `src/content/*.ts`. But some content requests can't be shown by editing a content file alone — the page renderer is hardcoded and has no slot for the new content. In that case the operator MAY also make **minimal same-page renderer wiring** to display the new content, **without** stopping to ask each time. This keeps such a request in the **process-normally** path instead of forcing it to `failed + manualFix`.
+
+**Allowed (small, local, display-only):**
+
+- Add a new content field in `src/content/<page>.ts`.
+- Update **only the matching page renderer** (e.g. `src/app/<page>/page.tsx`) to display that field.
+- Small local display wiring tied directly to the requested page, reusing existing visual tokens.
+
+**Not auto-allowed (still tier 3/4 → stop and ask or `failed + manualFix`):**
+
+- Route changes; API / auth / config changes; admin-pipeline internals.
+- Broad layout redesign; global styling / design-system rewrites.
+- Unrelated shared-component refactors; changes spanning multiple unrelated pages.
+
+**Guardrails:** if the renderer change grows beyond small local display wiring (a new component, a layout change, cross-page edits) → **stop and ask**. The work stays inside the `req/<id>-<slug>` branch + PR + preview flow; `lint`/`typecheck`/`build` still run; the preview + owner approval (Publicera) are still required before production. The glue allowance covers exactly the content field + the same-page renderer wiring — it does **not** widen the surface to `src/components/`, `src/lib/`, configs, or other pages.
+
+*Live evidence (2026-05-28):* a `/kontakt` request to add a "Vad händer sen?" section needed `src/content/kontakt.ts` **plus** a minimal section in `src/app/kontakt/page.tsx` (the renderer is hardcoded per-section). Processed under this allowance; PR → preview → Publicera → production all worked. See `docs/CLEAN-ROOM-VALIDATION.md`.
 
 ### Hard-stop conditions for the listener
 
@@ -198,11 +220,15 @@ Standing rules:
 - Four-tier classification: clear content = process; ambiguous content =
   STOP and ask me; structural / out-of-scope = failed + manualFix;
   unsafe (anything outside src/content/*.ts) = failed + manualFix.
+  Exception: minimal content-driven renderer glue (a new content field
+  plus the matching src/app/<page>/page.tsx wiring only to display it)
+  is allowed in the request branch — see § Four-tier classification rule.
 - No source commits to main. Only metadata writes to requests/<id>.json
   on main via Octokit / `gh api`. All source changes on req/<id>-<slug>
   branches with a PR.
-- Safe edit surface = src/content/{berattelser,home,kontakt,om-mig,site}.ts
-  ONLY. Anything else = unsafe → failed.
+- Safe edit surface = src/content/{berattelser,home,kontakt,om-mig,site}.ts,
+  plus minimal same-page renderer glue (src/app/<page>/page.tsx) only to
+  display a new content field. Anything else = unsafe → failed.
 - No `claude -p` child processes. No cron. No --permission-mode bypass.
 - No ANTHROPIC_API_KEY. Claude CLI subscription auth only.
 - Ask before destructive actions (force-push, hard reset, branch delete
@@ -239,7 +265,12 @@ re-arm. Speak only when
 a queued/improve_requested request appears, real work happens, a hard
 stop fires, or lane/queue state meaningfully changes; while idle, a
 short "listener alive" heartbeat at most about every ~10 minutes, not
-every cycle. STOP the listener (do not schedule the next wake) and
+every cycle. While a request you pushed is at review awaiting Publicera
+/ Förbättra / Avvisa, you MAY switch to a faster quiet ~60 s
+decision-watch until that request becomes done / improve_requested /
+rejected / failed, then return to ~10 min idle; decision-watch ticks
+stay quiet unless state changes or an error fires. STOP the listener
+(do not schedule the next wake) and
 surface to me on any hard-stop condition: ambiguity, unsafe scope
 (anything outside src/content/*.ts), dirty repo / merge conflict,
 network or GitHub or Vercel failure that doesn't recover with one

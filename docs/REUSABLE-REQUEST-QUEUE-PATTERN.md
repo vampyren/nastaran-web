@@ -87,7 +87,7 @@ Optional: `NEXT_PUBLIC_PREVIEW_MODE=1` for preview-mode UI niceties (never used 
 
 ## Operator modes
 
-- **Mode A — Interactive Claude Code session as the operator.** Current. The owner's local Claude Code session reads the queue, classifies, asks if uncertain, processes one request per check. Two usage shapes: on-demand (default) or foreground listener (opt-in, **~10 min idle cadence** via `ScheduleWakeup`, this-session-only). The listener **polls quietly** — no chat output on idle ticks, speaking up only when something actionable happens. The owner can force an immediate check at any time with "check the queue now" / "pick it up" / "process the queue". No child process. No cron. Uses the local Claude CLI's subscription auth (no `ANTHROPIC_API_KEY`). (A faster ~60 s default was tried and judged wasteful — faster pickup is on-demand only.)
+- **Mode A — Interactive Claude Code session as the operator.** Current. The owner's local Claude Code session reads the queue, classifies, asks if uncertain, processes one request per check. Two usage shapes: on-demand (default) or foreground listener (opt-in, **~10 min idle cadence** via `ScheduleWakeup`, this-session-only). The listener **polls quietly** — no chat output on idle ticks, speaking up only when something actionable happens. The owner can force an immediate check at any time with "check the queue now" / "pick it up" / "process the queue". **Review-state decision-watch:** there is no push signal from the website/API, so while a request the operator pushed is at `review` awaiting an owner decision, the listener may use a faster **quiet ~60 s** cadence until that request is terminal, then drop back to ~10 min idle. No child process. No cron. No webhook/daemon/background worker. Uses the local Claude CLI's subscription auth (no `ANTHROPIC_API_KEY`). (A faster ~60 s default for *idle* polling was tried and judged wasteful — fast idle pickup is on-demand only; the ~60 s cadence is reserved for the review-state decision-watch.)
 - **Mode B — Cron-driven `claude -p` wrapper.** Parked. Needs wrapper-level output validation + permission/auth handoff resolution before it's safe for unattended use. Not implemented in `nastaran-web`.
 
 ---
@@ -101,8 +101,9 @@ Optional: `NEXT_PUBLIC_PREVIEW_MODE=1` for preview-mode UI niceties (never used 
 - Branch / PR / preview pattern — one `req/<id>-<slug>` branch per request, one PR per branch, Vercel Preview URL per branch.
 - Approval / rejection / improvement flow.
 - Operator model — Mode A as default; Mode B parked.
+- Listener cadences — quiet ~10 min idle poll; faster quiet ~60 s review-state decision-watch while a pushed request awaits an owner decision; manual immediate override phrases.
 - Single-lane invariant.
-- Four-tier classification rule.
+- Four-tier classification rule — including the narrow **content-driven renderer glue** allowance (a new content field plus minimal same-page renderer wiring to display it, inside the request branch + PR + preview flow; not a license for routes, APIs, layout redesign, shared-component refactors, or cross-page edits).
 - Runtime env checklist.
 - API surface (English route names).
 - Code libraries — `src/lib/auth.ts`, `src/lib/github.ts`, `src/lib/request-store.ts`, `src/lib/request-types.ts`.

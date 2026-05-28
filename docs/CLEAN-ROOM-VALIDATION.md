@@ -22,11 +22,11 @@ Last known-good operational baseline, as of **2026-05-28**:
 |---|---|
 | Repo | `vampyren/nastaran-web` |
 | Local path | `/home/spawn/Apps/projects/nastaran-web` |
-| `main` HEAD | `8e2c3d7` (snapshot point — `main` advances as later PRs merge; treat as a marker, not a live pointer) |
-| Queue | Idle — no active request |
-| Listener / operator | Stopped — not armed |
-| Open PRs | None |
-| Pipeline | Installed + tested (PRs A–E) |
+| `main` HEAD | `7d28c81` (snapshot point — `main` advances as later PRs merge; treat as a marker, not a live pointer) |
+| Queue | Idle — all requests terminal (most recent: `/kontakt` "Vad händer sen?" shipped 2026-05-28) |
+| Listener / operator | Stopped between sessions — the foreground listener is session-only |
+| Open PRs | None (steady state) |
+| Pipeline | Installed + tested (PRs A–E); content-driven renderer glue + Vercel branch-recovery exercised 2026-05-28 |
 | Attachments | Installed + tested (1–3 per request) |
 
 Refresh this snapshot after any operational change — a new merge to `main`, a request processed end-to-end, or the listener being restarted.
@@ -121,7 +121,7 @@ Each step assumes the previous one passed. Pause and triage on any deviation.
 9. **Avvisa.** On a third fresh card in `review`, click `Avvisa` with an optional reason. PR closes unmerged, branch deletes, status → `rejected`, production untouched.
 10. **Försök igen.** Submit a deliberately unsafe request (e.g. "bump the version in package.json to 99.0.0"). Operator classifies unsafe → CAS to `failed + manualFix`. Card appears in `Fel`. Click `Försök igen`. Status flips back to `queued`. Operator picks it up again on the next cycle and classifies again — still unsafe, still moves to `failed`. Click `Avvisa` from `failed` to clear the card.
 11. **Single-lane.** While a request is in `review`, submit a second request. Tell the operator "check the queue". Expected: operator does NOT claim the second. Emits `loop: lane busy (active <id> at review)`. Second request stays at `queued` until the first reaches a terminal state.
-12. **Listener mode.** Owner says "start the listener" in the operator session. Session schedules a `ScheduleWakeup` ~10 min in the future (idle default). With an empty queue, each wake **polls quietly** — no chat output on idle ticks (at most an occasional "listener alive" heartbeat) — then reschedules. The owner can force an immediate check at any time with "check the queue now" / "pick it up" / "process the queue". Closing the session ends the listener — verify by reopening a fresh session and confirming nothing wakes on its own.
+12. **Listener mode.** Owner says "start the listener" in the operator session. Session schedules a `ScheduleWakeup` ~10 min in the future (idle default). With an empty queue, each wake **polls quietly** — no chat output on idle ticks (at most an occasional "listener alive" heartbeat) — then reschedules. The owner can force an immediate check at any time with "check the queue now" / "pick it up" / "process the queue". **Review-state decision-watch:** while a request the operator pushed is at `review` awaiting Publicera / Förbättra / Avvisa, the listener may poll on a faster **quiet ~60 s** cadence until that request is terminal, then return to ~10 min idle. Closing the session ends the listener — verify by reopening a fresh session and confirming nothing wakes on its own.
 
 ---
 
@@ -221,6 +221,19 @@ First live exercise of the pipeline. Reference request id: `20260527-164925-racy
 - Remaining unexercised steps (Avvisa, Försök igen, single-lane with a concurrent submission, listener mode) are operational paths that can be exercised opportunistically; they're not closeout-blocking since the core loop is proven.
 
 **Independent UX gap noted (not part of this PR):** queue board's `actionError` auto-clears after 8 s (`src/app/onskemal-kogen/QueueBoard.tsx`). That auto-clear masked the first Publicera failure caused by bug #3 — the owner saw the brief error banner but it disappeared before they could read it. Worth a separate small chore PR raising the timeout to ~30 s or making the error persistent until manually dismissed. Tracking outside PR #14.
+
+---
+
+### Live operator run — 2026-05-28 (renderer glue + decision-watch)
+
+First live run to exercise **content-driven renderer glue** and to surface the **review-state decision-watch** need. Request `20260528-125816-ngipww` — add a "Vad händer sen?" section to `/kontakt`.
+
+- **Renderer glue:** the request could not be satisfied by `src/content/kontakt.ts` alone — the kontakt renderer is hardcoded per-section with no slot for a new section. Processed by adding a `nextSteps` content field **plus** a minimal section in `src/app/kontakt/page.tsx` to display it (reusing existing visual tokens; no redesign). This is the canonical example for the glue allowance now in `spec/pipeline-operator-modes.md` § Four-tier classification rule and `spec/pipeline-mvp.md` § Safe edit surface.
+- **Vercel branch recovery:** the first request branch (`req/…-forbattra-kontaktsidan-genom-att-lagga`, PR #28) hit a repeated Vercel deploy failure — *"The provided GitHub repository does not contain the requested branch or commit reference"* — even though the ref existed and CI passed; an empty retrigger commit did not clear it. Recovered by cherry-picking the real change onto a fresh branch (`req/…-kontakt-v2`, PR #29), where Vercel built the preview successfully. Stale PR #28 was closed + branch pruned only **after** #29's preview was confirmed. **Lesson:** a stale/blocked Vercel ref is recovered by replacing the branch, not by retrying empty commits on it.
+- **PR → preview → production:** worked end-to-end on the replacement branch. Publicera squash-merged PR #29 → production (`productionCommitSha f018c87`).
+- **Decision-watch evidence:** the Publicera click was first detected on a **later ~10 min listener wake**, not promptly — correct given Mode A has no push signal, but slower than ideal. This motivated the review-state **~60 s quiet decision-watch** rule (see `spec/pipeline-operator-modes.md` § Foreground listener).
+
+This run also validates the previously-⏳ **listener mode** path (start the listener → quiet idle poll → a wake detected a real state change) alongside the glue + recovery behaviors.
 
 ---
 

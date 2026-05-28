@@ -186,7 +186,17 @@ The operator only edits **content** files. Anything else = unsafe = `failed + ma
 | `src/content/site.ts` | **Safe** |
 | Anything else (`src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `.github/`, `public/`, `docs/`, `spec/`, `requests/<other-id>.json`) | **Unsafe → `failed + manualFix`** |
 
-Specifically: the operator may write to `requests/<the-id-being-processed>.json` on `main` via Octokit, and to `src/content/*.ts` on the per-request branch. Never anywhere else.
+Specifically: the operator may write to `requests/<the-id-being-processed>.json` on `main` via Octokit, and to `src/content/*.ts` on the per-request branch (plus minimal content-driven renderer glue — see below). Never anywhere else.
+
+### Content-driven renderer glue
+
+Some content requests can't be shown by editing a content file alone — the page renderer is hardcoded and has no slot for the new content. In that case the operator may also make **minimal same-page renderer wiring** to display it, inside the request branch + PR + preview flow, **without** per-request owner approval:
+
+- **Allowed:** add a field in `src/content/<page>.ts`, and update **only the matching page renderer** (e.g. `src/app/<page>/page.tsx`) to display that field — small, local, display-only wiring reusing existing visual tokens.
+- **Not auto-allowed:** route changes, API/auth/config changes, admin-pipeline internals, broad layout redesign, global styling/design-system rewrites, unrelated shared-component refactors, or changes spanning multiple unrelated pages.
+- If it grows beyond small local display wiring → **stop and ask**. Gates (`lint`/`typecheck`/`build`) still run; preview + owner approval (Publicera) still required before production.
+
+This narrow allowance does **not** widen the surface to `src/components/`, `src/lib/`, configs, or other pages. Full classification detail in [`pipeline-operator-modes.md`](./pipeline-operator-modes.md) § Four-tier classification rule § Content-driven renderer glue.
 
 ### Page-ID → route mapping
 
