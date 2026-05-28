@@ -153,6 +153,21 @@ Short version of the rules that apply across the codebase:
 7. **Single-lane.** At most one active request across `in_progress | review | improve_requested | publishing`. `improve_requested` reuses **same request, same branch, same PR** — never duplicates a PR.
 8. **Safe edit surface:** `src/content/{berattelser,home,kontakt,om-mig,site}.ts`. Anything else = `failed + manualFix`. The operator never edits `src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, `.github/`, `public/`, `docs/`, `spec/`, or any other `requests/*.json` than the one being processed.
 9. **No real request processing inside infrastructure PRs unless explicitly approved.** PRs B–E ship the runtime; do not exercise the pipeline end-to-end with real owner requests during setup.
+10. **Image attachments** (1–3 per request, PNG/JPG/WebP, ≤ 5 MB each) live at `requests/<id>/attachments/<server-generated-name>` and are referenced from `requests/<id>.json`. Operator rules:
+    - **Inspect every attachment before classifying.** Read the request wording to decide which of the two valid intake shapes applies.
+    - **Reference / clarification.** Screenshots showing a layout bug, examples, "here's where I want the change". Operator inspects — never copies anywhere. The request is then judged on the text alone against the normal safe edit surface.
+    - **Source asset for the website.** Wording like "lägg in dessa", "byt bilden", "använd denna bild", "lägg till denna bild på <section>", "replace the X with this", "add this image to <page>". **The operator IS allowed to copy the uploaded file from `requests/<id>/attachments/...` into the correct project asset folder (preferably `public/assets/generated/<safe-filename>`) AND reference it from the appropriate safe content/data file** (`src/content/*.ts`). This is the intended source-asset path; it is NOT an unsafe request just because the binary lands outside `src/content/`.
+    - **Source-asset guardrails — all must hold for the asset-copy path:**
+      - The owner's wording clearly says use / add / replace / put-this-image-on-page (don't read into "look at this" or "see screenshot" — those are reference, not source).
+      - The target page/section/current image is unambiguous from the request text. If unclear → stop and ask, or `failed + manualFix`. Never guess placement.
+      - Destination is a **known project asset folder**, preferably `public/assets/generated/`. Anywhere outside the established asset layout → stop and ask.
+      - The destination filename is a **safe generated** name (lowercase, ASCII, hyphenated, descriptive; e.g. `<page>-<topic>.<ext>`). Never use the user's raw uploaded filename as the on-disk path component — that's already enforced at upload time but applies to the copy step too.
+      - **No cropping, retouching, color-grading, heavy optimization, or other design-sensitive choices** unless the owner explicitly asked for them AND the operation stays inside the safe edit surface. If in doubt — stop and ask.
+      - **No edits to unsafe components or rendering code.** Only the asset copy + the content/data file reference are in scope. If the request needs a new component, new section, layout change, etc. → outside the source-asset path → stop and ask.
+    - **Attachments still do NOT expand the whole safe edit surface.** The asset-copy allowance covers exactly two things: (1) the binary into the known project asset folder, (2) the path reference in `src/content/*.ts`. Everything else still falls under the normal four-tier rule.
+    - Full data model + storage layout + validation stack in `spec/pipeline-mvp.md` § Attachments.
+
+    **Cross-project portability.** When this attachment feature is ported to Shadi (`shadi-web`), the same source-asset rule is meant to carry forward verbatim — same destination convention (`public/assets/generated/`), same guardrails, same "does not expand the safe edit surface" boundary. Note this in the Shadi spec when the port happens; see `docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`.
 
 ## Temporary footer "Admin" link (pre-launch only)
 

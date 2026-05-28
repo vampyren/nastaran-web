@@ -12,9 +12,9 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw, LogOut } from "lucide-react";
+import { RefreshCw, LogOut, Paperclip } from "lucide-react";
 import { pageLabel, routeForPage } from "@/lib/pages";
-import type { Request, RequestStatus } from "@/lib/request-types";
+import type { Attachment, Request, RequestStatus } from "@/lib/request-types";
 
 type ActionKind = "approve" | "iterate" | "reject" | "retry";
 type BusyAction = { id: string; kind: ActionKind } | null;
@@ -181,6 +181,16 @@ function fmtTime(d: Date): string {
 function truncate(text: string, max = 220): string {
   if (text.length <= max) return text;
   return text.slice(0, max).trimEnd() + "…";
+}
+
+function fmtBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function attachmentHref(requestId: string, a: Attachment): string {
+  return `/api/attachment/${requestId}/${a.storedFilename}`;
 }
 
 export function QueueBoard() {
@@ -510,6 +520,42 @@ function RequestCard({
       <p className="mt-1 text-[0.92rem] leading-[1.55] text-ink-muted">
         {truncate(request.description)}
       </p>
+
+      {request.attachments && request.attachments.length > 0 && (
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-medium text-ink-muted">
+            <Paperclip size={12} aria-hidden="true" />
+            <span>
+              Bilagor ({request.attachments.length}) — kan vara
+              referensbilder eller bilder att använda på sidan
+            </span>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {request.attachments.map((a) => {
+              const href = attachmentHref(request.id, a);
+              return (
+                <li key={a.storedFilename}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`${a.originalFilename} · ${fmtBytes(a.sizeBytes)} · ${a.mimeType}`}
+                    className="block rounded-lg border border-hairline bg-paper-deep p-1 transition hover:border-accent hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={href}
+                      alt={a.originalFilename}
+                      loading="lazy"
+                      className="h-20 w-20 rounded object-cover"
+                    />
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {request.rejectionReason && (
         <p className="mt-3 whitespace-pre-wrap rounded-md border border-hairline bg-paper-deep px-3 py-2 text-[0.85rem] text-ink-muted">

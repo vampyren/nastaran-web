@@ -147,3 +147,16 @@ No special "rollback" status. No DB to roll back. The git history of `main` is t
 - Swedish-character slug normalization (`å→a`, `ä→a`, `ö→o`) is Swedish-specific. Localize for other languages.
 - The four-tier safety classification's "safe path" rule maps to each project's content layout. Generalize per project's structure.
 - Public form spam controls (rate limit, queue-depth cap, honeypot) tune per traffic profile.
+
+## Image attachments (added in Nastaran's PR #22)
+
+If the project ships the attachment intake (1–3 images per request, PNG/JPG/WebP, ≤ 5 MB each), carry these rules forward verbatim:
+
+- **Storage layout.** Binaries at `requests/<id>/attachments/<server-generated-name>` — never base64 inside the request JSON. Stored filename is operator-generated (`<index>-<rand6>.<ext>`); the user's original name is for display only.
+- **main-write narrowing.** Extend the metadata-write exception to cover `requests/<id>/attachments/`. Both `id` and `name` validated independently via a path helper (`attachmentPath()` in Nastaran). No `putAnywhereOnMain` exposed.
+- **Validation stack.** Declared mime + size check, then a magic-byte sniff after read; sniffed mime MUST equal declared mime (browsers can mis-report `File.type`). All-or-nothing — orphan blobs without a parent JSON are deleted best-effort.
+- **Admin-gated proxy.** Private repos need a `GET /api/attachment/[id]/[name]` route that fetches by sha via `git.getBlob` (works at any size — Contents API placeholders > 1 MB) and streams back the bytes with `X-Content-Type-Options: nosniff`.
+- **Source-asset rule (operator).** When the owner's wording clearly says use / add / replace an attached image on a page, the operator IS allowed to copy the binary from `requests/<id>/attachments/...` into the project's known asset folder (preferably `public/assets/generated/<safe-generated-filename>`) AND reference it from the appropriate safe content/data file. This is NOT unsafe just because the binary lands outside the content folder — it is the intended source-asset path. Reference-only attachments (screenshots showing where to change) are inspected, never copied.
+- **Guardrails (carry verbatim).** Unambiguous target, known asset folder, operator-generated filename, no cropping / retouching / design judgment, no edits to unsafe components. **Attachments do NOT expand the whole safe edit surface.** The allowance is narrow: binary into the known asset folder, plus a path reference in the content file. Everything else still falls under the normal four-tier rule.
+
+Project-specific knobs: asset destination convention (Nastaran uses `public/assets/generated/`), per-file size cap, allowed mime list, queue board thumbnail layout.

@@ -261,6 +261,18 @@ type Request = {
   failureReason?: string;
   manualFix?: boolean;
 
+  // ----- Optional image attachments (1–3 when present) -----
+  // See § Attachments below for the full upload contract.
+  attachments?: ReadonlyArray<{
+    originalFilename: string;            // sanitized display name only
+    storedFilename: string;              // "<1-3>-<6 alnum>.<png|jpg|webp>"
+    storedPath: string;                  // "requests/<id>/attachments/<storedFilename>"
+    mimeType: "image/png" | "image/jpeg" | "image/webp";
+    sizeBytes: number;
+    sha: string;                         // blob sha — proxy uses it to fetch
+    uploadedAt: string;                  // ISO 8601
+  }>;
+
   // ----- Append-only audit trail -----
   history: ReadonlyArray<{
     at: string;                        // ISO 8601
@@ -285,7 +297,105 @@ type Request = {
 
 **Timestamp rule:** every write MUST refresh `updatedAt`. It is the cheapest "last-modified" signal for the admin UI ordering.
 
-### Swedish UI vocabulary
+---
+
+## Attachments
+
+The request intake form may include 1–3 image attachments alongside the text. Attachments serve two purposes — both are valid intake shapes:
+
+1. **Reference / clarification** — screenshots showing a layout bug, examples, inspiration, or "here's exactly where I want the change". The operator inspects these to understand the request but does not copy them anywhere.
+2. **Source assets for the website** — an image the owner wants used as (or substituted for) an actual web asset on a page. The operator may copy the file from `requests/<id>/attachments/...` into the appropriate project asset/content location on the per-request branch, but only when the request clearly says so. **An uploaded image does not by itself authorize the operator to make a change — the safe edit surface and the four-tier rule still apply.**
+
+### Storage layout
+
+Binary contents are stored as separate repo files; no base64 ever lives inside `requests/<id>.json`.
+
+```
+requests/<id>.json                                ← metadata + attachment manifest
+requests/<id>/attachments/<index>-<rand6>.<ext>   ← binary blobs
+```
+
+- `index` ∈ `{1, 2, 3}` — the upload order
+- `rand6` — 6 lowercase alnum chars generated server-side
+- `ext` ∈ `{png, jpg, webp}` — derived from the sniffed mime type, never from the user-supplied filename
+
+The user's original filename is **never** used as a path component. It is sanitized for display only and stored in the JSON as `attachments[i].originalFilename`. This rules out path traversal, mojibake-in-path, and case-collision footguns by construction.
+
+### Validation stack (server-side, defense in depth)
+
+1. **Count cap** — at most 3 attachments per request.
+2. **Total payload cap** — multipart body ≤ 16 MiB (3 × 5 MB + framing slack).
+3. **Per-file declared mime check** — must be `image/png`, `image/jpeg`, or `image/webp`.
+4. **Per-file declared size check** — `> 0` and `≤ 5 MB`.
+5. **Per-file magic-byte sniff after read** — bytes must match one of the three allowed signatures (PNG `89 50 4E 47`, JPEG `FF D8 FF`, WebP `RIFF…WEBP`). The sniffed mime MUST equal the declared mime — mismatches reject with `file_type_invalid`. Browsers can mis-report `File.type`; bytes are the source of truth.
+6. **Server-generated stored filename** — `<index>-<rand6>.<ext>`. The user's filename never reaches the file system.
+7. **All-or-nothing semantics** — if any attachment fails validation OR upload, already-uploaded blobs are best-effort deleted via `deleteMainFile` and the request JSON is NOT written. Orphan blobs without a parent JSON are harmless (the queue board never lists them); cleanup is opportunistic.
+
+### main-write narrowing (extends rule 4)
+
+The metadata-write exception explicitly covers the attachment sub-tree. The exposed write helpers (`src/lib/github.ts`) are:
+
+| Helper | Path | Notes |
+|---|---|---|
+| `putRequestFile(gh, id, …)` | `requests/<id>.json` | Validates `id` via `requestPath()`. |
+| `putAttachmentFile(gh, id, name, …)` | `requests/<id>/attachments/<name>` | Validates `id` AND `name` via `attachmentPath()`. `name` must match the server-generated pattern `<1-3>-<6 alnum>.(png|jpg|webp)`. |
+| `deleteMainFile(gh, path, sha, …)` | (any) | Used only for best-effort rollback of orphan attachments — the caller supplies the path it just wrote via `putAttachmentFile`. |
+
+No exported helper accepts a free-form path on `main`. Both id and stored filename are validated independently, so the surface stays narrow even with the new sub-tree.
+
+### Attachment proxy
+
+The repo is private; raw blob URLs are not viewable in a browser. `GET /api/attachment/[id]/[name]` is the admin-gated proxy that streams a stored image back to the queue board:
+
+- `requireAdmin()` first — no anonymous access.
+- Validates `id` and `name` independently.
+- Reads `requests/<id>.json`, looks up the attachment record by `storedFilename`, fetches its blob by `sha` via the Git Database API (`git.getBlob` — works at any size, unlike Contents API which placeholders >1 MB).
+- Returns the bytes with the recorded `Content-Type`, `X-Content-Type-Options: nosniff`, and `Cache-Control: private, max-age=60`.
+
+The request JSON is the source of truth for which blob each URL serves. The route never selects a blob by free-form URL component — `name` only narrows the lookup inside the manifest.
+
+### Operator handling of attachments
+
+See [`pipeline-operator-modes.md`](./pipeline-operator-modes.md) § Attachments for the operator-side rule. Authoritative summary:
+
+**Two intake shapes — operator picks one from the request wording.**
+
+#### Reference / clarification
+
+Screenshots showing a layout bug, examples, "here's exactly where I want the change". The operator **inspects** the attachment to understand the request, but does NOT copy it anywhere. The request is then judged on the text alone against the normal four-tier rule.
+
+Typical wording: "see screenshot", "look at this", "as shown in the image", "this is where the issue is".
+
+#### Source asset for the website
+
+The owner attached an image they want **used on a page** (added, replaced, or substituted as an actual web asset). The operator IS allowed to copy the uploaded file from `requests/<id>/attachments/...` into the correct project asset folder AND reference it from the appropriate safe content/data file. **This is NOT an unsafe request just because the binary lands outside `src/content/`** — it is the intended source-asset path.
+
+Typical wording: "lägg in dessa", "byt bilden mot denna", "använd denna bild", "lägg till denna på <section>", "replace the X with this", "add this image to <page>".
+
+**Allowed asset-copy operations:**
+
+1. Copy the binary from `requests/<id>/attachments/<storedFilename>` into a **known project asset folder**. Preferred: `public/assets/generated/<safe-generated-filename>`. The destination filename is operator-generated (lowercase, ASCII, hyphenated, descriptive — e.g. `<page>-<topic>.<ext>`); never the raw user filename.
+2. Add or update a reference to the new local path in a safe content/data file (`src/content/*.ts`).
+
+That's it — the asset-copy allowance covers exactly those two things.
+
+**Guardrails (all must hold):**
+
+- ✅ Owner's wording clearly says **use / add / replace** / put-this-image-on-page. Don't read into "look at this" — that's reference, not source.
+- ✅ Target page/section/current image is **unambiguous** from the request text. If unclear → stop and ask, or `failed + manualFix`. Never guess placement.
+- ✅ Destination is a known project asset folder, preferably `public/assets/generated/`. Anywhere outside the established asset layout → stop and ask.
+- ✅ Destination filename is a **safe generated** name. Original user filename is for the JSON manifest's `originalFilename` field only.
+- ❌ No cropping, retouching, color-grading, heavy optimization, or design-sensitive image choices unless the owner explicitly asked AND the operation stays inside the safe edit surface.
+- ❌ No edits to unsafe components or rendering code. Asset copy + safe content/data reference only.
+- ❌ Need a new component, layout change, new section, design judgment? Outside the source-asset path → stop and ask, or `failed + manualFix`.
+
+**Attachments still do not expand the whole safe edit surface.** The asset-copy allowance is narrow: binary into the known asset folder, plus a path reference in `src/content/*.ts`. Everything else still falls under the normal four-tier rule.
+
+**Cross-project portability.** When this attachment feature is ported to Shadi (`shadi-web`), the same source-asset rule carries forward verbatim — same destination convention (`public/assets/generated/`), same guardrails. Note it in the Shadi spec when porting; the cross-project pattern lives in [`../docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](../docs/REUSABLE-REQUEST-QUEUE-PATTERN.md).
+
+---
+
+## Swedish UI vocabulary
 
 This is the **only** place internal status → Swedish UI label is defined. UI code references this table; it does not redefine the words.
 

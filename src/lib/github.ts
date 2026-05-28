@@ -32,9 +32,24 @@ export type GithubConfig = {
  */
 const REQUEST_ID_PATTERN = /^\d{8}-\d{6}-[a-z0-9]{6}$/;
 
+/**
+ * Stored attachment filename shape. Generated entirely server-side from
+ * the upload index and a 6-char random — the user's original filename
+ * is NEVER used as a path component. See `src/lib/attachments.ts` for
+ * the generator and `spec/pipeline-mvp.md` § Attachments for rationale.
+ *
+ *   <index 1-3>-<6 lowercase alnum>.<png|jpg|webp>
+ */
+const ATTACHMENT_NAME_PATTERN = /^[1-3]-[a-z0-9]{6}\.(png|jpg|webp)$/;
+
 /** True iff `id` is a string matching the documented request-id format. */
 export function isValidRequestId(id: unknown): id is string {
   return typeof id === "string" && REQUEST_ID_PATTERN.test(id);
+}
+
+/** True iff `name` matches the server-generated attachment filename shape. */
+export function isValidAttachmentName(name: unknown): name is string {
+  return typeof name === "string" && ATTACHMENT_NAME_PATTERN.test(name);
 }
 
 /**
@@ -54,6 +69,33 @@ export function requestPath(id: string): string {
     );
   }
   return `requests/${id}.json`;
+}
+
+/**
+ * Maps a request id + a server-generated attachment filename to the EXACT
+ * path on `main`: `requests/<id>/attachments/<name>`. Throws if either
+ * input is malformed.
+ *
+ * Both `id` AND `name` must be validated independently — `id` against the
+ * documented request-id format, `name` against the server-generated
+ * attachment-filename shape (`<index>-<rand6>.<ext>`). This is the
+ * central guard that keeps the metadata-write exception narrow for the
+ * attachments sub-tree as well: a caller cannot construct an arbitrary
+ * sub-path because the only inputs are id (operator/server) and name
+ * (server-generated only).
+ */
+export function attachmentPath(id: string, name: string): string {
+  if (!isValidRequestId(id)) {
+    throw new Error(
+      `Invalid request id: ${JSON.stringify(id)}. Expected YYYYMMDD-HHmmss-<6 lowercase alnum>.`
+    );
+  }
+  if (!isValidAttachmentName(name)) {
+    throw new Error(
+      `Invalid attachment name: ${JSON.stringify(name)}. Expected <1-3>-<6 lowercase alnum>.<png|jpg|webp>.`
+    );
+  }
+  return `requests/${id}/attachments/${name}`;
 }
 
 /**
@@ -139,6 +181,77 @@ export async function putRequestFile(
     commitSha: res.data.commit.sha ?? "",
     contentSha: res.data.content?.sha ?? "",
   };
+}
+
+/**
+ * Writes a binary attachment file under `requests/<id>/attachments/<name>`
+ * on `main`. Both `id` and `name` are validated via `attachmentPath()`
+ * before any Octokit call. The caller passes already-base64-encoded
+ * content (the GitHub Contents API requires base64 regardless of
+ * payload size).
+ *
+ * Returns the new blob SHA so the caller can store it for later
+ * authenticated retrieval via `getMainBlob()`.
+ *
+ * No `sha` parameter — initial create only. Re-uploading an attachment
+ * over an existing one is not part of the v1 flow (form rejects three+
+ * files and each upload generates a fresh random suffix, so name
+ * collisions are negligible).
+ */
+export async function putAttachmentFile(
+  { octokit, owner, repo }: GithubConfig,
+  id: string,
+  name: string,
+  message: string,
+  contentBase64: string
+): Promise<{ contentSha: string }> {
+  const path = attachmentPath(id, name);
+  const res = await octokit.rest.repos.createOrUpdateFileContents({
+    owner,
+    repo,
+    branch: "main",
+    path,
+    message,
+    content: contentBase64,
+  });
+  return { contentSha: res.data.content?.sha ?? "" };
+}
+
+/**
+ * Deletes a file on `main` by path. Used for best-effort cleanup if a
+ * multi-attachment upload fails partway and we want to remove orphaned
+ * blobs before reporting the error to the client.
+ */
+export async function deleteMainFile(
+  { octokit, owner, repo }: GithubConfig,
+  path: string,
+  sha: string,
+  message: string
+): Promise<void> {
+  await octokit.rest.repos.deleteFile({
+    owner,
+    repo,
+    branch: "main",
+    path,
+    sha,
+    message,
+  });
+}
+
+/**
+ * Fetches a blob by SHA from GitHub. Used by the attachment-serving
+ * proxy route to stream a stored image back to an authenticated admin
+ * client. `getBlob` works regardless of file size, unlike the Contents
+ * API which silently switches to a placeholder for files >1 MB.
+ *
+ * Returns the raw bytes (base64-decoded from GitHub's response).
+ */
+export async function getMainBlob(
+  { octokit, owner, repo }: GithubConfig,
+  sha: string
+): Promise<Uint8Array> {
+  const res = await octokit.rest.git.getBlob({ owner, repo, file_sha: sha });
+  return new Uint8Array(Buffer.from(res.data.content, "base64"));
 }
 
 /**
