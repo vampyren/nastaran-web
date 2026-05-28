@@ -2,7 +2,7 @@
 
 This file captures the visual system of the **clean rebuild as deployed at `https://nastaran-web.vercel.app`**. MS1 and MS2 are both shipped; this document records what is actually live.
 
-> The accompanying `spec/design-spec.md` is the original design brief extracted from the old project before implementation began. **This document records what is actually shipped.**
+> The accompanying `spec/design-spec.md` is the original design brief extracted from the earlier source material before implementation began. **This document records what is actually shipped.**
 
 ## Themes (MS2 — shipped)
 

@@ -178,7 +178,7 @@ src/
 - **Output:** `.next` (default).
 - **Env vars:** none in MS1. Document in README when any are added.
 - **Redirects:** `/testimonials` → `/berattelser` handled by a route file using `redirect()` from `next/navigation`, not Vercel config.
-- **Old Cloudflare preview (historical):** during the rebuild the old project ran a Cloudflare tunnel as the stable preview. The new site is now deployed on Vercel.
+- **Old Cloudflare preview (historical):** during the rebuild a Cloudflare tunnel served as the stable preview. The new site is now deployed on Vercel.
 
 ## Local quality gates
 
