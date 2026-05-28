@@ -4,16 +4,16 @@
   "description": "Ta bort healing på nr 1 och lägg till ayurveda istället.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "queued",
+  "status": "in_progress",
   "createdAt": "2026-05-28T17:53:14.761Z",
-  "updatedAt": "2026-05-28T17:53:14.761Z",
-  "claimedAt": null,
+  "updatedAt": "2026-05-28T18:01:57.077Z",
+  "claimedAt": "2026-05-28T18:01:57.077Z",
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
-  "branch": null,
+  "branch": "req/20260528-175314-tqtgw0-ta-bort-healing-pa-nr-1-och-lagg-till",
   "pullRequestUrl": null,
   "pullRequestNumber": null,
   "previewUrl": null,
@@ -26,6 +26,12 @@
       "actor": "user",
       "event": "created",
       "message": "Submitted anonymously"
+    },
+    {
+      "at": "2026-05-28T18:01:57.077Z",
+      "actor": "loop",
+      "event": "loop_picked_up",
+      "message": "claimed for processing"
     }
   ]
 }
