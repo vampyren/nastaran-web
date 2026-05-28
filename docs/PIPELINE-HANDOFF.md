@@ -190,7 +190,7 @@ The following are part of the codebase (most created by later PRs in this pipeli
 - Routes, navigation, content paths, owner name, branding. Already encoded in `src/content/site.ts` and `src/content/*.ts`.
 - Cookie name: `nastaran-admin` (not `shadi-admin`).
 - Page-ID allowlist in `src/lib/pages.ts`: `index`, `om-mig`, `berattelser`, `kontakt`, `hela-sajten`.
-- Safe edit surface: `src/content/{berattelser,home,kontakt,om-mig,site}.ts`.
+- Safe edit surface: `src/content/{berattelser,home,kontakt,om-mig,site}.ts`, plus a narrow content-driven renderer glue allowance (minimal same-page `src/app/<page>/page.tsx` wiring only to display a new content field — see `spec/pipeline-operator-modes.md` § Four-tier classification rule).
 
 ---
 
@@ -276,6 +276,7 @@ Submit a second request while the first is in `review`. Tell the operator "check
 3. The owner does **nothing else** until the operator pings them with a preview.
 4. The operator processes the request and pings the owner.
 5. Owner opens the preview URL or the queue board (`/onskemal-kogen`), looks at the change, decides Publicera / Förbättra / Avvisa.
+6. After pressing **Publicera / Förbättra / Avvisa**, the operator normally picks up the decision **automatically within about a minute** while the request is under review (during an active operator session, the listener uses a faster quiet ~60 s decision-watch in the `review` state). There is no instant push from the website to Claude Code, so if faster handling is needed the owner can also say **"check the queue now"** to trigger an immediate check. (If no operator session is open, the decision is picked up next time one is — nothing is lost; it stays recorded on `main`.)
 
 The owner never touches GitHub, Vercel, or the codebase directly.
 
@@ -298,13 +299,18 @@ Standing rules:
 - Four-tier classification: clear content = process; ambiguous content =
   STOP and ask me; structural / out-of-scope = failed + manualFix;
   unsafe (anything outside src/content/*.ts) = failed + manualFix.
+  Exception: minimal content-driven renderer glue (a new content field +
+  the matching src/app/<page>/page.tsx wiring only to display it) is
+  allowed in the request branch — see spec/pipeline-operator-modes.md
+  § Four-tier classification rule.
 - Source changes never go directly to main. The ONLY exception is the
   per-request metadata write to requests/<the-id-you-are-processing>.json
   via Octokit (via src/lib/github.ts::putRequestFile, which validates the
   id and hard-codes the path). All source/content changes flow through a
   req/<id>-<slug> branch + PR + Publicera (squash-merge).
-- Safe edit surface = src/content/{berattelser,home,kontakt,om-mig,site}.ts
-  ONLY. Anything else = unsafe → failed + manualFix.
+- Safe edit surface = src/content/{berattelser,home,kontakt,om-mig,site}.ts,
+  plus minimal same-page renderer glue (src/app/<page>/page.tsx) only to
+  display a new content field. Anything else = unsafe → failed + manualFix.
 - Slug rules (Swedish-aware): see spec/pipeline-mvp.md § Slug
   normalization. Branch = req/<id>-<slug>; id format YYYYMMDD-HHmmss-<6
   lowercase alnum>.
@@ -347,7 +353,12 @@ re-arm. Speak only when
 a queued/improve_requested request appears, real work happens, a hard
 stop fires, or lane/queue state meaningfully changes; while idle, a
 short "listener alive" heartbeat at most about every ~10 minutes, not
-every cycle. STOP the listener (do not schedule the next wake) and
+every cycle. While a request you pushed is at review awaiting Publicera
+/ Förbättra / Avvisa, you MAY switch to a faster quiet ~60 s
+decision-watch until that request becomes done / improve_requested /
+rejected / failed, then return to ~10 min idle; decision-watch ticks
+stay quiet unless state changes or an error fires. STOP the listener
+(do not schedule the next wake) and
 surface to me on any hard-stop condition: ambiguity, unsafe scope
 (anything outside src/content/*.ts), dirty repo / merge conflict,
 failing quality gate, network or GitHub or Vercel failure that
