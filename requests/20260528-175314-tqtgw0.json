@@ -4,12 +4,12 @@
   "description": "Ta bort healing på nr 1 och lägg till ayurveda istället.",
   "page": "index",
   "createdBy": "anonymous",
-  "status": "review",
+  "status": "publishing",
   "createdAt": "2026-05-28T17:53:14.761Z",
-  "updatedAt": "2026-05-28T18:04:01.852Z",
+  "updatedAt": "2026-05-28T18:14:18.965Z",
   "claimedAt": "2026-05-28T18:01:57.077Z",
   "reviewReadyAt": "2026-05-28T18:04:01.852Z",
-  "approvedAt": null,
+  "approvedAt": "2026-05-28T18:14:18.965Z",
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
@@ -38,6 +38,11 @@
       "actor": "loop",
       "event": "loop_pushed_pr",
       "message": "PR opened: https://github.com/vampyren/nastaran-web/pull/31"
+    },
+    {
+      "at": "2026-05-28T18:14:18.965Z",
+      "actor": "admin",
+      "event": "approval_started"
     }
   ]
 }
