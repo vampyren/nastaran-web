@@ -4,20 +4,20 @@
   "description": "Förbättra kontaktsidan genom att lägga till en kort och tydlig sektion efter formulärets introduktion med rubriken “Vad händer sen?”. Texten ska förklara att Nastaran återkommer personligen, att tiden bekräftas manuellt, och att man inte behöver dela känsliga detaljer i första kontakten. Behåll den lugna, varma och sakliga tonen. Ändra bara innehåll/text, ingen layoutombyggnad.",
   "page": "kontakt",
   "createdBy": "anonymous",
-  "status": "in_progress",
+  "status": "review",
   "createdAt": "2026-05-28T12:58:16.039Z",
-  "updatedAt": "2026-05-28T13:10:31.163Z",
+  "updatedAt": "2026-05-28T13:31:31.088Z",
   "claimedAt": "2026-05-28T13:10:31.163Z",
-  "reviewReadyAt": null,
+  "reviewReadyAt": "2026-05-28T13:31:31.088Z",
   "approvedAt": null,
   "publishedAt": null,
   "rejectedAt": null,
   "failedAt": null,
-  "branch": "req/20260528-125816-ngipww-forbattra-kontaktsidan-genom-att-lagga",
-  "pullRequestUrl": null,
-  "pullRequestNumber": null,
-  "previewUrl": null,
-  "latestCommitSha": null,
+  "branch": "req/20260528-125816-ngipww-kontakt-v2",
+  "pullRequestUrl": "https://github.com/vampyren/nastaran-web/pull/29",
+  "pullRequestNumber": 29,
+  "previewUrl": "https://nastaran-web-git-req-20260528-125816-ngipww-k-7d4896-aryan-tech.vercel.app",
+  "latestCommitSha": "734ffe37ea532e7c79a82f205bcc678ec5a63f24",
   "productionCommitSha": null,
   "productionDeploymentUrl": null,
   "history": [
@@ -32,6 +32,18 @@
       "actor": "loop",
       "event": "loop_picked_up",
       "message": "claimed for processing"
+    },
+    {
+      "at": "2026-05-28T13:31:31.088Z",
+      "actor": "loop",
+      "event": "branch_replaced",
+      "message": "Replaced stale branch req/20260528-125816-ngipww-forbattra-kontaktsidan-genom-att-lagga (PR #28) with req/20260528-125816-ngipww-kontakt-v2 (PR #29) due to Vercel branch/commit lookup failure"
+    },
+    {
+      "at": "2026-05-28T13:31:31.088Z",
+      "actor": "loop",
+      "event": "loop_pushed_pr",
+      "message": "PR opened: https://github.com/vampyren/nastaran-web/pull/29"
     }
   ]
 }
