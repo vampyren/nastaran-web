@@ -32,6 +32,7 @@ import {
   githubClient,
   isValidAttachmentName,
   isValidRequestId,
+  requestPath,
 } from "@/lib/github";
 import type { Attachment, Request } from "@/lib/request-types";
 
@@ -66,7 +67,7 @@ export async function GET(
   // serve and protects against URL-driven blob lookups.
   let record: { data: Request; sha: string } | null;
   try {
-    record = await getMainFile<Request>(gh, `requests/${id}.json`);
+    record = await getMainFile<Request>(gh, requestPath(id));
   } catch (err) {
     console.error(`[attachment] read failed for ${id}:`, err);
     return NextResponse.json({ error: "read_failed" }, { status: 500 });

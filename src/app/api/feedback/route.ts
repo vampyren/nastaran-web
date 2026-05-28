@@ -30,7 +30,7 @@ import crypto from "node:crypto";
 import { assertSameOrigin, requireAdmin } from "@/lib/auth";
 import {
   attachmentPath,
-  deleteMainFile,
+  deleteAttachmentFile,
   getMainFile,
   githubClient,
   type GithubConfig,
@@ -345,7 +345,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const declaredErr = validateAttachmentDeclared(declaredMime, declaredSize);
       if (declaredErr) {
         await rollbackAttachments(gh, id, uploaded);
-        return NextResponse.json({ error: declaredErr }, { status: 400 });
+        return NextResponse.json(
+          { error: declaredErr },
+          { status: declaredErr === "file_too_large" ? 413 : 400 }
+        );
       }
 
       // Read bytes and confirm via magic-byte sniff. Form-reported
@@ -360,7 +363,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
       if (bytes.byteLength > MAX_ATTACHMENT_BYTES) {
         await rollbackAttachments(gh, id, uploaded);
-        return NextResponse.json({ error: "file_too_large" }, { status: 400 });
+        return NextResponse.json({ error: "file_too_large" }, { status: 413 });
       }
       const sniffed = sniffImageMime(bytes);
       if (sniffed === null || sniffed !== declaredMime) {
@@ -507,9 +510,10 @@ async function rollbackAttachments(
 ): Promise<void> {
   for (const u of uploaded) {
     try {
-      await deleteMainFile(
+      await deleteAttachmentFile(
         gh,
-        u.attachment.storedPath,
+        id,
+        u.attachment.storedFilename,
         u.sha,
         `request: ${id} — rollback attachment ${u.attachment.storedFilename}`
       );

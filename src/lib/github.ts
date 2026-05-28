@@ -218,11 +218,12 @@ export async function putAttachmentFile(
 }
 
 /**
- * Deletes a file on `main` by path. Used for best-effort cleanup if a
- * multi-attachment upload fails partway and we want to remove orphaned
- * blobs before reporting the error to the client.
+ * Low-level delete of a file on `main` by path. PRIVATE — intentionally
+ * NOT exported, so no caller outside this module can delete an arbitrary
+ * path. The only public delete entry point is `deleteAttachmentFile`,
+ * which derives the path from a validated request id + attachment name.
  */
-export async function deleteMainFile(
+async function deleteMainFileByPath(
   { octokit, owner, repo }: GithubConfig,
   path: string,
   sha: string,
@@ -236,6 +237,28 @@ export async function deleteMainFile(
     sha,
     message,
   });
+}
+
+/**
+ * Deletes a request attachment blob (`requests/<id>/attachments/<name>`)
+ * on `main`. Used for best-effort rollback of orphaned blobs when a
+ * multi-attachment intake fails partway.
+ *
+ * The path is derived internally via `attachmentPath(id, name)`, which
+ * validates both the request id and the server-generated attachment name
+ * before any Octokit call. Callers pass a validated id + name, never an
+ * arbitrary path — this keeps the delete surface as narrow as the write
+ * surface (`putRequestFile` / `putAttachmentFile`).
+ */
+export async function deleteAttachmentFile(
+  gh: GithubConfig,
+  id: string,
+  name: string,
+  sha: string,
+  message: string
+): Promise<void> {
+  const path = attachmentPath(id, name);
+  await deleteMainFileByPath(gh, path, sha, message);
 }
 
 /**

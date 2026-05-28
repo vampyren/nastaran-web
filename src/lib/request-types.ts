@@ -36,6 +36,13 @@ export type RequestStatus =
   | "rejected"
   | "failed";
 
+/**
+ * History event names. The `loop_*` events (and the `"loop"` actor below)
+ * refer to the **Mode A operator/listener loop** — the interactive Claude
+ * Code session acting as the queue operator (claim → branch → PR → review).
+ * It is NOT a daemon, cron job, or background worker; "loop" is just the
+ * operator's poll/process cycle. See spec/pipeline-operator-modes.md.
+ */
 export type RequestHistoryEvent =
   | "created"
   | "loop_picked_up"
