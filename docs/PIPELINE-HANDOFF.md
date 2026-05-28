@@ -315,7 +315,8 @@ Standing rules:
   outside the normal Avvisa/Publicera flow, env-var changes, anything
   touching the archived old project at /home/spawn/Apps/nastaran-web).
 
-When I say "check the queue", you:
+When I say "check the queue" (or "check the queue now" / "pick it
+up" / "process the queue" / similar), you check immediately:
 1. git fetch + git pull origin main.
 2. Read requests/*.json (skip README.md).
 3. Single-lane check; if anything is in_progress / review / improve_requested /
@@ -339,9 +340,12 @@ When I say "check the queue", you:
    explicit handoff request).
 
 When I say "start the listener", you do the same loop above on a
-self-paced ~60-second cadence via ScheduleWakeup, while this session
-stays open. Poll QUIETLY: an empty queue is the steady state, so on
-an idle tick emit no chat — just re-check and re-arm. Speak only when
+self-paced ~10-minute cadence via ScheduleWakeup, while this session
+stays open. (Pickup needn't be near-instant; ~10 min keeps idle token
+spend low — and I can force an immediate check anytime with "check
+the queue now" / "pick it up".) Poll QUIETLY: an empty queue is the
+steady state, so on an idle poll emit no chat — just re-check and
+re-arm. Speak only when
 a queued/improve_requested request appears, real work happens, a hard
 stop fires, or lane/queue state meaningfully changes; while idle, a
 short "listener alive" heartbeat at most about every ~10 minutes, not
@@ -351,6 +355,19 @@ surface to me on any hard-stop condition: ambiguity, unsafe scope
 failing quality gate, network or GitHub or Vercel failure that
 doesn't recover with one retry, or anything that needs an owner
 decision. Closing the session ends the listener — no persistence.
+
+When I say "stop the listener and save handoff" (or "stop listening
+and save project info" / "pause operator and write restart handoff" /
+"I need to exit Claude, save restart state" / similar), you: stop the
+listener, do NOT schedule another wakeup, do NOT process any request,
+and write /home/spawn/temp/output_nastaran.md as a closeout handoff —
+active repo path + a warning not to use /home/spawn/Apps/nastaran-web,
+branch, HEAD, clean/dirty tree, open PRs, queue state, any active
+request + status, whether a req/<id> branch/PR is mid-flight, CI/Vercel
+if quick, confirmation the listener is stopped, and the exact restart
+prompt. If a request is mid-flight, state the safe next step and do
+NOT imply the queue is idle; if all idle, say the next session can
+safely run "start the operator".
 
 Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or auto-merge
 of source PRs — those are Mode B (parked) and not the operating model

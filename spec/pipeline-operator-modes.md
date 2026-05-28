@@ -5,7 +5,7 @@ Companion to [`pipeline-mvp.md`](./pipeline-mvp.md). That spec defines **what** 
 **Active operating model: Mode A — interactive Claude Code session.** The active Claude Code session itself is the queue operator. Mode A has two usage shapes within the same session model:
 
 - **On-demand (default).** Owner says "check the queue" when work is expected.
-- **Foreground listener (opt-in).** Owner says "start the listener"; the same session self-schedules a ~60 s re-check loop via `ScheduleWakeup` while it stays open.
+- **Foreground listener (opt-in).** Owner says "start the listener"; the same session self-schedules a **~10 min** re-check loop via `ScheduleWakeup` while it stays open. The owner can force an immediate check at any time ("check the queue now", "pick it up", "process the queue").
 
 Both shapes are interactive, supervisor-present, and end the moment the session closes. **No cron, no wrapper, no child `claude -p` process, no `ANTHROPIC_API_KEY`, no auto-merge of source PRs.**
 
@@ -34,13 +34,54 @@ Nothing runs between owner pings. This is the validated default.
 
 #### Foreground listener (opt-in, this-session-only)
 
-Owner says **"start the listener"** (or equivalent). Claude Code then self-schedules a periodic re-check loop via `ScheduleWakeup` from within the running session. **Cadence: every ~60 s** while the session is active (well within the prompt-cache TTL window — each wake stays cheap).
+Owner says **"start the listener"** (or equivalent). Claude Code then self-schedules a periodic re-check loop via `ScheduleWakeup` from within the running session. **Default cadence: about every ~10 minutes** while the session is active. Queue pickup does not need to be near-instant — dev work takes time anyway — so a ~10-minute idle poll keeps token spend low. (A faster ~60 s default was tried and judged wasteful; faster pickup is now on-demand only, see *Manual immediate check* below.)
 
 Each wake runs the loop body above; the listener stops the moment any hard-stop condition fires, or when the session itself closes.
 
-**Output discipline — poll quietly.** The ~60 s poll runs silently. On an idle tick (empty queue, nothing meaningful changed) the listener emits **no chat output** — it just re-checks and re-arms. It speaks immediately only when something actionable happens: a `queued`/`improve_requested` request appears, real work is done, a hard stop fires, or lane/queue state meaningfully changes. While idle it emits a short "listener alive" heartbeat **at most about every ~10 minutes**, never every cycle. (The `loop: queue empty` token from the parked Mode B output contract is not surfaced per-tick in interactive Mode A.)
+**Manual immediate check (override).** The ~10-minute cadence is only the idle default. If the owner says **"check the queue now"**, **"pick it up"**, **"process the queue"**, or anything equivalent, the operator polls and processes immediately per the Mode A flow — regardless of where the timer sits — then returns to the ~10-minute idle cadence.
+
+**Output discipline — poll quietly.** The ~10-minute poll runs silently. On an idle poll (empty queue, nothing meaningful changed) the listener emits **no chat output** — it just re-checks and re-arms. It speaks immediately only when something actionable happens: a `queued`/`improve_requested` request appears, real work is done, a hard stop fires, or lane/queue state meaningfully changes. While idle it emits at most an occasional short "listener alive" heartbeat — no more often than about every ~10 minutes. (The `loop: queue empty` token from the parked Mode B output contract is not surfaced per-poll in interactive Mode A.)
 
 **Closing the session ends the listener — no persistence.** Next session starts cold; the owner explicitly opts in again with "start the listener" if they want the polling shape rather than on-demand.
+
+### Stop / restart handoff (owner command)
+
+When the owner signals they're wrapping up — e.g. **"stop the listener and save handoff"**, **"stop listening and save project info"**, **"pause operator and write restart handoff"**, **"I need to exit Claude, save restart state"**, or anything equivalent — the operator does a clean shutdown + handoff:
+
+1. **Stop the listener.** Do not run another queue cycle.
+2. **Do not schedule/re-arm another `ScheduleWakeup`.** The loop ends here.
+3. **Do not claim or process any new request.**
+4. **Write `/home/spawn/temp/output_nastaran.md`.** This is direct closeout/handoff work — not a queue cycle — so writing the file is correct (see [`../CLAUDE.md`](../CLAUDE.md) § Rolling output file).
+
+The handoff must be self-contained for a cold reader / next session and include:
+
+- Active repo path: `/home/spawn/Apps/projects/nastaran-web`.
+- A warning to **not** use the archived `/home/spawn/Apps/nastaran-web`.
+- Current branch.
+- Current HEAD (short SHA + subject).
+- Working tree clean/dirty state.
+- Open PRs.
+- Queue state (each request id → status).
+- Any active request and its status, if one exists.
+- Whether any `req/<id>` branch/PR is mid-flight, and where in the state machine it sits.
+- CI/Vercel status on the relevant HEAD, if quickly available.
+- Confirmation that the listener is stopped.
+- The exact suggested restart prompt (below).
+
+**If a request is mid-processing** (`in_progress` / `review` / `improve_requested` / `publishing`, or a half-finished `req/<id>` branch): say so explicitly, name the safe next step from the § Recovery table, and do **not** imply the queue is idle.
+
+**If everything is idle** (clean tree, no open source PRs, no active request): state that the next session can safely run **"start the operator"**.
+
+**Suggested restart prompt** (adapt the specifics to the handoff):
+
+```
+Resume as the nastaran-web Mode A operator. Work ONLY in
+/home/spawn/Apps/projects/nastaran-web (NOT /home/spawn/Apps/nastaran-web).
+Read /home/spawn/temp/output_nastaran.md for the last handoff, then confirm
+branch / HEAD / clean tree / open PRs / queue state. If a request is mid-flight,
+resume it per spec/pipeline-operator-modes.md § Recovery. Otherwise "start the
+listener" (quiet ~10-min cadence; "check the queue now" forces an immediate check).
+```
 
 ### Authentication
 
@@ -169,7 +210,8 @@ Standing rules:
   outside the normal Avvisa/Publicera flow, env-var changes, anything
   touching the archived old project at /home/spawn/Apps/nastaran-web).
 
-When I say "check the queue", you:
+When I say "check the queue" (or "check the queue now" / "pick it
+up" / "process the queue" / similar), you check immediately:
 1. git fetch + git pull origin main.
 2. Read requests/*.json (skip README.md).
 3. Single-lane check; if lane busy, output `loop: lane busy (active
@@ -190,9 +232,12 @@ When I say "check the queue", you:
    explicit handoff request).
 
 When I say "start the listener", you do the same loop above on a
-self-paced ~60-second cadence via ScheduleWakeup, while this session
-stays open. Poll QUIETLY: an empty queue is the steady state, so on
-an idle tick emit no chat — just re-check and re-arm. Speak only when
+self-paced ~10-minute cadence via ScheduleWakeup, while this session
+stays open. (Pickup needn't be near-instant; ~10 min keeps idle token
+spend low — and I can force an immediate check anytime with "check
+the queue now" / "pick it up".) Poll QUIETLY: an empty queue is the
+steady state, so on an idle poll emit no chat — just re-check and
+re-arm. Speak only when
 a queued/improve_requested request appears, real work happens, a hard
 stop fires, or lane/queue state meaningfully changes; while idle, a
 short "listener alive" heartbeat at most about every ~10 minutes, not
@@ -202,6 +247,19 @@ surface to me on any hard-stop condition: ambiguity, unsafe scope
 network or GitHub or Vercel failure that doesn't recover with one
 retry, or anything that needs an owner decision. Closing the session
 ends the listener — no persistence.
+
+When I say "stop the listener and save handoff" (or "stop listening
+and save project info" / "pause operator and write restart handoff" /
+"I need to exit Claude, save restart state" / similar), you: stop the
+listener, do NOT schedule another wakeup, do NOT process any request,
+and write /home/spawn/temp/output_nastaran.md as a closeout handoff —
+active repo path + a warning not to use /home/spawn/Apps/nastaran-web,
+branch, HEAD, clean/dirty tree, open PRs, queue state, any active
+request + status, whether a req/<id> branch/PR is mid-flight, CI/Vercel
+if quick, confirmation the listener is stopped, and the exact restart
+prompt. If a request is mid-flight, state the safe next step and do
+NOT imply the queue is idle; if all idle, say the next session can
+safely run "start the operator".
 
 Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or
 auto-merge of source PRs — those are Mode B (parked) and not the
