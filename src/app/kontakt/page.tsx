@@ -113,6 +113,31 @@ export default function ContactPage() {
           <ContactForm email={contactEmail} />
         </section>
 
+        {/* What happens next */}
+        <section
+          aria-labelledby={kontakt.nextSteps.headingId}
+          className="mt-9 overflow-hidden border border-hairline p-[clamp(28px,5vw,54px)]"
+          style={{
+            borderRadius: "28px",
+            background: "color-mix(in srgb, var(--color-paper) 88%, white)",
+          }}
+        >
+          <Reveal>
+            <p className={`mb-3 ${EYEBROW} text-accent-deep`}>
+              {kontakt.nextSteps.prelude}
+            </p>
+            <h2
+              id={kontakt.nextSteps.headingId}
+              className="mb-4 font-serif font-medium tracking-[-0.018em] text-balance text-ink text-h2 leading-[var(--text-h2--line-height)] md:text-h2-md md:leading-[var(--text-h2-md--line-height)]"
+            >
+              {kontakt.nextSteps.heading}
+            </h2>
+            <p className="max-w-[60ch] text-ink-muted text-body leading-[var(--text-body--line-height)]">
+              {kontakt.nextSteps.body}
+            </p>
+          </Reveal>
+        </section>
+
         {/* Flow */}
         <section
           aria-labelledby={kontakt.flow.headingId}
