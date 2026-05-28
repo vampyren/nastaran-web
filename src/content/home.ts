@@ -34,7 +34,7 @@ export const home = {
     pullQuote: "Varsamt, närvarande och utan överlöften.",
     body: "Behandlingarna beskrivs enkelt och sakligt. Det viktigaste är ett lugnt möte där du får känna in vad som passar.",
     rows: [
-      ["01", "Healing", "Ett stilla rum för närvaro, mjuk balans och personlig återhämtning."],
+      ["01", "Ayurveda", "Ett stilla rum för närvaro, mjuk balans och personlig återhämtning."],
       ["02", "Reiki", "Varsam energibehandling med respekt för kroppens egen takt."],
       ["03", "Massage", "Lugn kroppsterapeutisk beröring med fokus på avspänning och omsorg."],
     ] as const,
