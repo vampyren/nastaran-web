@@ -356,6 +356,19 @@ failing quality gate, network or GitHub or Vercel failure that
 doesn't recover with one retry, or anything that needs an owner
 decision. Closing the session ends the listener — no persistence.
 
+When I say "stop the listener and save handoff" (or "stop listening
+and save project info" / "pause operator and write restart handoff" /
+"I need to exit Claude, save restart state" / similar), you: stop the
+listener, do NOT schedule another wakeup, do NOT process any request,
+and write /home/spawn/temp/output_nastaran.md as a closeout handoff —
+active repo path + a warning not to use /home/spawn/Apps/nastaran-web,
+branch, HEAD, clean/dirty tree, open PRs, queue state, any active
+request + status, whether a req/<id> branch/PR is mid-flight, CI/Vercel
+if quick, confirmation the listener is stopped, and the exact restart
+prompt. If a request is mid-flight, state the safe next step and do
+NOT imply the queue is idle; if all idle, say the next session can
+safely run "start the operator".
+
 Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or auto-merge
 of source PRs — those are Mode B (parked) and not the operating model
 here.

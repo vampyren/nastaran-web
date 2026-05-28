@@ -185,6 +185,7 @@ The user keeps a working output file at `/home/spawn/temp/output_nastaran.md`. *
 - **Overwrite completely** after each meaningful Claude Code round. **Do not append. Do not preserve history.**
 - **Scope — direct collaboration only, NOT Önskemål queue processing.** Active Mode A request-queue processing (the operator cycle: claim → `req/<id>` branch → edit → PR → status flips) does **not** count as a "meaningful round" for this file — do **not** write `output_nastaran.md` for queue cycles. For queue/operator work the source of truth is `requests/<id>.json` + the `req/<id>` branch/PR + GitHub/Vercel state, and the per-cycle report goes to the owner in chat. Direct owner ↔ Claude Code work outside the queue (setup, PR review, debugging, docs, refactors, closeout/handoff summaries, an explicit status request) **does** count — update the file as usual. See [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) § Reporting after each cycle.
 - **Do not create a second output file** unless the user explicitly asks.
+- **Stop/restart handoff command.** When the owner says "stop the listener and save handoff" (or "stop listening and save project info", "pause operator and write restart handoff", "I need to exit Claude, save restart state", or similar), stop the listener, do **not** re-arm or process any request, and write this file as a closeout handoff with the full restart checklist — see [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) § Stop / restart handoff.
 
 **What to include each turn:**
 

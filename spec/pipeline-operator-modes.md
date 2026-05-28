@@ -44,6 +44,45 @@ Each wake runs the loop body above; the listener stops the moment any hard-stop 
 
 **Closing the session ends the listener — no persistence.** Next session starts cold; the owner explicitly opts in again with "start the listener" if they want the polling shape rather than on-demand.
 
+### Stop / restart handoff (owner command)
+
+When the owner signals they're wrapping up — e.g. **"stop the listener and save handoff"**, **"stop listening and save project info"**, **"pause operator and write restart handoff"**, **"I need to exit Claude, save restart state"**, or anything equivalent — the operator does a clean shutdown + handoff:
+
+1. **Stop the listener.** Do not run another queue cycle.
+2. **Do not schedule/re-arm another `ScheduleWakeup`.** The loop ends here.
+3. **Do not claim or process any new request.**
+4. **Write `/home/spawn/temp/output_nastaran.md`.** This is direct closeout/handoff work — not a queue cycle — so writing the file is correct (see [`../CLAUDE.md`](../CLAUDE.md) § Rolling output file).
+
+The handoff must be self-contained for a cold reader / next session and include:
+
+- Active repo path: `/home/spawn/Apps/projects/nastaran-web`.
+- A warning to **not** use the archived `/home/spawn/Apps/nastaran-web`.
+- Current branch.
+- Current HEAD (short SHA + subject).
+- Working tree clean/dirty state.
+- Open PRs.
+- Queue state (each request id → status).
+- Any active request and its status, if one exists.
+- Whether any `req/<id>` branch/PR is mid-flight, and where in the state machine it sits.
+- CI/Vercel status on the relevant HEAD, if quickly available.
+- Confirmation that the listener is stopped.
+- The exact suggested restart prompt (below).
+
+**If a request is mid-processing** (`in_progress` / `review` / `improve_requested` / `publishing`, or a half-finished `req/<id>` branch): say so explicitly, name the safe next step from the § Recovery table, and do **not** imply the queue is idle.
+
+**If everything is idle** (clean tree, no open source PRs, no active request): state that the next session can safely run **"start the operator"**.
+
+**Suggested restart prompt** (adapt the specifics to the handoff):
+
+```
+Resume as the nastaran-web Mode A operator. Work ONLY in
+/home/spawn/Apps/projects/nastaran-web (NOT /home/spawn/Apps/nastaran-web).
+Read /home/spawn/temp/output_nastaran.md for the last handoff, then confirm
+branch / HEAD / clean tree / open PRs / queue state. If a request is mid-flight,
+resume it per spec/pipeline-operator-modes.md § Recovery. Otherwise "start the
+listener" (quiet ~10-min cadence; "check the queue now" forces an immediate check).
+```
+
 ### Authentication
 
 - The local Claude CLI's existing **subscription session** (`claude /login`).
@@ -208,6 +247,19 @@ surface to me on any hard-stop condition: ambiguity, unsafe scope
 network or GitHub or Vercel failure that doesn't recover with one
 retry, or anything that needs an owner decision. Closing the session
 ends the listener — no persistence.
+
+When I say "stop the listener and save handoff" (or "stop listening
+and save project info" / "pause operator and write restart handoff" /
+"I need to exit Claude, save restart state" / similar), you: stop the
+listener, do NOT schedule another wakeup, do NOT process any request,
+and write /home/spawn/temp/output_nastaran.md as a closeout handoff —
+active repo path + a warning not to use /home/spawn/Apps/nastaran-web,
+branch, HEAD, clean/dirty tree, open PRs, queue state, any active
+request + status, whether a req/<id> branch/PR is mid-flight, CI/Vercel
+if quick, confirmation the listener is stopped, and the exact restart
+prompt. If a request is mid-flight, state the safe next step and do
+NOT imply the queue is idle; if all idle, say the next session can
+safely run "start the operator".
 
 Do not enable cron, child `claude -p`, ANTHROPIC_API_KEY, or
 auto-merge of source PRs — those are Mode B (parked) and not the
