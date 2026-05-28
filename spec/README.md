@@ -1,22 +1,21 @@
 # Nastaran clean rebuild — spec folder
 
-This folder holds the living specification for the Nastaran website rebuild. The documents capture what we're building, why, and how — extracted from the old project and locked in before implementation begins.
+This folder holds the living specification for the Nastaran website rebuild. The documents capture what we're building, why, and how — extracted from the original design source and locked in before implementation begins.
 
 **These are living docs.** As the project evolves, update the relevant file in the same PR that introduces the change. If a PR changes design, routes, assets, content structure, tokens, or PR scope, the matching spec file must be updated alongside the code. Spec drift creates the same kind of debt this rebuild is fixing.
 
 ## Project goal
 
-A clean Tailwind-first rebuild of Nastaran's website. The old project remains the strict design and content reference; the new project is a fresh implementation built without the legacy CSS architecture.
+A clean Tailwind-first rebuild of Nastaran's website — faithful to the original design and content (color world, typography, spacing, tone) but implemented fresh, without the previous cascade-heavy CSS architecture.
 
 - **Design reference is strict.** Same color world, same typography mood, same spacing rhythm, same decorative restraint, same Swedish-first tone.
 - **Implementation is fresh.** No cascade chains, no large semantic class systems, no `@apply` migration structure, no theme-only override layers.
 
 ## Paths
 
-- **Old reference project (read-only):** `/home/spawn/Apps/nastaran-web`
-- **New project root (this repo):** `/home/spawn/Apps/projects/nastaran-web`
+- **Project root (this repo):** `/home/spawn/Apps/projects/nastaran-web`
 - **Target GitHub repo:** `vampyren/nastaran-web` (private)
-- **Old preview (untouched):** Cloudflare tunnel from the old project remains the stable preview.
+- **Earlier preview (historical):** during the rebuild a Cloudflare tunnel served as the stable preview (now superseded by Vercel).
 - **New preview target:** Vercel preview deployments (configured in MS2).
 
 ## Files in this folder
@@ -26,7 +25,7 @@ A clean Tailwind-first rebuild of Nastaran's website. The old project remains th
 | `README.md` | This file. Index and update rule. |
 | `design-spec.md` | Extracted design source of truth: colors, type scale, spacing, motifs, image direction, motion, anti-goals. |
 | `implementation-spec.md` | How MS1 is built: tech stack, `globals.css` contract, forbidden CSS patterns, component structure, routes, content/asset strategy, Vercel plan, quality gates. |
-| `decisions-and-open-questions.md` | Locked decisions, recommended defaults for open questions, full PR/milestone breakdown, risks that could leak legacy CSS debt into the rebuild. |
+| `decisions-and-open-questions.md` | Locked decisions, recommended defaults for open questions, full PR/milestone breakdown, risks that could leak prior CSS debt into the rebuild. |
 | `pipeline-mvp.md` | Request/publish pipeline spec: data model, state machine, API contracts, safe edit surface, validation stack, acceptance criteria. |
 | `pipeline-operator-modes.md` | Mode A foreground listener pattern (current). Mode B (cron wrapper) parked. |
 

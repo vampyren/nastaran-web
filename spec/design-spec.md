@@ -1,6 +1,6 @@
 # Design spec — Nastaran clean rebuild
 
-The design source of truth for the new project. All values were extracted directly from the old project at `/home/spawn/Apps/nastaran-web`. No values were eyeballed.
+The design source of truth for the new project. All values were extracted directly from the original design source. No values were eyeballed.
 
 ## Visual identity
 
@@ -151,9 +151,9 @@ All motifs already exist as clean React SVG components in `src/app/SiteMotifs.ts
 
 **Note:** `SanskritColumn` and `PaisleyDivider` were originally listed as MS2-only. They were promoted into MS1 as decorative polish (not as theme infrastructure — no `data-theme` attribute, no theme switcher) after visual review showed the page needed more visual life.
 
-**Body dot pattern.** Old project applies a faint dot grid via `body::before` under `@media (forced-colors: none)`. New project moves this to a dedicated overlay `<BodyBackground>` element in `RootLayout`, keeping the `forced-colors` safety gate.
+**Body dot pattern.** The original design applies a faint dot grid via `body::before` under `@media (forced-colors: none)`. New project moves this to a dedicated overlay `<BodyBackground>` element in `RootLayout`, keeping the `forced-colors` safety gate.
 
-**Top blur veil.** Old project applies a 124-px blurred fade under the top rail via `body::after`. New project moves this to a dedicated element under `<SiteHeader>`, not a body pseudo-element.
+**Top blur veil.** The original design applies a 124-px blurred fade under the top rail via `body::after`. New project moves this to a dedicated element under `<SiteHeader>`, not a body pseudo-element.
 
 **Subtlety rules:**
 
@@ -182,7 +182,7 @@ All motifs already exist as clean React SVG components in `src/app/SiteMotifs.ts
 - Bright, high-saturation, "wellness Instagram" stock.
 - Clinical / medical photography (white rooms, gloves, etc.).
 - Bollywood / temple / yoga-class crowds.
-- Any image not approved or not from the old project.
+- Any image not approved or not from the original design source.
 - Random stock unless explicitly approved.
 
 **Gallery placeholders.** Old `siteData.ts` lists 5 Unsplash URLs in `ceremonyImages`, flagged as "Exempelbild från Unsplash". These are placeholders, not final assets. When the gallery ships:

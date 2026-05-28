@@ -13,12 +13,12 @@
 | **No theme switcher in MS1** | Build one solid visual treatment first; themes are MS2 if MS1 stays clean |
 | **Token-based theme system in MS2 only if MS1 stays clean** | Avoid recreating the theme-overlay CSS that contributed to the old cascade hell |
 | **Framer Motion included from start, restrained only** | Subtle hero entrance + section reveals; no flashy animation, must respect `prefers-reduced-motion` |
-| **No `lucide-react` in MS1** | Old project pulled it in but never imported it; inline SVG motif components are sufficient |
+| **No `lucide-react` in MS1** | The original design pulled it in but never imported it; inline SVG motif components are sufficient |
 | **No GitHub Actions CI in MS1** | Adds scope to an already-shaped first PR; defer to MS2 |
 | **CI in MS2** (lint + typecheck + build on PR) | Once scaffold and first meaningful route ship |
 | **MS1 local quality gates only:** `npm run lint`, `npm run typecheck`, `npm run build` | Developer-run, not enforced by automation yet |
 | Tech stack: Next.js App Router · React 19 · TS strict · Tailwind v4 CSS-first · `next/image` · Framer Motion (restrained) | All chosen and locked |
-| Source of truth for design extraction: old local project at `/home/spawn/Apps/nastaran-web` (not the Cloudflare URL) | Direct file access, exact hex values |
+| Source of truth for design extraction: the original design source (not the Cloudflare URL) | Direct file access, exact hex values |
 | Swedish copy ported verbatim by copy-paste from old source files | Avoid manual retyping → copy drift |
 | Old `globals.css` architecture forbidden in new project | Cascade-heavy semantic class system was the original problem |
 
@@ -32,17 +32,17 @@ These are the defaults. They apply unless the user explicitly overrides.
 
 **Reason:** Keeps the first visual review small and self-contained. Verifies the token system, `globals.css` contract, and component patterns are working before applying them across four routes. Prevents CSS debt from spreading early.
 
-### 2. `/berattelser` gallery — reuse what the old project already uses
+### 2. `/berattelser` gallery — reuse what the original design already uses
 
 **Recommendation:** When MS1.2 PR4 lands, reuse the 5 Unsplash URLs already in `siteData.ts` (`ceremonyImages`). Add `images.remotePatterns` for `images.unsplash.com` in `next.config.mjs` so `next/image` works. Mark clearly in README and in the gallery copy itself that these are placeholders pending real assets.
 
-**Reason:** The old project already uses these placeholders and flags them in Swedish ("Exempelbild från Unsplash"). Don't add new random stock. Don't block the gallery route on missing assets.
+**Reason:** The original design already uses these placeholders and flags them in Swedish ("Exempelbild från Unsplash"). Don't add new random stock. Don't block the gallery route on missing assets.
 
 ### 3. `LavenderSprig` motif — keep available, don't force into MS1
 
 **Recommendation:** Include `LavenderSprig.tsx` in `src/components/motifs/` as an exported component (preserve the original SVG paths), but do not render it on any MS1 route. Available for MS2 or later if it supports the visual identity.
 
-**Reason:** The old project declares it but doesn't actually render it on Home. Don't invent new placements in MS1.
+**Reason:** The original design declares it but doesn't actually render it on Home. Don't invent new placements in MS1.
 
 **Update after PR2 visual review:** Two formerly MS2-only motifs were promoted into MS1 for decorative polish:
 
@@ -55,9 +55,9 @@ These were added as ornaments only — **no `data-theme` attribute, no theme swi
 
 - `/om-mig`, `/berattelser`, `/kontakt` are now implemented as part of MS1 (no longer deferred).
 - `/testimonials` redirect now retargets to `/berattelser` (was `/`).
-- `next.config.mjs` got `images.remotePatterns` for `images.unsplash.com` to support the 5 gallery placeholders that the old project already used.
-- `next/image` is used for local assets only on Berättelser; the gallery itself uses a plain `<img>` element (with `referrerPolicy="no-referrer"`) inside the ported `GalleryCarousel`. This matches the old project's pattern for Unsplash CDN images.
-- New `public/assets/generated/nastaran-character-01.jpeg` for the Om-mig portrait, copied from the old project.
+- `next.config.mjs` got `images.remotePatterns` for `images.unsplash.com` to support the 5 gallery placeholders that the original design already used.
+- `next/image` is used for local assets only on Berättelser; the gallery itself uses a plain `<img>` element (with `referrerPolicy="no-referrer"`) inside the ported `GalleryCarousel`. This matches the original design's pattern for Unsplash CDN images.
+- New `public/assets/generated/nastaran-character-01.jpeg` for the Om-mig portrait, copied from the original design.
 
 ### 4. Body dot pattern — preserve with forced-colors safety gate
 
@@ -239,9 +239,9 @@ Adapts the validated `shadi-web` MS3 pattern. Five-PR chain:
 
 **Listener cadence changed (2026-05-28):** default idle poll moved from **~60 s to ~10 min**. The owner can still force immediate pickup by command ("check the queue now", "pick it up", "process the queue"). Reason: near-instant pickup isn't needed for this project and a 60-second poll wasted tokens. Captured in CLAUDE.md § Request/publish pipeline rules (rule 5) and `pipeline-operator-modes.md` § Foreground listener / § Manual immediate check.
 
-**Stop/restart handoff command added (2026-05-28):** owner phrases like "stop the listener and save handoff" / "stop listening and save project info" / "pause operator and write restart handoff" / "I need to exit Claude, save restart state" trigger a clean shutdown — stop the listener, no re-arm, no request processing — and write `output_nastaran.md` as a closeout handoff (active repo path + old-path warning, branch, HEAD, clean/dirty tree, open PRs, queue state, any active request + status, whether a `req/<id>` branch/PR is mid-flight, CI/Vercel if quick, listener-stopped confirmation, exact restart prompt). Mid-flight requests get an explicit safe-next-step and are never reported as idle. Captured in CLAUDE.md § Rolling output file and `pipeline-operator-modes.md` § Stop / restart handoff.
+**Stop/restart handoff command added (2026-05-28):** owner phrases like "stop the listener and save handoff" / "stop listening and save project info" / "pause operator and write restart handoff" / "I need to exit Claude, save restart state" trigger a clean shutdown — stop the listener, no re-arm, no request processing — and write `output_nastaran.md` as a closeout handoff (active repo path, branch, HEAD, clean/dirty tree, open PRs, queue state, any active request + status, whether a `req/<id>` branch/PR is mid-flight, CI/Vercel if quick, listener-stopped confirmation, exact restart prompt). Mid-flight requests get an explicit safe-next-step and are never reported as idle. Captured in CLAUDE.md § Rolling output file and `pipeline-operator-modes.md` § Stop / restart handoff.
 
-## D. Risks that could leak legacy CSS debt into the rebuild
+## D. Risks that could leak prior CSS debt into the rebuild
 
 | Risk | Mitigation |
 |---|---|
@@ -253,5 +253,5 @@ Adapts the validated `shadi-web` MS3 pattern. Five-PR chain:
 | **Adding dependencies before there is a real need.** `lucide-react`, headless UI libs, animation libs. | Hard rule: no new runtime dependency in any PR without a PR comment explaining why. MS1 runtime deps locked: `next`, `react`, `react-dom`, `framer-motion`. Dev deps locked: `tailwindcss`, `@tailwindcss/postcss`, `typescript`, `eslint`, `eslint-config-next`, `@types/*`. |
 | **Random stock images instead of approved local assets.** Easy to grab a stock photo "to fill the gallery." | Hard rule: no new image asset without explicit approval. Reviewer greps for new files in `public/assets/`. |
 | **`@apply` creeping in.** Especially for "I'll just reuse this 5-utility chain across 3 components." | Default: no `@apply`. If a pattern repeats 3+ times, make a sub-component, not a CSS class. Any `@apply` in a PR requires a PR comment. |
-| **Custom breakpoints.** Old project had 14+. Tailwind defaults to 5. | Hard rule: any custom breakpoint in `@theme --breakpoint-*` requires a PR comment explaining why. |
+| **Custom breakpoints.** The original design had 14+. Tailwind defaults to 5. | Hard rule: any custom breakpoint in `@theme --breakpoint-*` requires a PR comment explaining why. |
 | **Polish layers.** "I'll add a polish file later to fix this one thing." | Hard rule: no `polish.css`, no `overrides.css`, no `Dxx` layered comments in `globals.css`. Design changes go into the component that owns them. |

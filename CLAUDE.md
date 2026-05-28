@@ -193,7 +193,7 @@ The user keeps a working output file at `/home/spawn/temp/output_nastaran.md`. *
 - Repo / branch / PR / status / commit SHA(s).
 - Changed files if any.
 - Quality gates run, and their results.
-- Safety notes (old project paths untouched, no secrets in chat/docs/PR, etc.).
+- Safety notes (no secrets in chat/docs/PR, source-of-truth respected, etc.).
 - One short line at the bottom: next step or open question, or `Standing by.` if nothing's queued.
 
 The file is meant to be read cold by a reviewer who hasn't seen the chat. Make it self-contained for that round. Git history preserves the project trail; this file is the working tray.
@@ -210,10 +210,9 @@ Still: never paste real secret values into chat. Tell the owner to run the `open
 
 These apply unconditionally unless I override them in-session.
 
-- **Do not touch archived/old repos or project paths unless I explicitly ask.** The old Nastaran project at `/home/spawn/Apps/nastaran-web` is archived reference only — do not modify it. Use this repo (`/home/spawn/Apps/projects/nastaran-web`, `vampyren/nastaran-web`) as the single source of truth.
+- **Single source of truth.** All work happens in this repo: `/home/spawn/Apps/projects/nastaran-web` (`vampyren/nastaran-web`). Use it for every read and write.
 - **Do not change Vercel settings or env vars unless I explicitly ask.**
 - **Do not paste secrets into chat, docs, commits, logs, or PR bodies.**
 - **Do not create PATs, secrets, deployment settings, or OAuth/app integrations without explicit approval.** The pipeline's `GITHUB_TOKEN`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` must be set by the human directly in the Vercel dashboard — see [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) § 2.
-- **Treat the old Nastaran project/repo/path as archived reference only.** Do not modify it. Use the current repo/project as the source of truth.
 - **No `ANTHROPIC_API_KEY` anywhere.** Mode A uses the local Claude CLI subscription session; setting an API key would override it.
 - **The operator edits only `src/content/*.ts`** during request work. Anything outside that = unsafe classification = `failed + manualFix`.

@@ -1,6 +1,6 @@
 # Learnings + MS2 theme system (shipped)
 
-Captures original-site theme/design learnings (extracted read-only from `/home/spawn/Apps/nastaran-web`) and the rules the MS2 theme selector followed. **MS2 shipped** — the guardrails below are kept as the contract for any future theme additions or changes. Pairs with [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) which records the current accepted look.
+Captures original-site theme/design learnings (extracted read-only from the original Nastaran site project) and the rules the MS2 theme selector followed. **MS2 shipped** — the guardrails below are kept as the contract for any future theme additions or changes. Pairs with [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) which records the current accepted look.
 
 ---
 
@@ -17,7 +17,7 @@ Source: `src/app/ThemeSwitcher.tsx` + `src/app/ThemeDecorations.tsx` + `src/app/
 | `elements` | Element | Ayurvedas fem element | `#faf7fc #f3e7c0 #b8945a` | Adds an `ElementsBand` section ("Pancha Mahabhuta") with the five elements: Jord (पृथ्वी), Vatten (जल), Eld (अग्नि), Luft (वायु), Eter (आकाश) — each with an SVG glyph and Devanagari name |
 | `arch` | Arch | Jharokha-ram | `#faf7fc #ead8f4 #7a4e8c` | Adds a large Jharokha (Indian palace window) arch SVG behind the hero / page content |
 
-**Critically:** the four themes don't change the core color palette in the old project. They toggle the visibility of **decorative SVG overlays** that exist in the DOM at all times but are gated by `:root[data-theme="..."] .theme-only-...` rules. Same `--paper`, `--aubergine`, `--accent`, `--copper`, `--marigold` everywhere.
+**Critically:** the four themes don't change the core color palette in the original design. They toggle the visibility of **decorative SVG overlays** that exist in the DOM at all times but are gated by `:root[data-theme="..."] .theme-only-...` rules. Same `--paper`, `--aubergine`, `--accent`, `--copper`, `--marigold` everywhere.
 
 ### Color palette (original `:root` in old globals.css)
 
@@ -31,7 +31,7 @@ Identical to what the clean rebuild uses (we extracted hex-for-hex). All 14 name
 
 The current site already inherits these (via `next/font/google`).
 
-### Decorative motifs in the old project
+### Decorative motifs in the original design
 
 | Motif | Component | Currently in clean rebuild? |
 |---|---|---|
@@ -56,7 +56,7 @@ The current site already inherits these (via `next/font/google`).
 - **Booti** (Mughal dot+leaf pattern) inside the hero ritual panel
 - **Sandalwood / lavender / copper / marigold** color palette — warm, premium, spiritual but restrained
 
-### What's worth preserving from the old project
+### What's worth preserving from the original design
 
 1. The **base color palette** (already preserved — same hexes)
 2. The **lotus / paisley / booti** motifs (already in MS1)
@@ -67,14 +67,14 @@ The current site already inherits these (via `next/font/google`).
 
 ### What must NOT be brought back
 
-1. **The 2369-line globals.css with D7–D10 polish layers.** The old project's CSS was cascade-heavy with hundreds of semantic class selectors (`.section-shell`, `.contact-section h2`, `.row-list p`, etc.) overridden by later "polish" stanzas. The current site rebuilds from Tailwind utilities and we never recreate that cascade structure.
-2. **`@apply` migration architecture.** Some intermediate state of the old project had `@apply` directives mapping Tailwind utilities into semantic classes. MS2 must not reintroduce this.
-3. **`body::before` / `body::after` decorations.** Old project put the dot pattern, top blur veil, and other decorative bits on body pseudo-elements. The current site moved them into real DOM elements (`BodyBackground`, `HeaderFrost`). MS2 must keep this.
-4. **`!important` overrides** like `.desktop-nav { display: flex !important; }` and `.spine-nav { display: none !important; }` that the old project's D8 layer used to fight earlier rules.
+1. **The 2369-line globals.css with D7–D10 polish layers.** The original design's CSS was cascade-heavy with hundreds of semantic class selectors (`.section-shell`, `.contact-section h2`, `.row-list p`, etc.) overridden by later "polish" stanzas. The current site rebuilds from Tailwind utilities and we never recreate that cascade structure.
+2. **`@apply` migration architecture.** Some intermediate state of the original design had `@apply` directives mapping Tailwind utilities into semantic classes. MS2 must not reintroduce this.
+3. **`body::before` / `body::after` decorations.** Original design put the dot pattern, top blur veil, and other decorative bits on body pseudo-elements. The current site moved them into real DOM elements (`BodyBackground`, `HeaderFrost`). MS2 must keep this.
+4. **`!important` overrides** like `.desktop-nav { display: flex !important; }` and `.spine-nav { display: none !important; }` that the original design's D8 layer used to fight earlier rules.
 5. **`:not()` selector chains** like `.section-shell:not(.contact-section):not(.warm-section)::before`. Not allowed.
-6. **Custom breakpoint chaos** — old project had 14+ overlapping `@media` queries (390/430/640/768/900/1024/1100/1280/1440/etc.). MS2 must stick to Tailwind defaults plus the handful of `max-[560px]:`/`max-[640px]:` arbitraries we already have.
+6. **Custom breakpoint chaos** — original design had 14+ overlapping `@media` queries (390/430/640/768/900/1024/1100/1280/1440/etc.). MS2 must stick to Tailwind defaults plus the handful of `max-[560px]:`/`max-[640px]:` arbitraries we already have.
 7. **`theme-only-*` CSS class architecture** where every theme-specific node is rendered in the DOM at all times and shown/hidden via `:root[data-theme="..."]` selectors. If MS2 needs theme-specific decorations, they should be **conditionally rendered** in React, not hidden by CSS.
-8. **Noisy decoration** — Bollywood/temple-heavy ornament, multiple stacked overlays, busy background patterns. The old project deliberately stayed restrained; MS2 must too.
+8. **Noisy decoration** — Bollywood/temple-heavy ornament, multiple stacked overlays, busy background patterns. The original design deliberately stayed restrained; MS2 must too.
 
 ---
 
@@ -119,11 +119,11 @@ Hard rules the theme selector followed. **MS2 shipped** with these rules respect
 
 ### Theme labels in Swedish, elegant
 
-Old project's switcher labels: "Base" / "Ornament" / "Element" / "Arch". Those are fine but "Element" reads oddly in Swedish — could be "Elementen" (the elements). Keep labels short, capitalized like proper nouns, with a one-line Swedish hint (the old project's hint pattern: `Nuvarande utseende`, `Mandala · paisley · sanskrit`, etc.).
+Original design's switcher labels: "Base" / "Ornament" / "Element" / "Arch". Those are fine but "Element" reads oddly in Swedish — could be "Elementen" (the elements). Keep labels short, capitalized like proper nouns, with a one-line Swedish hint (the original design's hint pattern: `Nuvarande utseende`, `Mandala · paisley · sanskrit`, etc.).
 
 ### Original themes first, new themes second
 
-Inventory below proposes themes derived from the old project's four. **Don't invent a wildly new theme before the four originals are visually documented and selectable.**
+Inventory below proposes themes derived from the original design's four. **Don't invent a wildly new theme before the four originals are visually documented and selectable.**
 
 ### No Bollywood / temple-heavy design
 
@@ -145,11 +145,11 @@ Inventory below proposes themes derived from the old project's four. **Don't inv
 | Theme id | Swedish label | Inspired by | Color palette | Decorations |
 |---|---|---|---|---|
 | `nuvarande` | Nuvarande | Current deployed site | Existing tokens (unchanged). `--color-paper #f4eaf8` base, `--color-accent #8a6aa5`, copper + marigold accents | Lotus + paisley + booti only. No theme-specific overlays. |
-| `ornament` | Ornament | Old project's "ornament" theme | Same base palette | `<MandalaWatermark />` top-left + the fixed `<SanskritColumn />` on the left edge at xl+ |
-| `elementen` | Elementen | Old project's "elements" theme (Pancha Mahabhuta) | Same base | `<ElementsBand />` (Pancha Mahabhuta) section rendered inline in `src/app/page.tsx` |
-| `bage` | Båge | Old project's "arch" theme (Jharokha) | Same base | `<JharokhaArch />` SVG behind the hero copy |
+| `ornament` | Ornament | Original design's "ornament" theme | Same base palette | `<MandalaWatermark />` top-left + the fixed `<SanskritColumn />` on the left edge at xl+ |
+| `elementen` | Elementen | Original design's "elements" theme (Pancha Mahabhuta) | Same base | `<ElementsBand />` (Pancha Mahabhuta) section rendered inline in `src/app/page.tsx` |
+| `bage` | Båge | Original design's "arch" theme (Jharokha) | Same base | `<JharokhaArch />` SVG behind the hero copy |
 
-**All four themes share the same palette family.** The differences are decorative overlays + tiny per-theme tone adjustments. This matches the old project's intent — themes are seasonings on the same base recipe, not entirely different recipes.
+**All four themes share the same palette family.** The differences are decorative overlays + tiny per-theme tone adjustments. This matches the original design's intent — themes are seasonings on the same base recipe, not entirely different recipes.
 
 ### Optional themes — explicitly not implemented
 

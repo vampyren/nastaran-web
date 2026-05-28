@@ -87,9 +87,9 @@ No manual import, build-command tweaks, or env vars are required for the current
 
 | Asset | Source | Use |
 |---|---|---|
-| `public/assets/generated/nastaran_space.jpeg` | Old project | Home hero ritual panel |
-| `public/assets/generated/nastaran-character-01.jpeg` | Old project | Om-mig portrait |
-| `images.unsplash.com` (5 URLs) | Old project's `siteData.ts` | Berättelser gallery placeholders — flagged as placeholders in the Swedish copy. Replace with real assets before public launch, then drop `images.remotePatterns`. |
+| `public/assets/generated/nastaran_space.jpeg` | Original source | Home hero ritual panel |
+| `public/assets/generated/nastaran-character-01.jpeg` | Original source | Om-mig portrait |
+| `images.unsplash.com` (5 URLs) | Original `siteData.ts` | Berättelser gallery placeholders — flagged as placeholders in the Swedish copy. Replace with real assets before public launch, then drop `images.remotePatterns`. |
 
 The Unsplash patterns are whitelisted in `next.config.mjs` via `images.remotePatterns`.
 
