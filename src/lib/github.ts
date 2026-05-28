@@ -1,15 +1,28 @@
 /**
  * Shared GitHub client + helpers for request-record I/O.
  *
- * All writes target `requests/<id>.json` on the production branch (`main`).
- * Every write is SHA-conditional — see spec/pipeline-mvp.md § Optimistic
+ * All exported writes/deletes target the production branch (`main`) and are
+ * SHA-conditional where applicable — see spec/pipeline-mvp.md § Optimistic
  * concurrency.
  *
- * **Exported write surface is intentionally narrow.** The only writer is
- * `putRequestFile(gh, id, ...)` — there is no generic put-anywhere-on-main
- * helper. A future caller cannot widen the metadata-write exception by
- * passing a different `path`. Id validation lives in `requestPath()`,
- * which `putRequestFile` calls before any Octokit call.
+ * **The exported main write/delete surface is intentionally narrow.** Every
+ * helper derives its path internally from a validated request id (and, for
+ * attachments, a server-generated name) — no exported helper accepts a
+ * free-form path on `main`:
+ *
+ *   - Request metadata writes go through `putRequestFile(gh, id, ...)`, which
+ *     derives `requests/<id>.json` via `requestPath(id)`.
+ *   - Attachment writes go through `putAttachmentFile(gh, id, name, ...)`,
+ *     which derives `requests/<id>/attachments/<name>` via
+ *     `attachmentPath(id, name)`.
+ *   - Attachment rollback deletes go through
+ *     `deleteAttachmentFile(gh, id, name, sha, ...)`, which also derives the
+ *     path via `attachmentPath(id, name)`. The low-level by-path delete
+ *     (`deleteMainFileByPath`) is private/unexported.
+ *
+ * A future caller cannot widen the metadata-write exception by passing a
+ * different `path`; id (and attachment-name) validation runs before any
+ * Octokit call.
  *
  * See CLAUDE.md § Request/publish pipeline rules § rule 4 and
  * spec/pipeline-mvp.md § Architecture > main write exception.
