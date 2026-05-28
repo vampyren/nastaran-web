@@ -14,6 +14,25 @@ Cross-references:
 
 ---
 
+## Current baseline
+
+Last known-good operational baseline, as of **2026-05-28**:
+
+| Field | Value |
+|---|---|
+| Repo | `vampyren/nastaran-web` |
+| Local path | `/home/spawn/Apps/projects/nastaran-web` |
+| `main` HEAD | `8e2c3d7` (snapshot point — `main` advances as later PRs merge; treat as a marker, not a live pointer) |
+| Queue | Idle — no active request |
+| Listener / operator | Stopped — not armed |
+| Open PRs | None |
+| Pipeline | Installed + tested (PRs A–E) |
+| Attachments | Installed + tested (1–3 per request) |
+
+Refresh this snapshot after any operational change — a new merge to `main`, a request processed end-to-end, or the listener being restarted.
+
+---
+
 ## Purpose
 
 Three things need to be true for the pipeline to ship cleanly:
@@ -102,7 +121,7 @@ Each step assumes the previous one passed. Pause and triage on any deviation.
 9. **Avvisa.** On a third fresh card in `review`, click `Avvisa` with an optional reason. PR closes unmerged, branch deletes, status → `rejected`, production untouched.
 10. **Försök igen.** Submit a deliberately unsafe request (e.g. "bump the version in package.json to 99.0.0"). Operator classifies unsafe → CAS to `failed + manualFix`. Card appears in `Fel`. Click `Försök igen`. Status flips back to `queued`. Operator picks it up again on the next cycle and classifies again — still unsafe, still moves to `failed`. Click `Avvisa` from `failed` to clear the card.
 11. **Single-lane.** While a request is in `review`, submit a second request. Tell the operator "check the queue". Expected: operator does NOT claim the second. Emits `loop: lane busy (active <id> at review)`. Second request stays at `queued` until the first reaches a terminal state.
-12. **Listener mode.** Owner says "start the listener" in the operator session. Session schedules a `ScheduleWakeup` ~60 s in the future. With an empty queue, each wake emits `loop: queue empty` and reschedules. Closing the session ends the listener — verify by reopening a fresh session and confirming nothing wakes on its own.
+12. **Listener mode.** Owner says "start the listener" in the operator session. Session schedules a `ScheduleWakeup` ~10 min in the future (idle default). With an empty queue, each wake **polls quietly** — no chat output on idle ticks (at most an occasional "listener alive" heartbeat) — then reschedules. The owner can force an immediate check at any time with "check the queue now" / "pick it up" / "process the queue". Closing the session ends the listener — verify by reopening a fresh session and confirming nothing wakes on its own.
 
 ---
 
@@ -178,7 +197,7 @@ First live exercise of the pipeline. Reference request id: `20260527-164925-racy
 | 9 | **Avvisa** — owner closes a card; PR closes unmerged | ⏳ | Not yet exercised. |
 | 10 | **Försök igen** — deliberately unsafe request → `failed + manualFix` → retry → `queued` | ⏳ | Not yet exercised. |
 | 11 | **Single-lane invariant** with a second concurrent submission | ⏳ | Partially: the single-lane invariant was respected during the Förbättra iteration (improve_requested → in_progress → review on the same request, not a new claim). Not yet stress-tested with a second concurrent submission. |
-| 12 | **Listener mode** (`start the listener` → ~60 s `ScheduleWakeup` cadence) | ⏳ | Not yet exercised. The on-demand `check the queue` shape was used for steps 5 + 8. |
+| 12 | **Listener mode** (`start the listener` → ~10 min quiet `ScheduleWakeup` cadence) | ⏳ | Not yet exercised. The on-demand `check the queue` shape was used for steps 5 + 8. |
 
 **Three bugs surfaced during the live run; all three fixed:**
 

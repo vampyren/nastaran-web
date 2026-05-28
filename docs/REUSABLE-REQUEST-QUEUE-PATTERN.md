@@ -87,7 +87,7 @@ Optional: `NEXT_PUBLIC_PREVIEW_MODE=1` for preview-mode UI niceties (never used 
 
 ## Operator modes
 
-- **Mode A — Interactive Claude Code session as the operator.** Current. The owner's local Claude Code session reads the queue, classifies, asks if uncertain, processes one request per check. Two usage shapes: on-demand (default) or foreground listener (opt-in, ~60 s cadence via `ScheduleWakeup`, this-session-only). No child process. No cron. Uses the local Claude CLI's subscription auth (no `ANTHROPIC_API_KEY`).
+- **Mode A — Interactive Claude Code session as the operator.** Current. The owner's local Claude Code session reads the queue, classifies, asks if uncertain, processes one request per check. Two usage shapes: on-demand (default) or foreground listener (opt-in, **~10 min idle cadence** via `ScheduleWakeup`, this-session-only). The listener **polls quietly** — no chat output on idle ticks, speaking up only when something actionable happens. The owner can force an immediate check at any time with "check the queue now" / "pick it up" / "process the queue". No child process. No cron. Uses the local Claude CLI's subscription auth (no `ANTHROPIC_API_KEY`). (A faster ~60 s default was tried and judged wasteful — faster pickup is on-demand only.)
 - **Mode B — Cron-driven `claude -p` wrapper.** Parked. Needs wrapper-level output validation + permission/auth handoff resolution before it's safe for unattended use. Not implemented in `nastaran-web`.
 
 ---
