@@ -1,15 +1,28 @@
 /**
  * Shared GitHub client + helpers for request-record I/O.
  *
- * All writes target `requests/<id>.json` on the production branch (`main`).
- * Every write is SHA-conditional — see spec/pipeline-mvp.md § Optimistic
+ * All exported writes/deletes target the production branch (`main`) and are
+ * SHA-conditional where applicable — see spec/pipeline-mvp.md § Optimistic
  * concurrency.
  *
- * **Exported write surface is intentionally narrow.** The only writer is
- * `putRequestFile(gh, id, ...)` — there is no generic put-anywhere-on-main
- * helper. A future caller cannot widen the metadata-write exception by
- * passing a different `path`. Id validation lives in `requestPath()`,
- * which `putRequestFile` calls before any Octokit call.
+ * **The exported main write/delete surface is intentionally narrow.** Every
+ * helper derives its path internally from a validated request id (and, for
+ * attachments, a server-generated name) — no exported helper accepts a
+ * free-form path on `main`:
+ *
+ *   - Request metadata writes go through `putRequestFile(gh, id, ...)`, which
+ *     derives `requests/<id>.json` via `requestPath(id)`.
+ *   - Attachment writes go through `putAttachmentFile(gh, id, name, ...)`,
+ *     which derives `requests/<id>/attachments/<name>` via
+ *     `attachmentPath(id, name)`.
+ *   - Attachment rollback deletes go through
+ *     `deleteAttachmentFile(gh, id, name, sha, ...)`, which also derives the
+ *     path via `attachmentPath(id, name)`. The low-level by-path delete
+ *     (`deleteMainFileByPath`) is private/unexported.
+ *
+ * A future caller cannot widen the metadata-write exception by passing a
+ * different `path`; id (and attachment-name) validation runs before any
+ * Octokit call.
  *
  * See CLAUDE.md § Request/publish pipeline rules § rule 4 and
  * spec/pipeline-mvp.md § Architecture > main write exception.
@@ -218,11 +231,12 @@ export async function putAttachmentFile(
 }
 
 /**
- * Deletes a file on `main` by path. Used for best-effort cleanup if a
- * multi-attachment upload fails partway and we want to remove orphaned
- * blobs before reporting the error to the client.
+ * Low-level delete of a file on `main` by path. PRIVATE — intentionally
+ * NOT exported, so no caller outside this module can delete an arbitrary
+ * path. The only public delete entry point is `deleteAttachmentFile`,
+ * which derives the path from a validated request id + attachment name.
  */
-export async function deleteMainFile(
+async function deleteMainFileByPath(
   { octokit, owner, repo }: GithubConfig,
   path: string,
   sha: string,
@@ -236,6 +250,28 @@ export async function deleteMainFile(
     sha,
     message,
   });
+}
+
+/**
+ * Deletes a request attachment blob (`requests/<id>/attachments/<name>`)
+ * on `main`. Used for best-effort rollback of orphaned blobs when a
+ * multi-attachment intake fails partway.
+ *
+ * The path is derived internally via `attachmentPath(id, name)`, which
+ * validates both the request id and the server-generated attachment name
+ * before any Octokit call. Callers pass a validated id + name, never an
+ * arbitrary path — this keeps the delete surface as narrow as the write
+ * surface (`putRequestFile` / `putAttachmentFile`).
+ */
+export async function deleteAttachmentFile(
+  gh: GithubConfig,
+  id: string,
+  name: string,
+  sha: string,
+  message: string
+): Promise<void> {
+  const path = attachmentPath(id, name);
+  await deleteMainFileByPath(gh, path, sha, message);
 }
 
 /**

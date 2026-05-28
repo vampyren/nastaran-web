@@ -339,7 +339,7 @@ The user's original filename is **never** used as a path component. It is saniti
 4. **Per-file declared size check** — `> 0` and `≤ 5 MB`.
 5. **Per-file magic-byte sniff after read** — bytes must match one of the three allowed signatures (PNG `89 50 4E 47`, JPEG `FF D8 FF`, WebP `RIFF…WEBP`). The sniffed mime MUST equal the declared mime — mismatches reject with `file_type_invalid`. Browsers can mis-report `File.type`; bytes are the source of truth.
 6. **Server-generated stored filename** — `<index>-<rand6>.<ext>`. The user's filename never reaches the file system.
-7. **All-or-nothing semantics** — if any attachment fails validation OR upload, already-uploaded blobs are best-effort deleted via `deleteMainFile` and the request JSON is NOT written. Orphan blobs without a parent JSON are harmless (the queue board never lists them); cleanup is opportunistic.
+7. **All-or-nothing semantics** — if any attachment fails validation OR upload, already-uploaded blobs are best-effort deleted via `deleteAttachmentFile` and the request JSON is NOT written. Orphan blobs without a parent JSON are harmless (the queue board never lists them); cleanup is opportunistic.
 
 ### main-write narrowing (extends rule 4)
 
@@ -349,7 +349,7 @@ The metadata-write exception explicitly covers the attachment sub-tree. The expo
 |---|---|---|
 | `putRequestFile(gh, id, …)` | `requests/<id>.json` | Validates `id` via `requestPath()`. |
 | `putAttachmentFile(gh, id, name, …)` | `requests/<id>/attachments/<name>` | Validates `id` AND `name` via `attachmentPath()`. `name` must match the server-generated pattern `<1-3>-<6 alnum>.(png|jpg|webp)`. |
-| `deleteMainFile(gh, path, sha, …)` | (any) | Used only for best-effort rollback of orphan attachments — the caller supplies the path it just wrote via `putAttachmentFile`. |
+| `deleteAttachmentFile(gh, id, name, sha, …)` | `requests/<id>/attachments/<name>` | Best-effort rollback of orphan attachments. Derives the path internally via `attachmentPath(id, name)` — validates `id` AND `name`; the caller passes a validated id + server-generated name, never a free-form path. (A private, unexported `deleteMainFileByPath` does the low-level delete.) |
 
 No exported helper accepts a free-form path on `main`. Both id and stored filename are validated independently, so the surface stays narrow even with the new sub-tree.
 
