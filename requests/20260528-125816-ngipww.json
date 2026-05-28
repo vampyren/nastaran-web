@@ -1,0 +1,31 @@
+{
+  "id": "20260528-125816-ngipww",
+  "title": "Förbättra kontaktsidan genom att lägga till en kort och tydlig sektion efter formulärets introduktion med rubriken “Vad ",
+  "description": "Förbättra kontaktsidan genom att lägga till en kort och tydlig sektion efter formulärets introduktion med rubriken “Vad händer sen?”. Texten ska förklara att Nastaran återkommer personligen, att tiden bekräftas manuellt, och att man inte behöver dela känsliga detaljer i första kontakten. Behåll den lugna, varma och sakliga tonen. Ändra bara innehåll/text, ingen layoutombyggnad.",
+  "page": "kontakt",
+  "createdBy": "anonymous",
+  "status": "queued",
+  "createdAt": "2026-05-28T12:58:16.039Z",
+  "updatedAt": "2026-05-28T12:58:16.039Z",
+  "claimedAt": null,
+  "reviewReadyAt": null,
+  "approvedAt": null,
+  "publishedAt": null,
+  "rejectedAt": null,
+  "failedAt": null,
+  "branch": null,
+  "pullRequestUrl": null,
+  "pullRequestNumber": null,
+  "previewUrl": null,
+  "latestCommitSha": null,
+  "productionCommitSha": null,
+  "productionDeploymentUrl": null,
+  "history": [
+    {
+      "at": "2026-05-28T12:58:16.039Z",
+      "actor": "user",
+      "event": "created",
+      "message": "Submitted anonymously"
+    }
+  ]
+}
