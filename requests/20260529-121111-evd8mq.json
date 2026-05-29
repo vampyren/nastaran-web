@@ -4,14 +4,14 @@
   "description": "lägg till ytterligare text på titeln första sidan, jag tycker den är lite klen just nu",
   "page": "berattelser",
   "createdBy": "Roro",
-  "status": "queued",
+  "status": "rejected",
   "createdAt": "2026-05-29T12:11:11.459Z",
-  "updatedAt": "2026-05-29T12:11:11.459Z",
+  "updatedAt": "2026-05-29T15:40:45.624Z",
   "claimedAt": null,
   "reviewReadyAt": null,
   "approvedAt": null,
   "publishedAt": null,
-  "rejectedAt": null,
+  "rejectedAt": "2026-05-29T15:40:45.624Z",
   "failedAt": null,
   "branch": null,
   "pullRequestUrl": null,
@@ -26,6 +26,13 @@
       "actor": "user",
       "event": "created",
       "message": "Submitted by Roro"
+    },
+    {
+      "at": "2026-05-29T15:40:45.624Z",
+      "actor": "admin",
+      "event": "rejected",
+      "message": "Removed from queue by owner request (ambiguous; never clarified)"
     }
-  ]
+  ],
+  "rejectionReason": "Borttagen ur kön – tvetydig förfrågan (sida/titel oklar); ägaren bad att ta bort den."
 }
