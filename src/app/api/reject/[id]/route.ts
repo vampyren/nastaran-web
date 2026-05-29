@@ -2,7 +2,8 @@
  * POST /api/reject/[id] — reject a request and tidy up.
  *
  * Allowed when current status is one of `review`, `improve_requested`,
- * `failed`. Sets status → `rejected`, records the reason, then
+ * `failed`, `clarification_needed`. Sets status → `rejected`, records the
+ * reason, then
  * best-effort:
  *   - closes the PR (if `pullRequestNumber` is set)
  *   - deletes the `req/...` branch (if `branch` is set)
@@ -107,6 +108,8 @@ const REJECTABLE: ReadonlySet<string> = new Set([
   "review",
   "improve_requested",
   "failed",
+  // A parked clarification request can be cleared without an answer.
+  "clarification_needed",
 ]);
 
 async function closePullRequestIfAny(

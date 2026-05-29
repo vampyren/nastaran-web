@@ -60,7 +60,7 @@ admin-only (pre-launch) / public (post-launch)             admin (cookie-gated)
 2. **Operator edits ONLY a known-safe path.** In `nastaran-web` that's `src/content/{berattelser,home,kontakt,om-mig,site}.ts`. Anything else = unsafe classification = `failed + manualFix`.
 3. **Four-tier classification** for incoming requests:
    - Clear content-only → process normally.
-   - Minor content ambiguity → STOP and ask (Mode A).
+   - **Ambiguous-but-safe → `clarification_needed`**: park the request with a concise question, surfaced in the queue UI; the requester answers in the board and it returns to `queued`. No claim/branch/PR while parked; the operator never guesses. (Earlier iterations stopped to ask the maintainer in the agent session; the in-product clarification loop is the improvement.)
    - Structural / out-of-scope → `failed + manualFix`.
    - Unsafe (configs, package.json, layout, src/app) → `failed + manualFix`.
 4. **Build gates before push.** `lint`, `typecheck`, `build` must all pass on the operator's local branch before pushing. A broken branch never gets a PR.
@@ -104,6 +104,7 @@ Optional: `NEXT_PUBLIC_PREVIEW_MODE=1` for preview-mode UI niceties (never used 
 - Listener cadences — quiet ~10 min idle poll; faster quiet ~60 s review-state decision-watch while a pushed request awaits an owner decision; manual immediate override phrases.
 - Single-lane invariant.
 - Four-tier classification rule — including the narrow **content-driven renderer glue** allowance (a new content field plus minimal same-page renderer wiring to display it, inside the request branch + PR + preview flow; not a license for routes, APIs, layout redesign, shared-component refactors, or cross-page edits).
+- **Clarification flow** — an ambiguous-but-safe request parks at `clarification_needed` with an operator question the requester answers in the queue UI (then back to `queued`). Crucial: keep two **separate** status sets — lane-blocking (active work, one at a time) vs queue-depth/counting (which may include the parked clarification state). `clarification_needed` is counted but NOT lane-blocking, so it never stalls other requests.
 - Runtime env checklist.
 - API surface (English route names).
 - Code libraries — `src/lib/auth.ts`, `src/lib/github.ts`, `src/lib/request-store.ts`, `src/lib/request-types.ts`.

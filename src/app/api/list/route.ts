@@ -19,8 +19,8 @@ import type { Request, RequestStatus } from "@/lib/request-types";
 const HISTORY_CAP = 30;
 
 // Sort newest-first for terminal statuses (done, rejected), oldest-first
-// for active ones (queued, in_progress, review, improve_requested,
-// publishing, failed).
+// for non-terminal ones (queued, clarification_needed, in_progress, review,
+// improve_requested, publishing, failed).
 const TERMINAL: ReadonlySet<RequestStatus> = new Set<RequestStatus>([
   "done",
   "rejected",

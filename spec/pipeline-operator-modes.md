@@ -23,10 +23,10 @@ The owner opens a Claude Code session in this repo (`/home/spawn/Apps/projects/n
 
 1. `git checkout main && git pull origin main` — make sure the local clone is current.
 2. Reads `requests/*.json` (skip `README.md`).
-3. Single-lane check: if anything is in `in_progress`, `review`, `improve_requested`, or `publishing`, report `loop: lane busy (active <id> at <status>)` and stop.
-4. If lane clear, find the oldest `queued` or `improve_requested` request and classify it (four-tier rule below).
+3. Single-lane check: if anything is in `in_progress`, `review`, `improve_requested`, or `publishing` (the `LANE_BLOCKING_STATUSES`), report `loop: lane busy (active <id> at <status>)` and stop. `clarification_needed` is **not** a lane occupant — a request parked there never blocks the lane.
+4. If lane clear, find the oldest `queued` or `improve_requested` request and classify it (four-tier rule below). Skip `clarification_needed` requests — they're waiting on the requester, not on the operator.
 5. Clear content-only → claim, branch, edit, gate, push, PR, flip to `review`.
-6. Ambiguous → stop and ask. Do NOT mutate the request file.
+6. **Ambiguous-but-safe → CAS to `clarification_needed`** with a concise Swedish `clarificationQuestion` (no claim, no branch, no PR). The requester answers in the board (**Svara**); it returns to `queued`. Do NOT guess, do NOT stop the listener for this. (Genuine owner-policy decisions — not requester-answerable — can still stop and ask the owner.)
 7. Structural / unsafe → CAS to `failed + manualFix` with a clear `failureReason`, log it, stop.
 8. Empty queue → emit `loop: queue empty` and stop.
 
@@ -103,11 +103,21 @@ When the operator picks up a request, it classifies into one of four buckets:
 | Bucket | Example | Operator action |
 |---|---|---|
 | **Clear content-only** | "Change the word X to Y in paragraph Z on /om-mig" | Process normally: claim, edit `src/content/<page>.ts`, gate, push, open PR, flip to `review`. |
-| **Minor content ambiguity** | The request references text that doesn't exist on the target page; or "tweak the intro" without saying how | **STOP and ask the owner.** Do NOT mark `failed`. Do NOT invent text. Do NOT mutate the request file. Leave at `queued`. |
+| **Minor content ambiguity** | The request references text/page that doesn't exist or conflicts (e.g. text says "första sidan" but `page` says `berattelser`); or "tweak the intro" without saying how | **CAS to `clarification_needed`** with a concise Swedish `clarificationQuestion`. Do NOT claim, branch, guess, invent text, or stop the listener. The requester answers in the board (**Svara** → `POST /api/clarify`), which flips it back to `queued`; the operator re-picks it up and reads the Q+A. See § Clarification flow below. |
 | **Structural / out-of-scope** | Asks to add a new page, rename a route, change navigation, alter theme tokens | CAS to `failed + manualFix` with a clear `failureReason` describing what's structural. Surfaces in the `Fel` section of the board. |
 | **Unsafe** | Wants to edit `src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, scripts, workflows — anything outside `src/content/*.ts` (beyond the content-driven renderer glue allowance below) | CAS to `failed + manualFix` with `failureReason` naming the unsafe path. Same `Fel` landing. |
 
-The rule is intentionally conservative on ambiguity: an ambiguous-but-safe-in-intent request gets a clarifying question, not an auto-resolution or auto-failure.
+The rule is intentionally conservative on ambiguity: an ambiguous-but-safe-in-intent request becomes `clarification_needed` (the requester answers in the UI) — never an auto-resolution, an auto-failure, or a guess.
+
+#### Clarification flow (ambiguous-but-safe)
+
+When tier 2 fires, the operator parks the request instead of guessing or stopping the listener:
+
+1. **CAS `queued → clarification_needed`** (operator metadata write to `main`) with a concise Swedish `clarificationQuestion` (e.g. *"Vilken sida menar du: startsidan eller Berättelser?"* / *"Vad vill du att titeln ska säga?"*). **No claim, no branch, no PR.** History `clarification_requested`.
+2. The request shows in the board's **Väntar på svar** section with the question. The requester clicks **Svara**, types an answer → `POST /api/clarify/[id]` stores `clarificationAnswer` + history `clarification_answered` and flips it back to **`queued`**.
+3. On the next cycle the operator re-picks up the **same request** (no duplicate, no pre-built branch/PR), reads `clarificationQuestion` + `clarificationAnswer`, and processes it normally. If still ambiguous, it may park again (re-asking; the Q&A thread accrues in `history`).
+
+`clarification_needed` is **not** a lane occupant (`LANE_BLOCKING_STATUSES`) — other `queued` requests keep flowing while one waits for an answer. It *does* count toward the intake queue-depth cap (`QUEUE_DEPTH_STATUSES`). See `pipeline-mvp.md` § Single-lane vs queue-depth. **Avvisa** clears a never-answered one. Still **never guess** page, wording, placement, or image usage — that's exactly what the question is for.
 
 #### Content-driven renderer glue (allowed, no per-request approval)
 
@@ -133,7 +143,7 @@ The main safe edit surface stays `src/content/*.ts`. But some content requests c
 
 At any of these, **stop the listener** (do not schedule the next wake) and surface to the owner:
 
-- **Ambiguity** — intent unclear; multiple plausible outcomes with different blast radius.
+- **Ambiguity that the *requester* can't resolve** — a genuine owner-policy/scope decision. (Ordinary ambiguous-but-safe *content* questions do **not** stop the listener — they go to `clarification_needed` and the requester answers in the board. See § Four-tier classification rule § Clarification flow.)
 - **Unsafe scope** — request needs an edit outside `src/content/*.ts`.
 - **Repo conflict** — working tree dirty at iteration start; merge conflict on `main`; a `req/<id>-…` branch already exists for the same id from an earlier session.
 - **Failing quality gate** — `lint`, `typecheck`, or `build` fails on the operator's branch.
@@ -216,10 +226,16 @@ Claude Code session as operator — see spec/pipeline-operator-modes.md).
 
 Standing rules:
 - Single-lane: at most ONE active request across in_progress / review /
-  improve_requested / publishing.
-- Four-tier classification: clear content = process; ambiguous content =
-  STOP and ask me; structural / out-of-scope = failed + manualFix;
-  unsafe (anything outside src/content/*.ts) = failed + manualFix.
+  improve_requested / publishing (LANE_BLOCKING_STATUSES).
+  clarification_needed is NOT a lane occupant — it's parked waiting for
+  the requester and never blocks other queued requests. Skip it when
+  scanning for the oldest queued/improve_requested to claim.
+- Four-tier classification: clear content = process; ambiguous-but-safe
+  content = CAS to clarification_needed with a Swedish clarificationQuestion
+  (no claim/branch/PR; requester answers via Svara → back to queued; do
+  NOT stop the listener, do NOT guess); structural / out-of-scope =
+  failed + manualFix; unsafe (anything outside src/content/*.ts) =
+  failed + manualFix.
   Exception: minimal content-driven renderer glue (a new content field
   plus the matching src/app/<page>/page.tsx wiring only to display it)
   is allowed in the request branch — see § Four-tier classification rule.
@@ -241,7 +257,10 @@ up" / "process the queue" / similar), you check immediately:
 3. Single-lane check; if lane busy, output `loop: lane busy (active
    <id> at <status>)` and stop.
 4. If lane clear and there's a queued or improve_requested request,
-   classify it. If ambiguous, ASK me with the specific question.
+   classify it. If ambiguous-but-safe, CAS it to clarification_needed
+   with a concise Swedish question (the requester answers in the board)
+   — do NOT stop to ask me and do NOT guess. Skip clarification_needed
+   requests (waiting on the requester).
 5. If clear and safe, process it through to review (claim → branch
    → edit → gates → push → PR → flip to review).
 6. If improve_requested, REUSE same branch + same PR for the next
@@ -271,11 +290,13 @@ decision-watch until that request becomes done / improve_requested /
 rejected / failed, then return to ~10 min idle; decision-watch ticks
 stay quiet unless state changes or an error fires. STOP the listener
 (do not schedule the next wake) and
-surface to me on any hard-stop condition: ambiguity, unsafe scope
-(anything outside src/content/*.ts), dirty repo / merge conflict,
-network or GitHub or Vercel failure that doesn't recover with one
-retry, or anything that needs an owner decision. Closing the session
-ends the listener — no persistence.
+surface to me on any hard-stop condition: ambiguity the REQUESTER can't
+resolve (a genuine owner-policy/scope call — ordinary ambiguous-but-safe
+content goes to clarification_needed, not a stop), unsafe scope (anything
+outside src/content/*.ts), dirty repo / merge conflict, network or GitHub
+or Vercel failure that doesn't recover with one retry, or anything that
+needs an owner decision. Closing the session ends the listener — no
+persistence.
 
 When I say "stop the listener and save handoff" (or "stop listening
 and save project info" / "pause operator and write restart handoff" /
