@@ -2,13 +2,15 @@
 
 /**
  * Queue board client component. Fetches /api/list, groups the response
- * into the four sections defined in spec/pipeline-mvp.md § Swedish UI
- * vocabulary, and renders cards with the four review actions:
+ * into the five sections defined in spec/pipeline-mvp.md § Swedish UI
+ * vocabulary (Väntar i kö, Väntar på svar, Aktivt i review, Fel, Klart),
+ * and renders cards with the relevant actions per status:
  *
- *   - Publicera (POST /api/approve/:id)
- *   - Förbättra (POST /api/iterate/:id, body { message })
- *   - Avvisa    (POST /api/reject/:id,  body { reason })
- *   - Försök igen (POST /api/admin/retry/:id)
+ *   - Publicera   (POST /api/approve/:id)                — review
+ *   - Förbättra   (POST /api/iterate/:id,  body { message }) — review
+ *   - Avvisa      (POST /api/reject/:id,   body { reason })  — review / failed / clarification_needed
+ *   - Försök igen (POST /api/admin/retry/:id)              — failed
+ *   - Svara       (POST /api/clarify/:id,  body { answer })  — clarification_needed
  */
 
 import { useCallback, useEffect, useState } from "react";
