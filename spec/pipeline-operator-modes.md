@@ -171,7 +171,7 @@ After every cycle that did real work, the operator reports:
 - ❌ Not unattended after the Claude Code session closes.
 - ❌ Does not set `ANTHROPIC_API_KEY`. Claude CLI subscription auth only.
 - ❌ Does not auto-merge source PRs. **Publicera always requires the owner clicking it** from `/admin` or `/onskemal-kogen`.
-- ❌ Does not edit anything outside `src/content/*.ts` on request branches, ever.
+- ❌ Does not edit outside the documented safe edit surface. The main safe surface is `src/content/*.ts`; the **only** approved exceptions are minimal same-page **content-driven renderer glue** (a new content field + the matching `src/app/<page>/page.tsx` wiring to display it) and **approved attachment source-asset copying** (into `public/assets/generated/` + a reference from `src/content/*.ts`) — exactly as documented above. It still does **not** edit routes, API/auth/config, admin-pipeline internals, shared components, broad layout/design-system code, or unrelated pages automatically — those are stop-and-ask or `failed + manualFix`.
 - ❌ Does not write anywhere on `main` other than `requests/<the-id-being-processed>.json` via Octokit.
 
 ### Recovery if the session dies mid-cycle
