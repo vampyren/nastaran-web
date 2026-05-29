@@ -36,8 +36,13 @@ const SECTION_DEFS = [
   {
     key: "review" as const,
     title: "Aktivt i review",
-    // Single-lane occupants — see LANE_BLOCKING_STATUSES in request-types.
-    statuses: new Set<RequestStatus>(LANE_BLOCKING_STATUSES),
+    // The actively-worked lane occupants. `clarification_needed` is also
+    // lane-blocking (see LANE_BLOCKING_STATUSES) but is parked waiting for the
+    // requester, so it gets its own "Väntar på svar" section above and is
+    // excluded here to avoid double-listing.
+    statuses: new Set<RequestStatus>(
+      [...LANE_BLOCKING_STATUSES].filter((s) => s !== "clarification_needed")
+    ),
   },
   {
     key: "failed" as const,

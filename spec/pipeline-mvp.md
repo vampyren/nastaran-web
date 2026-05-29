@@ -82,7 +82,7 @@ The Swedish UI vocabulary is centralized in [§ Swedish UI vocabulary](#swedish-
 
 `failed` is a terminal sibling of any active state. It surfaces in the **Fel** board section with `failureReason` + an optional `manualFix: true` flag. **Försök igen** moves `failed → queued`.
 
-**Clarification side-loop:** ambiguous-but-safe requests get parked at `clarification_needed` (operator writes a Swedish `clarificationQuestion`; **no claim, no branch, no PR**), surface in the **Väntar på svar** section, and return via `clarification_needed → queued` once the requester answers (**Svara** → `POST /api/clarify/[id]`). `clarification_needed` is **not** a lane occupant — it does not block other `queued` requests (see [§ Single-lane vs queue-depth](#single-lane-vs-queue-depth)). **Avvisa** can clear a never-answered one.
+**Clarification side-loop:** ambiguous-but-safe requests get parked at `clarification_needed` (the queue worker / CC writes a Swedish `clarificationQuestion`; **no claim, no branch, no PR**), surface in the **Väntar på svar** section, and return via `clarification_needed → queued` once the requester answers (**Svara** → `POST /api/clarify/[id]`). `clarification_needed` **holds the single lane** while it waits — CC does not pick up another `queued` request until it's answered or rejected (see [§ Single-lane vs intake count](#single-lane-vs-intake-count)). **Avvisa** can clear a never-answered one.
 
 ### Full state transition table
 
@@ -90,7 +90,7 @@ The Swedish UI vocabulary is centralized in [§ Swedish UI vocabulary](#swedish-
 |---|---|---|---|---|
 | (none) | owner submits via `/onskemal` → `POST /api/feedback` | `queued` | New `requests/<id>.json` (status `queued`, `createdAt = updatedAt = now`) | Initial Octokit write, no `sha` needed |
 | `queued` | operator picks up oldest | `in_progress` | `claimedAt`, `updatedAt`, `branch`, history `loop_picked_up` | SHA-CAS |
-| `queued` | operator classifies **ambiguous-but-safe** (tier 2) | `clarification_needed` | `clarificationQuestion`, `updatedAt`, history `clarification_requested` (actor `loop`) | **No claim, no branch, no PR.** Operator metadata write to `main`. Not a lane occupant. |
+| `queued` | queue worker (CC) classifies **ambiguous-but-safe** (tier 2) | `clarification_needed` | `clarificationQuestion`, `updatedAt`, history `clarification_requested` (actor `loop`) | **No claim, no branch, no PR.** Metadata write to `main`. **Lane-blocking** while parked — holds the single lane until answered or rejected. |
 | `clarification_needed` | requester clicks **Svara** → `POST /api/clarify/[id]` | `queued` | `clarificationAnswer`, `updatedAt`, history `clarification_answered` (actor `admin`) | **Same request reused** — operator re-picks it up and reads the Q+A. No duplicate. |
 | `clarification_needed` | admin clicks **Avvisa** | `rejected` | `rejectedAt`, optional reason, history `rejected` | Clears a never-answered parked request |
 | `in_progress` | operator finishes classify + edit + gates + push + PR open | `review` | `reviewReadyAt`, `updatedAt`, `pullRequestUrl`, `pullRequestNumber`, `previewUrl`, `latestCommitSha`, history `loop_pushed_pr` | `req/*` branch holds only the `src/content/*.ts` change |
@@ -108,16 +108,16 @@ The Swedish UI vocabulary is centralized in [§ Swedish UI vocabulary](#swedish-
 
 Any transition not listed is **not permitted** — invalid transition requests return `409 Conflict`.
 
-### Single-lane vs queue-depth
+### Single-lane vs intake count
 
-Two distinct status sets — **do not conflate them** (a future operator session must not treat a parked clarification as active work):
+Two distinct status sets — **do not conflate them** (a future queue-worker / CC session must not mistake intake counting for lane blocking):
 
 | Set (in `src/lib/request-types.ts`) | Members | Meaning |
 |---|---|---|
-| `LANE_BLOCKING_STATUSES` | `in_progress`, `review`, `improve_requested`, `publishing` | **Single-lane occupants.** The operator processes at most ONE of these at a time. Each has (or is about to have) a `req/*` branch + PR. |
-| `QUEUE_DEPTH_STATUSES` | `queued`, `clarification_needed`, `in_progress`, `review`, `improve_requested`, `publishing` | **Counting only** — the intake queue-depth cap in `POST /api/feedback`. Includes waiting/parked states. **Not** a lane-busy check. |
+| `LANE_BLOCKING_STATUSES` | `in_progress`, `clarification_needed`, `review`, `improve_requested`, `publishing` | **Single-lane occupants — the set the queue worker (CC) checks to decide whether it may pick up another request.** CC works at most ONE of these at a time. |
+| `REQUEST_INTAKE_COUNT_STATUSES` | `queued`, `clarification_needed`, `in_progress`, `review`, `improve_requested`, `publishing` | **Counting only** — the request-intake cap in `POST /api/feedback` (every non-terminal status). **Never** a lane-busy check. |
 
-`clarification_needed` is in the depth count (it's an open request) but **NOT** in the lane-blocking set: it is parked waiting for the requester, has no branch/PR, and must not block other `queued` requests from being processed. `queued`, `done`, `rejected`, `failed` are likewise not lane occupants.
+`clarification_needed` **IS lane-blocking**: while a request waits for the requester's answer it holds the single lane, so CC does **not** claim another `queued` request until it's resolved (answered → `queued`, or `rejected`). This is intentional and simple — no parallel queue handling yet. A `clarification_needed` request has no branch/PR — it's lane-blocking but parked (hence its own **Väntar på svar** board section). `queued`, `done`, `rejected`, `failed` are not lane occupants.
 
 ### Optimistic concurrency (SHA-based CAS) — required for every writer
 
