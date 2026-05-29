@@ -40,7 +40,7 @@ import {
 } from "@/lib/github";
 import { isValidPageId } from "@/lib/pages";
 import {
-  QUEUE_DEPTH_STATUSES,
+  REQUEST_INTAKE_COUNT_STATUSES,
   type Attachment,
   type AttachmentMime,
   type Request,
@@ -539,7 +539,7 @@ async function countActive(gh: GithubConfig): Promise<number> {
       .filter((e) => e.name.endsWith(".json"))
       .map(async (e) => {
         const f = await getMainFile<{ status: RequestStatus }>(gh, e.path);
-        if (f && QUEUE_DEPTH_STATUSES.has(f.data.status)) active += 1;
+        if (f && REQUEST_INTAKE_COUNT_STATUSES.has(f.data.status)) active += 1;
       })
   );
   return active;

@@ -275,7 +275,7 @@ Submit a second request while the first is in `review`. Tell the operator "check
 2. **Click "Skicka önskemål"** from the hub. This opens `/onskemal`. Pick the page, describe the change in plain language. Submit.
 3. The owner does **nothing else** until the operator pings them with a preview.
 4. The operator processes the request and pings the owner.
-5. **If the request was ambiguous** (e.g. the page was unclear, or it didn't say what the new text should be), the operator does **not** guess — it parks the request in the board's **"Väntar på svar"** section with a short question. Open `/onskemal-kogen`, click **Svara**, type your answer; the request goes back in the queue and the operator picks it up again automatically. (Other requests keep being processed while one waits for your answer.)
+5. **If the request was ambiguous** (e.g. the page was unclear, or it didn't say what the new text should be), the queue worker (CC) does **not** guess — it parks the request in the board's **"Väntar på svar"** section with a short question. Open `/onskemal-kogen`, click **Svara**, type your answer; the request goes back in the queue and CC picks it up again automatically. (Note: a request waiting for your answer **holds the single lane** — CC won't start another request until you answer it or reject it with **Avvisa**. Intentional for now — one request at a time.)
 6. Owner opens the preview URL or the queue board (`/onskemal-kogen`), looks at the change, decides Publicera / Förbättra / Avvisa.
 7. After pressing **Publicera / Förbättra / Avvisa**, the operator normally picks up the decision **automatically within about a minute** while the request is under review (during an active operator session, the listener uses a faster quiet ~60 s decision-watch in the `review` state). There is no instant push from the website to Claude Code, so if faster handling is needed the owner can also say **"check the queue now"** to trigger an immediate check. (If no operator session is open, the decision is picked up next time one is — nothing is lost; it stays recorded on `main`.)
 
@@ -326,13 +326,14 @@ When I say "check the queue" (or "check the queue now" / "pick it
 up" / "process the queue" / similar), you check immediately:
 1. git fetch + git pull origin main.
 2. Read requests/*.json (skip README.md).
-3. Single-lane check; if anything is in_progress / review / improve_requested /
-   publishing, output `loop: lane busy (active <id> at <status>)` and stop.
+3. Single-lane check; if anything is in_progress / clarification_needed /
+   review / improve_requested / publishing, output `loop: lane busy
+   (active <id> at <status>)` and stop. clarification_needed counts as
+   busy — a request awaiting its answer holds the single lane.
 4. Otherwise pick the oldest queued or improve_requested by createdAt /
-   updatedAt asc (skip clarification_needed — waiting on the requester).
-   Classify. If ambiguous-but-safe, CAS to clarification_needed with a
-   Swedish question (requester answers via Svara) — don't guess, don't
-   stop to ask me.
+   updatedAt asc. Classify. If ambiguous-but-safe, CAS to
+   clarification_needed with a Swedish question (requester answers via
+   Svara) — don't guess, don't stop to ask me.
 5. If clear and safe, process through to review: CAS queued → in_progress,
    create the req/<id>-<slug> branch, edit src/content/*.ts only, run
    `npm run lint && npm run typecheck && npm run build`, push, open the

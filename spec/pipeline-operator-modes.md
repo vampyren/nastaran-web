@@ -9,11 +9,23 @@ Companion to [`pipeline-mvp.md`](./pipeline-mvp.md). That spec defines **what** 
 
 Both shapes are interactive, supervisor-present, and end the moment the session closes. **No cron, no wrapper, no child `claude -p` process, no `ANTHROPIC_API_KEY`, no auto-merge of source PRs.**
 
-**Mode B — cron-driven `claude -p` wrapper — is PARKED.** Not implemented in this project. Reference design lives in the source project's `Spec/06b-MS3-loop-cron-and-ops.md`. Adopting Mode B would require wrapper-level output-contract enforcement and permission-handoff hardening; it is out of scope until/unless explicitly approved.
+**Mode B — cron-driven `claude -p` wrapper — is PARKED.** Not implemented in this project. Adopting Mode B would require wrapper-level output-contract enforcement and permission-handoff hardening; it is out of scope until/unless explicitly approved.
 
 ---
 
-## Mode A — Interactive Claude Code operator
+## Roles (three, and only three)
+
+This project's model has exactly three roles. Use these terms; avoid the bare word "operator" unless it's clear it means the queue worker / CC.
+
+1. **Requester / user** — the person who submits a request through the website (`/onskemal`). Answers ordinary clarification questions in the website queue UI (**Svara**) and can cancel/reject a request (**Avvisa**).
+2. **Queue worker / CC** — the active Claude Code session processing the queue. It reads requests, classifies them, writes request metadata, creates branches / PRs / previews, and waits for approval. It does **not** guess unclear-but-safe requests, and it does **not** interrupt the owner in Claude Code for ordinary clarification — it parks those as `clarification_needed` for the requester to answer in the UI.
+3. **Owner / admin / supervisor (Rex)** — one and the same human authority. Approves / improves / rejects / publishes through the admin website flow (Publicera / Förbättra / Avvisa). Interrupted **directly in Claude Code only** when something is unsafe, structural, broken, outside the safe edit surface, or otherwise needs human judgment that a normal clarification question can't resolve.
+
+**Throughout this spec, "operator" ≡ queue worker / CC (role 2).**
+
+---
+
+## Mode A — Interactive Claude Code operator (the queue worker / CC)
 
 ### Two usage shapes
 
@@ -23,8 +35,8 @@ The owner opens a Claude Code session in this repo (`/home/spawn/Apps/projects/n
 
 1. `git checkout main && git pull origin main` — make sure the local clone is current.
 2. Reads `requests/*.json` (skip `README.md`).
-3. Single-lane check: if anything is in `in_progress`, `review`, `improve_requested`, or `publishing` (the `LANE_BLOCKING_STATUSES`), report `loop: lane busy (active <id> at <status>)` and stop. `clarification_needed` is **not** a lane occupant — a request parked there never blocks the lane.
-4. If lane clear, find the oldest `queued` or `improve_requested` request and classify it (four-tier rule below). Skip `clarification_needed` requests — they're waiting on the requester, not on the operator.
+3. Single-lane check: if anything is in `in_progress`, `clarification_needed`, `review`, `improve_requested`, or `publishing` (the `LANE_BLOCKING_STATUSES`), report `loop: lane busy (active <id> at <status>)` and stop. **`clarification_needed` blocks the lane** — while a request waits for the requester's answer, CC does not pick up anything else.
+4. If lane clear, find the oldest `queued` or `improve_requested` request and classify it (four-tier rule below).
 5. Clear content-only → claim, branch, edit, gate, push, PR, flip to `review`.
 6. **Ambiguous-but-safe → CAS to `clarification_needed`** with a concise Swedish `clarificationQuestion` (no claim, no branch, no PR). The requester answers in the board (**Svara**); it returns to `queued`. Do NOT guess, do NOT stop the listener for this. (Genuine owner-policy decisions — not requester-answerable — can still stop and ask the owner.)
 7. Structural / unsafe → CAS to `failed + manualFix` with a clear `failureReason`, log it, stop.
@@ -117,7 +129,7 @@ When tier 2 fires, the operator parks the request instead of guessing or stoppin
 2. The request shows in the board's **Väntar på svar** section with the question. The requester clicks **Svara**, types an answer → `POST /api/clarify/[id]` stores `clarificationAnswer` + history `clarification_answered` and flips it back to **`queued`**.
 3. On the next cycle the operator re-picks up the **same request** (no duplicate, no pre-built branch/PR), reads `clarificationQuestion` + `clarificationAnswer`, and processes it normally. If still ambiguous, it may park again (re-asking; the Q&A thread accrues in `history`).
 
-`clarification_needed` is **not** a lane occupant (`LANE_BLOCKING_STATUSES`) — other `queued` requests keep flowing while one waits for an answer. It *does* count toward the intake queue-depth cap (`QUEUE_DEPTH_STATUSES`). See `pipeline-mvp.md` § Single-lane vs queue-depth. **Avvisa** clears a never-answered one. Still **never guess** page, wording, placement, or image usage — that's exactly what the question is for.
+`clarification_needed` **blocks the single lane** (`LANE_BLOCKING_STATUSES`) — while one request waits for an answer, CC does **not** pick up another `queued` request. This is intentional and simple: no parallel queue handling yet. It also counts toward the request-intake cap (`REQUEST_INTAKE_COUNT_STATUSES`). See `pipeline-mvp.md` § Single-lane vs intake count. **Avvisa** clears a never-answered one. Still **never guess** page, wording, placement, or image usage — that's exactly what the question is for.
 
 #### Content-driven renderer glue (allowed, no per-request approval)
 
@@ -225,11 +237,11 @@ You are the queue operator for nastaran-web in Mode A (interactive
 Claude Code session as operator — see spec/pipeline-operator-modes.md).
 
 Standing rules:
-- Single-lane: at most ONE active request across in_progress / review /
-  improve_requested / publishing (LANE_BLOCKING_STATUSES).
-  clarification_needed is NOT a lane occupant — it's parked waiting for
-  the requester and never blocks other queued requests. Skip it when
-  scanning for the oldest queued/improve_requested to claim.
+- Single-lane: at most ONE active request across in_progress /
+  clarification_needed / review / improve_requested / publishing
+  (LANE_BLOCKING_STATUSES). clarification_needed BLOCKS the lane — while a
+  request waits for the requester's answer, do NOT pick up another queued
+  request (intentional; no parallel handling yet).
 - Four-tier classification: clear content = process; ambiguous-but-safe
   content = CAS to clarification_needed with a Swedish clarificationQuestion
   (no claim/branch/PR; requester answers via Svara → back to queued; do
@@ -254,13 +266,14 @@ When I say "check the queue" (or "check the queue now" / "pick it
 up" / "process the queue" / similar), you check immediately:
 1. git fetch + git pull origin main.
 2. Read requests/*.json (skip README.md).
-3. Single-lane check; if lane busy, output `loop: lane busy (active
-   <id> at <status>)` and stop.
+3. Single-lane check; if anything is in_progress / clarification_needed /
+   review / improve_requested / publishing, output `loop: lane busy
+   (active <id> at <status>)` and stop. clarification_needed counts as
+   busy — don't claim anything else while a request awaits its answer.
 4. If lane clear and there's a queued or improve_requested request,
    classify it. If ambiguous-but-safe, CAS it to clarification_needed
    with a concise Swedish question (the requester answers in the board)
-   — do NOT stop to ask me and do NOT guess. Skip clarification_needed
-   requests (waiting on the requester).
+   — do NOT stop to ask me and do NOT guess.
 5. If clear and safe, process it through to review (claim → branch
    → edit → gates → push → PR → flip to review).
 6. If improve_requested, REUSE same branch + same PR for the next

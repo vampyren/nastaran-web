@@ -26,8 +26,9 @@ The repo's branch-first rule (see `CLAUDE.md`) says **source/content changes nev
 - `POST /api/approve/[id]` — flips `review → publishing → done` and records `productionCommitSha`.
 - `POST /api/reject/[id]` — flips → `rejected` and closes the underlying PR.
 - `POST /api/iterate/[id]` — flips `review → improve_requested` with a refinement message.
+- `POST /api/clarify/[id]` — flips `clarification_needed → queued`, storing the requester's clarification answer.
 - `POST /api/admin/retry/[id]` — flips `failed → queued`.
-- The Mode A operator session — drives `queued → in_progress → review` and `improve_requested → in_progress → review` during request processing.
+- The Mode A queue worker / CC session — drives `queued → in_progress → review`, `improve_requested → in_progress → review`, and parks ambiguous-but-safe requests at `queued → clarification_needed` (lane-blocking until answered/rejected) during request processing.
 
 Every other path on `main` (`src/**`, `public/**`, `package.json`, `next.config.mjs`, configs, CI, docs, anything) still requires a branch + PR. **The Octokit call is hard-coded to `path: "requests/<id>.json"`** in every writer — no input can broaden the write scope.
 

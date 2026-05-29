@@ -127,14 +127,15 @@ export type Request = {
 };
 
 /**
- * Statuses that COUNT toward the intake queue-depth cap (`POST /api/feedback`).
+ * Statuses that COUNT toward the request-intake cap (`POST /api/feedback`).
  *
- * This is a *counting* set — it includes `queued` and `clarification_needed`,
- * which are NOT active work. **It is not the lane-blocking set** (see
- * `LANE_BLOCKING_STATUSES`). Do not use it to decide whether the single-lane
- * operator is busy.
+ * Counting only — every non-terminal status (`queued`, `clarification_needed`,
+ * and the lane-blocking set). It limits how many open requests can pile up at
+ * intake time. **This is NOT the lane-blocking set** (see
+ * `LANE_BLOCKING_STATUSES`) and must never be used to decide whether the
+ * queue worker (CC) can pick up a request.
  */
-export const QUEUE_DEPTH_STATUSES: ReadonlySet<RequestStatus> =
+export const REQUEST_INTAKE_COUNT_STATUSES: ReadonlySet<RequestStatus> =
   new Set<RequestStatus>([
     "queued",
     "clarification_needed",
@@ -145,18 +146,24 @@ export const QUEUE_DEPTH_STATUSES: ReadonlySet<RequestStatus> =
   ]);
 
 /**
- * The single-lane occupants. The Mode A operator processes at most ONE
- * request in these statuses at a time. A request here is *active work*
- * (has, or is about to have, a `req/*` branch + PR).
+ * The single-lane occupants — **the set the queue worker (CC) checks to
+ * decide whether it may pick up another request.** CC processes at most ONE
+ * request in these statuses at a time; while one is here it does NOT claim
+ * another `queued` request.
  *
- * `clarification_needed` is deliberately **NOT** here: it is parked waiting
- * for the requester's answer, has no branch/PR, and must not block other
- * `queued` requests from being processed. Likewise `queued`, `done`,
- * `rejected`, and `failed` are not lane occupants.
+ * `clarification_needed` **IS** lane-blocking: a request waiting for the
+ * requester's answer holds the single lane. This is intentional and simple —
+ * we are not building parallel queue handling yet. `queued`, `done`,
+ * `rejected`, and `failed` are NOT lane occupants.
+ *
+ * Note: a `clarification_needed` request has no branch/PR yet — it is lane-
+ * blocking but parked, so the queue board renders it in its own
+ * "Väntar på svar" section, not under "Aktivt i review".
  */
 export const LANE_BLOCKING_STATUSES: ReadonlySet<RequestStatus> =
   new Set<RequestStatus>([
     "in_progress",
+    "clarification_needed",
     "review",
     "improve_requested",
     "publishing",

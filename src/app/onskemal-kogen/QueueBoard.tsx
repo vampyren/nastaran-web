@@ -2,13 +2,15 @@
 
 /**
  * Queue board client component. Fetches /api/list, groups the response
- * into the four sections defined in spec/pipeline-mvp.md § Swedish UI
- * vocabulary, and renders cards with the four review actions:
+ * into the five sections defined in spec/pipeline-mvp.md § Swedish UI
+ * vocabulary (Väntar i kö, Väntar på svar, Aktivt i review, Fel, Klart),
+ * and renders cards with the relevant actions per status:
  *
- *   - Publicera (POST /api/approve/:id)
- *   - Förbättra (POST /api/iterate/:id, body { message })
- *   - Avvisa    (POST /api/reject/:id,  body { reason })
- *   - Försök igen (POST /api/admin/retry/:id)
+ *   - Publicera   (POST /api/approve/:id)                — review
+ *   - Förbättra   (POST /api/iterate/:id,  body { message }) — review
+ *   - Avvisa      (POST /api/reject/:id,   body { reason })  — review / failed / clarification_needed
+ *   - Försök igen (POST /api/admin/retry/:id)              — failed
+ *   - Svara       (POST /api/clarify/:id,  body { answer })  — clarification_needed
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -36,8 +38,13 @@ const SECTION_DEFS = [
   {
     key: "review" as const,
     title: "Aktivt i review",
-    // Single-lane occupants — see LANE_BLOCKING_STATUSES in request-types.
-    statuses: new Set<RequestStatus>(LANE_BLOCKING_STATUSES),
+    // The actively-worked lane occupants. `clarification_needed` is also
+    // lane-blocking (see LANE_BLOCKING_STATUSES) but is parked waiting for the
+    // requester, so it gets its own "Väntar på svar" section above and is
+    // excluded here to avoid double-listing.
+    statuses: new Set<RequestStatus>(
+      [...LANE_BLOCKING_STATUSES].filter((s) => s !== "clarification_needed")
+    ),
   },
   {
     key: "failed" as const,
