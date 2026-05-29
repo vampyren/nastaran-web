@@ -243,7 +243,7 @@ Verify after: `git fetch && git ls-tree origin/main requests/` shows only `READM
 In a Claude Code session in this repo, say **"check the queue"**. The expected sequence:
 
 1. Operator reads the queue, finds the new `queued` request.
-2. If the wording is clear → operator proceeds. If ambiguous → operator asks for clarification (per the four-tier rule).
+2. If the wording is clear → operator proceeds. If ambiguous-but-safe → operator parks it at `clarification_needed` with a Swedish question; you answer it in the queue board (see below) — the operator never guesses (per the four-tier rule).
 3. CAS write `queued → in_progress` lands as a metadata commit on `main` (`request: <id> — in_progress`).
 4. Local `req/<id>-<slug>` branch is created off `main`.
 5. Edit to `src/content/<page>.ts` only.
@@ -275,8 +275,9 @@ Submit a second request while the first is in `review`. Tell the operator "check
 2. **Click "Skicka önskemål"** from the hub. This opens `/onskemal`. Pick the page, describe the change in plain language. Submit.
 3. The owner does **nothing else** until the operator pings them with a preview.
 4. The operator processes the request and pings the owner.
-5. Owner opens the preview URL or the queue board (`/onskemal-kogen`), looks at the change, decides Publicera / Förbättra / Avvisa.
-6. After pressing **Publicera / Förbättra / Avvisa**, the operator normally picks up the decision **automatically within about a minute** while the request is under review (during an active operator session, the listener uses a faster quiet ~60 s decision-watch in the `review` state). There is no instant push from the website to Claude Code, so if faster handling is needed the owner can also say **"check the queue now"** to trigger an immediate check. (If no operator session is open, the decision is picked up next time one is — nothing is lost; it stays recorded on `main`.)
+5. **If the request was ambiguous** (e.g. the page was unclear, or it didn't say what the new text should be), the operator does **not** guess — it parks the request in the board's **"Väntar på svar"** section with a short question. Open `/onskemal-kogen`, click **Svara**, type your answer; the request goes back in the queue and the operator picks it up again automatically. (Other requests keep being processed while one waits for your answer.)
+6. Owner opens the preview URL or the queue board (`/onskemal-kogen`), looks at the change, decides Publicera / Förbättra / Avvisa.
+7. After pressing **Publicera / Förbättra / Avvisa**, the operator normally picks up the decision **automatically within about a minute** while the request is under review (during an active operator session, the listener uses a faster quiet ~60 s decision-watch in the `review` state). There is no instant push from the website to Claude Code, so if faster handling is needed the owner can also say **"check the queue now"** to trigger an immediate check. (If no operator session is open, the decision is picked up next time one is — nothing is lost; it stays recorded on `main`.)
 
 The owner never touches GitHub, Vercel, or the codebase directly.
 
@@ -296,8 +297,10 @@ Standing rules:
 - Single-lane: at most ONE active request across in_progress / review /
   improve_requested / publishing. improve_requested is your own backlog
   on the SAME branch + SAME PR — not a new claim.
-- Four-tier classification: clear content = process; ambiguous content =
-  STOP and ask me; structural / out-of-scope = failed + manualFix;
+- Four-tier classification: clear content = process; ambiguous-but-safe
+  content = CAS to clarification_needed with a Swedish question (requester
+  answers via Svara → back to queued; never guess, never stop the listener
+  for this); structural / out-of-scope = failed + manualFix;
   unsafe (anything outside src/content/*.ts) = failed + manualFix.
   Exception: minimal content-driven renderer glue (a new content field +
   the matching src/app/<page>/page.tsx wiring only to display it) is
@@ -326,7 +329,10 @@ up" / "process the queue" / similar), you check immediately:
 3. Single-lane check; if anything is in_progress / review / improve_requested /
    publishing, output `loop: lane busy (active <id> at <status>)` and stop.
 4. Otherwise pick the oldest queued or improve_requested by createdAt /
-   updatedAt asc. Classify. If ambiguous, ASK me with the specific question.
+   updatedAt asc (skip clarification_needed — waiting on the requester).
+   Classify. If ambiguous-but-safe, CAS to clarification_needed with a
+   Swedish question (requester answers via Svara) — don't guess, don't
+   stop to ask me.
 5. If clear and safe, process through to review: CAS queued → in_progress,
    create the req/<id>-<slug> branch, edit src/content/*.ts only, run
    `npm run lint && npm run typecheck && npm run build`, push, open the
@@ -430,8 +436,10 @@ Squash-merge succeeded on GitHub, but the operator couldn't write the post-merge
 
 Read the card's `failureReason`. Per the four-tier rule:
 
-- "no <text> found in <file>" → ambiguous content. Submit a clearer request.
 - "unsafe_request: <path>" → the request asked to edit outside `src/content/*.ts`. Reject and resubmit as content-only.
+- Structural / out-of-scope (new page, route, nav, theme) → reject; not doable via the content-only pipeline.
+
+(Ambiguous-but-safe content no longer lands in **Fel** — it goes to **Väntar på svar** instead, where you answer the operator's question with **Svara**.)
 - "<lint|typecheck|build> failed: <detail>" → the operator's edit broke a gate. Could be a classifier miss; investigate the branch.
 
 Click **Försök igen** to move back to `queued` after fixing whatever caused the failure.

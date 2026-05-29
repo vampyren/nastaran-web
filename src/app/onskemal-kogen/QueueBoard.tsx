@@ -14,9 +14,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, LogOut, Paperclip } from "lucide-react";
 import { pageLabel, routeForPage } from "@/lib/pages";
+import { LANE_BLOCKING_STATUSES } from "@/lib/request-types";
 import type { Attachment, Request, RequestStatus } from "@/lib/request-types";
 
-type ActionKind = "approve" | "iterate" | "reject" | "retry";
+type ActionKind = "approve" | "iterate" | "reject" | "retry" | "clarify";
 type BusyAction = { id: string; kind: ActionKind } | null;
 
 type ListResponse = { items: Request[] } | { error: string };
@@ -28,14 +29,15 @@ const SECTION_DEFS = [
     statuses: new Set<RequestStatus>(["queued"]),
   },
   {
+    key: "clarification" as const,
+    title: "Väntar på svar",
+    statuses: new Set<RequestStatus>(["clarification_needed"]),
+  },
+  {
     key: "review" as const,
     title: "Aktivt i review",
-    statuses: new Set<RequestStatus>([
-      "in_progress",
-      "review",
-      "improve_requested",
-      "publishing",
-    ]),
+    // Single-lane occupants — see LANE_BLOCKING_STATUSES in request-types.
+    statuses: new Set<RequestStatus>(LANE_BLOCKING_STATUSES),
   },
   {
     key: "failed" as const,
@@ -51,6 +53,7 @@ const SECTION_DEFS = [
 
 const STATUS_LABEL: Record<RequestStatus, string> = {
   queued: "Väntar i kö",
+  clarification_needed: "Väntar på svar",
   in_progress: "Pågår",
   review: "Aktivt i review",
   improve_requested: "Behöver justeras",
@@ -62,6 +65,7 @@ const STATUS_LABEL: Record<RequestStatus, string> = {
 
 const STATUS_CLASS: Record<RequestStatus, string> = {
   queued: "bg-paper-deep text-ink",
+  clarification_needed: "bg-lavender text-aubergine",
   in_progress: "bg-lavender text-aubergine",
   review: "bg-accent text-paper",
   improve_requested: "bg-lavender text-aubergine",
@@ -73,6 +77,7 @@ const STATUS_CLASS: Record<RequestStatus, string> = {
 
 const SECTION_BG: Record<string, string> = {
   queued: "bg-white",
+  clarification: "bg-white",
   review: "bg-white",
   failed: "bg-red-50/50",
   done: "bg-paper-deep",
@@ -83,6 +88,7 @@ type LoadState = "loading" | "ready" | "unauthorized" | "error";
 type ModalState =
   | { kind: "iterate"; id: string; title: string }
   | { kind: "reject"; id: string; title: string }
+  | { kind: "clarify"; id: string; title: string; question: string }
   | null;
 
 function friendlyActionError(id: string, code: string): string {
@@ -424,6 +430,14 @@ export function QueueBoard() {
                           `/api/admin/retry/${r.id}`
                         )
                       }
+                      onClarify={() =>
+                        setModal({
+                          kind: "clarify",
+                          id: r.id,
+                          title: r.title,
+                          question: r.clarificationQuestion ?? "",
+                        })
+                      }
                     />
                   ))}
                 </ul>
@@ -442,11 +456,15 @@ export function QueueBoard() {
             const url =
               modal.kind === "iterate"
                 ? `/api/iterate/${modal.id}`
-                : `/api/reject/${modal.id}`;
+                : modal.kind === "clarify"
+                  ? `/api/clarify/${modal.id}`
+                  : `/api/reject/${modal.id}`;
             const body =
               modal.kind === "iterate"
                 ? { message: text }
-                : { reason: text };
+                : modal.kind === "clarify"
+                  ? { answer: text }
+                  : { reason: text };
             const ok = await runAction(modal.id, modal.kind, url, body);
             if (ok) setModal(null);
           }}
@@ -465,6 +483,7 @@ function RequestCard({
   onIterate,
   onReject,
   onRetry,
+  onClarify,
 }: {
   request: Request;
   nowMs: number;
@@ -474,10 +493,12 @@ function RequestCard({
   onIterate: () => void;
   onReject: () => void;
   onRetry: () => void;
+  onClarify: () => void;
 }) {
   const statusClass = STATUS_CLASS[request.status];
   const showReviewActions = request.status === "review";
   const showFailedActions = request.status === "failed";
+  const showClarifyActions = request.status === "clarification_needed";
   const pageDisplay = request.page ? pageLabel(request.page) : null;
   const relative = fmtRelative(request.createdAt, nowMs);
   const absolute = fmtDate(request.createdAt);
@@ -571,6 +592,13 @@ function RequestCard({
         </p>
       )}
 
+      {showClarifyActions && request.clarificationQuestion && (
+        <p className="mt-3 whitespace-pre-wrap rounded-md border border-accent/40 bg-lavender/40 px-3 py-2 text-[0.85rem] text-aubergine">
+          <span className="font-semibold">Fråga:</span>{" "}
+          {request.clarificationQuestion}
+        </p>
+      )}
+
       {(request.pullRequestUrl ||
         request.previewUrl ||
         request.productionCommitSha) && (
@@ -607,7 +635,7 @@ function RequestCard({
         </div>
       )}
 
-      {(showReviewActions || showFailedActions) && (
+      {(showReviewActions || showFailedActions || showClarifyActions) && (
         <>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {showReviewActions && (
@@ -663,6 +691,28 @@ function RequestCard({
                 </button>
               </>
             )}
+            {showClarifyActions && (
+              <>
+                <button
+                  type="button"
+                  onClick={onClarify}
+                  disabled={busy}
+                  aria-busy={busyKind === "clarify"}
+                  className="inline-flex h-9 w-full items-center justify-center rounded-full bg-aubergine px-4 text-[0.85rem] font-semibold text-paper transition hover:bg-aubergine-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:justify-start"
+                >
+                  {busyKind === "clarify" ? "Skickar svar…" : "Svara"}
+                </button>
+                <button
+                  type="button"
+                  onClick={onReject}
+                  disabled={busy}
+                  aria-busy={busyKind === "reject"}
+                  className="inline-flex h-9 w-full items-center justify-center rounded-full border border-red-200 bg-white px-4 text-[0.85rem] font-semibold text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:justify-start"
+                >
+                  {busyKind === "reject" ? "Avvisar…" : "Avvisa"}
+                </button>
+              </>
+            )}
           </div>
           {busyKind === "approve" && (
             <p
@@ -693,16 +743,28 @@ function ActionModal({
 }) {
   const [text, setText] = useState("");
   const isIterate = modal.kind === "iterate";
-  const title = isIterate ? "Förbättra" : "Avvisa";
+  const isClarify = modal.kind === "clarify";
+  const title = isIterate ? "Förbättra" : isClarify ? "Svara" : "Avvisa";
   const placeholder = isIterate
     ? "Vad behöver justeras? T.ex. 'Gör rubriken kortare och flytta CTA högre upp.'"
-    : "Varför avvisas det här önskemålet? (valfritt)";
-  const submitLabel = isIterate ? "Skicka justering" : "Avvisa";
-  const required = isIterate;
+    : isClarify
+      ? "Skriv ditt svar på frågan ovan. T.ex. 'Startsidan' eller vad titeln ska säga."
+      : "Varför avvisas det här önskemålet? (valfritt)";
+  const submitLabel = isIterate
+    ? "Skicka justering"
+    : isClarify
+      ? "Skicka svar"
+      : "Avvisa";
+  const required = isIterate || isClarify;
 
   const trimmed = text.trim();
   const disabled = busy || (required && trimmed.length === 0);
-  const busyLabel = isIterate ? "Skickar justering…" : "Avvisar…";
+  const busyLabel = isIterate
+    ? "Skickar justering…"
+    : isClarify
+      ? "Skickar svar…"
+      : "Avvisar…";
+  const maxLen = modal.kind === "reject" ? 500 : 2000;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -729,12 +791,17 @@ function ActionModal({
         >
           {title} — {modal.title}
         </h2>
+        {modal.kind === "clarify" && modal.question && (
+          <p className="mt-3 whitespace-pre-wrap rounded-md border border-accent/40 bg-lavender/40 px-3 py-2 text-[0.85rem] text-aubergine">
+            <span className="font-semibold">Fråga:</span> {modal.question}
+          </p>
+        )}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
           rows={5}
-          maxLength={isIterate ? 2000 : 500}
+          maxLength={maxLen}
           className="mt-3 w-full rounded-xl border border-hairline bg-paper p-3 text-[0.92rem] text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           autoFocus
         />

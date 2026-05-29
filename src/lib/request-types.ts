@@ -28,6 +28,7 @@ export type Attachment = {
 
 export type RequestStatus =
   | "queued"
+  | "clarification_needed"
   | "in_progress"
   | "review"
   | "improve_requested"
@@ -42,12 +43,18 @@ export type RequestStatus =
  * Code session acting as the queue operator (claim → branch → PR → review).
  * It is NOT a daemon, cron job, or background worker; "loop" is just the
  * operator's poll/process cycle. See spec/pipeline-operator-modes.md.
+ *
+ * `clarification_requested` (actor `loop`) + `clarification_answered`
+ * (actor `admin`) cover the ambiguous-but-safe clarification flow — see
+ * spec/pipeline-operator-modes.md § Four-tier classification rule.
  */
 export type RequestHistoryEvent =
   | "created"
   | "loop_picked_up"
   | "loop_pushed_pr"
   | "loop_iterated"
+  | "clarification_requested"
+  | "clarification_answered"
   | "improve_requested"
   | "approval_started"
   | "approved"
@@ -101,6 +108,16 @@ export type Request = {
   failureReason?: string;
   manualFix?: boolean;
 
+  // Clarification flow (ambiguous-but-safe requests). When the operator
+  // can't safely resolve a request, it parks it at `clarification_needed`
+  // with a concise Swedish question here; the requester answers in the
+  // queue board, the answer lands in `clarificationAnswer`, and the
+  // request flips back to `queued`. Both hold the LATEST round; the full
+  // Q&A thread lives in `history`. See spec/pipeline-operator-modes.md
+  // § Four-tier classification rule.
+  clarificationQuestion?: string;
+  clarificationAnswer?: string;
+
   // Optional image attachments (1–3 per request when present).
   // Stored under `requests/<id>/attachments/...`; this array holds only
   // the metadata. Absent on text-only requests for backward compat.
@@ -109,11 +126,38 @@ export type Request = {
   history: ReadonlyArray<RequestHistoryEntry>;
 };
 
-/** Statuses that count toward the queue-depth cap. */
-export const ACTIVE_STATUSES: ReadonlySet<RequestStatus> = new Set<RequestStatus>([
-  "queued",
-  "in_progress",
-  "review",
-  "improve_requested",
-  "publishing",
-]);
+/**
+ * Statuses that COUNT toward the intake queue-depth cap (`POST /api/feedback`).
+ *
+ * This is a *counting* set — it includes `queued` and `clarification_needed`,
+ * which are NOT active work. **It is not the lane-blocking set** (see
+ * `LANE_BLOCKING_STATUSES`). Do not use it to decide whether the single-lane
+ * operator is busy.
+ */
+export const QUEUE_DEPTH_STATUSES: ReadonlySet<RequestStatus> =
+  new Set<RequestStatus>([
+    "queued",
+    "clarification_needed",
+    "in_progress",
+    "review",
+    "improve_requested",
+    "publishing",
+  ]);
+
+/**
+ * The single-lane occupants. The Mode A operator processes at most ONE
+ * request in these statuses at a time. A request here is *active work*
+ * (has, or is about to have, a `req/*` branch + PR).
+ *
+ * `clarification_needed` is deliberately **NOT** here: it is parked waiting
+ * for the requester's answer, has no branch/PR, and must not block other
+ * `queued` requests from being processed. Likewise `queued`, `done`,
+ * `rejected`, and `failed` are not lane occupants.
+ */
+export const LANE_BLOCKING_STATUSES: ReadonlySet<RequestStatus> =
+  new Set<RequestStatus>([
+    "in_progress",
+    "review",
+    "improve_requested",
+    "publishing",
+  ]);

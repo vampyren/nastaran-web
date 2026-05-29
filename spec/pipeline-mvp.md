@@ -82,12 +82,17 @@ The Swedish UI vocabulary is centralized in [§ Swedish UI vocabulary](#swedish-
 
 `failed` is a terminal sibling of any active state. It surfaces in the **Fel** board section with `failureReason` + an optional `manualFix: true` flag. **Försök igen** moves `failed → queued`.
 
+**Clarification side-loop:** ambiguous-but-safe requests get parked at `clarification_needed` (operator writes a Swedish `clarificationQuestion`; **no claim, no branch, no PR**), surface in the **Väntar på svar** section, and return via `clarification_needed → queued` once the requester answers (**Svara** → `POST /api/clarify/[id]`). `clarification_needed` is **not** a lane occupant — it does not block other `queued` requests (see [§ Single-lane vs queue-depth](#single-lane-vs-queue-depth)). **Avvisa** can clear a never-answered one.
+
 ### Full state transition table
 
 | From | Actor / action | To | What gets written | Notes |
 |---|---|---|---|---|
 | (none) | owner submits via `/onskemal` → `POST /api/feedback` | `queued` | New `requests/<id>.json` (status `queued`, `createdAt = updatedAt = now`) | Initial Octokit write, no `sha` needed |
 | `queued` | operator picks up oldest | `in_progress` | `claimedAt`, `updatedAt`, `branch`, history `loop_picked_up` | SHA-CAS |
+| `queued` | operator classifies **ambiguous-but-safe** (tier 2) | `clarification_needed` | `clarificationQuestion`, `updatedAt`, history `clarification_requested` (actor `loop`) | **No claim, no branch, no PR.** Operator metadata write to `main`. Not a lane occupant. |
+| `clarification_needed` | requester clicks **Svara** → `POST /api/clarify/[id]` | `queued` | `clarificationAnswer`, `updatedAt`, history `clarification_answered` (actor `admin`) | **Same request reused** — operator re-picks it up and reads the Q+A. No duplicate. |
+| `clarification_needed` | admin clicks **Avvisa** | `rejected` | `rejectedAt`, optional reason, history `rejected` | Clears a never-answered parked request |
 | `in_progress` | operator finishes classify + edit + gates + push + PR open | `review` | `reviewReadyAt`, `updatedAt`, `pullRequestUrl`, `pullRequestNumber`, `previewUrl`, `latestCommitSha`, history `loop_pushed_pr` | `req/*` branch holds only the `src/content/*.ts` change |
 | `in_progress` | operator classifier marks unsafe OR `lint`/`typecheck`/`build` fails | `failed` | `failedAt`, `failureReason`, `manualFix: true`, history `failed` | No push; branch never published |
 | `review` | admin clicks **Förbättra** → `POST /api/iterate/[id]` | `improve_requested` | `updatedAt`, history `improve_requested` with message | Branch + PR remain open |
@@ -102,6 +107,17 @@ The Swedish UI vocabulary is centralized in [§ Swedish UI vocabulary](#swedish-
 | `done` | rollback PR merged later | `done` (unchanged) | history `rolled_back` with rollback PR URL, `updatedAt` bumped | Status stays `done` for audit accuracy |
 
 Any transition not listed is **not permitted** — invalid transition requests return `409 Conflict`.
+
+### Single-lane vs queue-depth
+
+Two distinct status sets — **do not conflate them** (a future operator session must not treat a parked clarification as active work):
+
+| Set (in `src/lib/request-types.ts`) | Members | Meaning |
+|---|---|---|
+| `LANE_BLOCKING_STATUSES` | `in_progress`, `review`, `improve_requested`, `publishing` | **Single-lane occupants.** The operator processes at most ONE of these at a time. Each has (or is about to have) a `req/*` branch + PR. |
+| `QUEUE_DEPTH_STATUSES` | `queued`, `clarification_needed`, `in_progress`, `review`, `improve_requested`, `publishing` | **Counting only** — the intake queue-depth cap in `POST /api/feedback`. Includes waiting/parked states. **Not** a lane-busy check. |
+
+`clarification_needed` is in the depth count (it's an open request) but **NOT** in the lane-blocking set: it is parked waiting for the requester, has no branch/PR, and must not block other `queued` requests from being processed. `queued`, `done`, `rejected`, `failed` are likewise not lane occupants.
 
 ### Optimistic concurrency (SHA-based CAS) — required for every writer
 
@@ -167,6 +183,7 @@ During pre-launch, only the owner submits requests. **Both** the page and the AP
 | `POST /api/approve/[id]` | Publicera | Cookie + same-origin | `src/app/api/approve/[id]/route.ts` |
 | `POST /api/reject/[id]` | Avvisa | Cookie + same-origin | `src/app/api/reject/[id]/route.ts` |
 | `POST /api/iterate/[id]` | Förbättra | Cookie + same-origin | `src/app/api/iterate/[id]/route.ts` |
+| `POST /api/clarify/[id]` | Svara (answer a clarification) | Cookie + same-origin | `src/app/api/clarify/[id]/route.ts` |
 | `POST /api/admin/retry/[id]` | Försök igen | Cookie + same-origin | `src/app/api/admin/retry/[id]/route.ts` |
 
 **Out of v1:** `GET /api/git/log` (powers a "Senaste ändringar" header widget on Shadi) and the matching widget are deferred — add later if the owner wants the at-a-glance recent-merges view.
@@ -234,6 +251,7 @@ type Request = {
   createdBy?: string;                  // "nastaran" / informational only
   status:
     | "queued"
+    | "clarification_needed"
     | "in_progress"
     | "review"
     | "improve_requested"
@@ -270,6 +288,14 @@ type Request = {
   // ----- Failure context -----
   failureReason?: string;
   manualFix?: boolean;
+
+  // ----- Clarification flow (ambiguous-but-safe) -----
+  // Operator parks the request at `clarification_needed` with a concise
+  // Swedish question; the requester answers via Svara (POST /api/clarify);
+  // the answer lands here and the request flips back to `queued`. Both hold
+  // the LATEST round — the full Q&A thread is in `history`.
+  clarificationQuestion?: string;
+  clarificationAnswer?: string;
 
   // ----- Optional image attachments (1–3 when present) -----
   // See § Attachments below for the full upload contract.
@@ -414,6 +440,7 @@ This is the **only** place internal status → Swedish UI label is defined. UI c
 | Internal status | UI label |
 |---|---|
 | `queued` | `Väntar i kö` |
+| `clarification_needed` | `Väntar på svar` |
 | `in_progress` | `Pågår` |
 | `review` | `Aktivt i review` |
 | `improve_requested` | `Behöver justeras` |
@@ -428,7 +455,8 @@ This is the **only** place internal status → Swedish UI label is defined. UI c
 |---|---|---|
 | `Publicera` | `POST /api/approve/[id]` | `review → publishing → done` |
 | `Förbättra` | `POST /api/iterate/[id]` | `review → improve_requested` |
-| `Avvisa` | `POST /api/reject/[id]` | `review → rejected`, `improve_requested → rejected`, `failed → rejected` |
+| `Svara` | `POST /api/clarify/[id]` | `clarification_needed → queued` |
+| `Avvisa` | `POST /api/reject/[id]` | `review → rejected`, `improve_requested → rejected`, `failed → rejected`, `clarification_needed → rejected` |
 | `Försök igen` | `POST /api/admin/retry/[id]` | `failed → queued` |
 
 **Board sections:**
@@ -436,6 +464,7 @@ This is the **only** place internal status → Swedish UI label is defined. UI c
 | Section | Statuses shown |
 |---|---|
 | `Väntar i kö` | `queued` |
+| `Väntar på svar` | `clarification_needed` |
 | `Aktivt i review` | `in_progress`, `review`, `improve_requested`, `publishing` |
 | `Fel` | `failed` |
 | `Klart` | `done`, `rejected` (newest-first, capped at 30) |
@@ -581,8 +610,8 @@ All status writes target `requests/<id>.json` on `main` via Octokit. Auth: `requ
 
 Body: `{ reason?: string }` (optional, max 500 chars).
 
-1. Verify `status` is one of `review`, `improve_requested`, `failed` (otherwise 409).
-2. Close the PR without merging (best-effort if `pullRequestNumber` present): `octokit.pulls.update({ state: "closed" })`.
+1. Verify `status` is one of `review`, `improve_requested`, `failed`, `clarification_needed` (otherwise 409).
+2. Close the PR without merging (best-effort if `pullRequestNumber` present): `octokit.pulls.update({ state: "closed" })`. (A `clarification_needed` request has no PR/branch, so this is a no-op.)
 3. Delete the source branch best-effort (only if `branch` starts with `req/`).
 4. CAS: → `rejected` with `rejectedAt`, optional `rejectionReason`, history `rejected`.
 5. Respond `{ ok: true }`.
@@ -596,6 +625,16 @@ Body: `{ message: string }` (required, 1–2000 chars).
 3. Respond `{ ok: true }`.
 
 The next operator cycle picks it up and iterates on the **same branch + same PR**. Never opens a duplicate PR.
+
+### `POST /api/clarify/[id]`
+
+Body: `{ answer: string }` (required, 1–2000 chars). Powers the **Svara** button on a `clarification_needed` card.
+
+1. Verify `status === "clarification_needed"` (otherwise 409).
+2. CAS: → `queued`; set `clarificationAnswer`; append history `clarification_answered` (actor `admin`, with the answer).
+3. Respond `{ ok: true }`.
+
+The next operator cycle re-picks up the **same request** (no new request, no branch, no PR was ever created while parked), reads `clarificationQuestion` + `clarificationAnswer`, and processes it normally. If still ambiguous, the operator may park it again (overwriting the question, clearing the prior answer; the full Q&A thread stays in `history`).
 
 ### `POST /api/admin/retry/[id]`
 

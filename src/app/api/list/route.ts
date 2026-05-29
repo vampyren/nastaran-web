@@ -2,7 +2,8 @@
  * GET /api/list — admin queue listing.
  *
  * Reads every requests/*.json on main, returns them grouped/sorted so the
- * /onskemal-kogen board can render four sections without further work.
+ * /onskemal-kogen board can render its five sections (Väntar i kö,
+ * Väntar på svar, Aktivt i review, Fel, Klart) without further work.
  *
  * Auth: requireAdmin only — listing is a read, so no same-origin check
  * (admin uses the board over normal navigation, not from arbitrary
@@ -19,8 +20,8 @@ import type { Request, RequestStatus } from "@/lib/request-types";
 const HISTORY_CAP = 30;
 
 // Sort newest-first for terminal statuses (done, rejected), oldest-first
-// for active ones (queued, in_progress, review, improve_requested,
-// publishing, failed).
+// for non-terminal ones (queued, clarification_needed, in_progress, review,
+// improve_requested, publishing, failed).
 const TERMINAL: ReadonlySet<RequestStatus> = new Set<RequestStatus>([
   "done",
   "rejected",
