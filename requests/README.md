@@ -1,3 +1,7 @@
+> **ℹ️ Shared pipeline behavior is canonical in central web-ops**
+> (`/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md`). This file documents
+> Nastaran's local request-metadata file shape and write paths.
+
 # `requests/` — request queue metadata
 
 This directory holds the **single source of truth** for the request/publish pipeline. One JSON file per request, named `<id>.json`. The pipeline itself lives in:

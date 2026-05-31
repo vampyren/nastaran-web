@@ -1,10 +1,44 @@
 # Project conventions — nastaran-web
 
+## Shared web-ops rules (central source)
+
+This project follows the shared **web-ops** pipeline/operator rules. They live in
+**one central location** on Rex's Claude Code VM — they are not vendored into this
+repo and there is no git submodule.
+
+Before any request / queue / publish / operator work:
+
+1. Refresh the central rules:
+
+   ```bash
+   git -C /home/spawn/Apps/projects/web-ops pull --ff-only
+   ```
+
+2. Then read, in order:
+   1. `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md` — canonical pipeline/operator behavior.
+   2. `ops/project-profile.json` — this project's local Nastaran values.
+   3. This `CLAUDE.md` — Nastaran-specific non-pipeline conventions and warnings.
+
+The shared web-ops rules define behavior. The local project profile defines the project-specific Nastaran values.
+If the shared rules and the local profile conflict, stop and ask Rex. Do not guess.
+
+If `/home/spawn/Apps/projects/web-ops` is missing on this machine, stop and ask Rex. Do not operate from memory.
+
+Archived/local pipeline docs are **not canonical** for shared behavior. The `docs/`
+and `spec/` files describe Nastaran's implementation, setup, and history; where they
+touch shared pipeline/operator behavior, the central rules win.
+
+The shared operator behavior — Mode A model, listener cadence, single-lane rule,
+clarification flow, four-tier classification, request branch/PR/preview lifecycle,
+Publicera / Förbättra / Avvisa, attachments/source assets, safe edit surface,
+mutative-API security order, recovery — is **not duplicated here**. Read it from the
+central rules. Everything below is Nastaran-specific.
+
 ## Branch-first workflow (strict)
 
 **Never commit source changes directly to `main`.** Every code change goes through a feature branch + PR, even one-line fixes.
 
-> **One documented exception:** the request/publish pipeline (planned in PR A — this rule lands when the pipeline ships) writes metadata-only commits to `requests/<id>.json` on `main` via Octokit. Those writes come from either the Vercel-hosted API routes (`/api/feedback`, `/api/approve/[id]`, etc.) or the local Mode A operator session. Nothing else takes this path — no source files, no docs, no config, no other paths under `requests/` beyond the single per-request JSON. All actual source/content changes for requests still flow through a `req/<id>-<slug>` branch + PR + Publicera (squash-merge). See [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) § Source-of-truth split and [`requests/README.md`](./requests/README.md).
+> **One documented exception:** the request/publish pipeline writes metadata-only commits to `requests/<id>.json` on `main` via Octokit. Those writes come from either the Vercel-hosted API routes (`/api/feedback`, `/api/approve/[id]`, etc.) or the local Mode A operator session. Nothing else takes this path — no source files, no docs, no config, no other paths under `requests/` beyond the single per-request JSON. All actual source/content changes for requests still flow through a `req/<id>-<slug>` branch + PR + Publicera (squash-merge). See [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) § Source-of-truth split and [`requests/README.md`](./requests/README.md).
 
 Before making any edit/write that modifies committed code:
 
@@ -47,7 +81,7 @@ When you open a PR, include the Vercel preview URL in the chat handoff (and the 
 - React 19
 - TypeScript strict
 - Tailwind CSS v4 (CSS-first, `@theme` tokens) — Tailwind-first; reach for global CSS only when a token/utility can't express the effect cleanly
-- Octokit 4 for all GitHub I/O from the pipeline (request queue, PR open/merge, branch delete) — added in PR B
+- Octokit 4 for all GitHub I/O from the pipeline (request queue, PR open/merge, branch delete)
 - Deployed via Vercel (team `aryan-tech`), auto-deploy from `main`
 - GitHub repo: `vampyren/nastaran-web`
 
@@ -83,6 +117,8 @@ The Swedish UI vocabulary is centralized in [`spec/pipeline-mvp.md`](./spec/pipe
 
 ## Keep documentation in sync
 
+> Shared/cross-project pipeline & operator behavior is now canonical in the central web-ops repo (`/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md`), not in these local docs. The table below governs **Nastaran-local** doc maintenance only; the `docs/` and `spec/` pipeline docs are Nastaran implementation/setup/history and must not contradict the central rules.
+
 **Docs that describe what the code is or how it works must be updated in the same PR as the code change.** Stale docs are worse than no docs — they actively mislead.
 
 Doc surfaces in this repo, and what should trigger an update:
@@ -90,18 +126,20 @@ Doc surfaces in this repo, and what should trigger an update:
 | Doc | Update when… |
 |---|---|
 | `README.md` | Run/build/deploy instructions change, new top-level scripts, env vars added, repo URL or stack basics change. |
-| `CLAUDE.md` | Conventions, workflow rules, tech stack basics, or operator-mode rules shift. |
+| `CLAUDE.md` | Conventions, workflow rules, tech stack basics, or Nastaran-specific operator bindings shift. |
+| `ops/project-profile.json` | Any Nastaran local value the central web-ops model reads changes (routes, API paths, safe surface, asset patterns, output file, etc.). |
 | `spec/README.md` | Entry point / navigation for the spec folder. Update if the spec folder structure or a spec doc's purpose changes. |
 | `spec/design-spec.md` | Visual system, themes, motifs, tokens, or layout/spine architecture changes. |
 | `spec/implementation-spec.md` | New routes, milestone scope shifts, completed/added/dropped PRs in the roadmap. |
 | `spec/decisions-and-open-questions.md` | A new architectural decision is made, an open question is resolved, or a previously-resolved decision is revisited. |
-| `spec/pipeline-mvp.md` | Request data model, status union, state-transition table, API contracts, safe edit surface, validation stack, or acceptance criteria change. Authoritative source for the pipeline implementation. |
-| `spec/pipeline-operator-modes.md` | Mode A operator behavior, foreground listener cadence, four-tier classification rule, or anything in the parked Mode B reference shifts. |
-| `docs/PIPELINE-HANDOFF.md` | From-zero setup steps, env-var list, operator starter prompt, recovery model, or smoke-test checklist changes. |
-| `docs/REUSABLE-REQUEST-QUEUE-PATTERN.md` | The cross-project pattern (state machine, single-lane rule, four-tier classification, env checklist) genuinely changes — not project-specific tweaks. |
+| `spec/pipeline-mvp.md` | Nastaran's request data model, status union, API contracts, safe edit surface, or Swedish UI vocabulary change. Nastaran implementation reference + history. (Shared behavior → central web-ops.) |
+| `spec/pipeline-operator-modes.md` | Nastaran operator-mode history (Mode A current / Mode B parked) shifts. (Shared behavior → central web-ops.) |
+| `docs/PIPELINE-HANDOFF.md` | Nastaran from-zero setup steps, env-var list, or smoke-test checklist changes. |
+| `docs/REUSABLE-REQUEST-QUEUE-PATTERN.md` | Historical only — the cross-project pattern now lives in central web-ops. |
+| `docs/CLEAN-ROOM-VALIDATION.md` | Historical only — shared clean-room questions live in central web-ops. |
 | `docs/DESIGN-SYSTEM.md` | Design tokens, components, color/spacing/typography rules, or motif inventory changes. |
 | `docs/LEARNINGS.md` | A non-obvious gotcha, browser quirk, or pattern-that-bit-us emerges and is worth not repeating. |
-| `requests/README.md` | Metadata conventions, the `main`-write exception, or concurrency-safety rules change. |
+| `requests/README.md` | Nastaran metadata conventions or the `main`-write exception change. |
 | `.env.example` | New Vercel runtime env var is required, an existing one is renamed/dropped. |
 
 If an `archive/` or `legacy/` directory is added in the future, docs under those paths are **historical reference only** — they do not need to be kept in sync with current code, and the doc-surface rule does not apply to them.
@@ -123,53 +161,27 @@ Process at PR time:
 Standalone docs-only PRs are reserved for:
 - Intentional documentation cleanup (typo passes, restructuring, dead-link sweeps).
 - Project wrap-up / status finalization (e.g., milestone close, deferral checkpoint).
-- Pipeline / infrastructure setup phases (e.g., PR A of the request/publish pipeline chain).
+- Pipeline / infrastructure setup phases.
 - When the user explicitly asks for a docs-only PR.
 
 In doubt, update the doc. Cost of an extra paragraph is low; cost of a misleading doc compounds.
 
-## Request/publish pipeline rules
+## Pipeline operator mode — Nastaran-specific bindings
 
-**Status:** Shipped (PRs A–E). Anonymous production smoke + clean-room docs comprehension both pass on `main`. Live-run end-to-end smoke is ready to execute once Vercel env vars land — see [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md).
+Nastaran runs the shared pipeline in **Mode A** (the interactive Claude Code session is the operator — no cron, no daemon, no webhook service, no background worker, no child `claude -p`, no `ANTHROPIC_API_KEY`, no `--permission-mode bypassPermissions`, no unattended processing after the session closes, no auto-merge of source PRs).
 
-The pipeline is documented in:
+**The operator behavior itself — on-demand vs foreground-listener triggers and cadence, single-lane rule, clarification flow, four-tier classification, request branch / PR / preview lifecycle, Publicera / Förbättra / Avvisa, and attachment / source-asset handling — is canonical in `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md`. Do not duplicate or override it here.**
 
-- [`spec/pipeline-mvp.md`](./spec/pipeline-mvp.md) — data model, state machine, API contracts, safe edit surface, validation stack.
-- [`spec/pipeline-operator-modes.md`](./spec/pipeline-operator-modes.md) — Mode A foreground listener pattern. Mode B parked.
-- [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) — from-zero setup walkthrough + canonical operator starter prompt (§ 6).
-- [`docs/CLEAN-ROOM-VALIDATION.md`](./docs/CLEAN-ROOM-VALIDATION.md) — validation plan + recorded test results.
-- [`docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`](./docs/REUSABLE-REQUEST-QUEUE-PATTERN.md) — cross-project abstract pattern.
-- [`requests/README.md`](./requests/README.md) — metadata directory + `main`-write exception.
-- [`.env.example`](./.env.example) — env var template.
+Nastaran-specific bindings the operator needs (local values; also in `ops/project-profile.json`):
 
-Short version of the rules that apply across the codebase:
-
-1. **`/admin` is the owner entry point.** Anonymous `GET /admin` → 307 to `/admin/login`.
-2. **Request form is admin-gated for pre-launch.** Both `GET /onskemal` and `POST /api/feedback` call `hasAdminSession()` / `requireAdmin()`. Anonymous direct POST returns 401 and **never writes** to `requests/<id>.json`. Removal trigger documented in `spec/pipeline-mvp.md` § Pre-launch admin-gating.
-3. **Active request branch prefix:** `req/<id>-<slug>`. ID format: `YYYYMMDD-HHmmss-<6 random chars>`. Slug normalization is Swedish-aware (å→a, ä→a, ö→o, then NFKD, then ASCII strip). Full rules in `spec/pipeline-mvp.md` § Request id + slug rules.
-4. **Metadata-only write exception:** Octokit / `/api/*` may write to `requests/<id>.json` on `main`. Source/content changes only via `req/<id>-<slug>` branch + PR + Publicera (squash-merge). Every Octokit call hard-codes the path — no input can broaden the write scope.
-5. **Mode A foreground listener rules.** Operator is the active Claude Code session. Two shapes: on-demand (default) and opt-in foreground listener (**~10 min default cadence** via `ScheduleWakeup`, this-session-only; the owner can force an immediate check by saying "check the queue now", "pick it up", "process the queue", or similar). **Review-state decision-watch:** while a request the operator pushed sits at `review` awaiting Publicera / Förbättra / Avvisa, the listener may use a faster **quiet ~60 s** cadence until that request becomes `done` / `improve_requested` / `rejected` / `failed`, then returns to the ~10 min idle cadence. Mode A has no push signal from the website/API — Claude Code only notices owner button actions on a wake/check. NO cron, NO daemon, NO webhook service, NO background worker, NO child `claude -p`, NO `ANTHROPIC_API_KEY`, NO `--permission-mode bypassPermissions`, NO unattended processing after the session closes, NO auto-merge of source PRs. Full detail in `spec/pipeline-operator-modes.md`.
-6. **Mode B is parked.** Cron-driven `claude -p` wrapper is reference design only; not implemented. No `.loop/` directory in this repo.
-7. **Single-lane.** At most one active request across `in_progress | clarification_needed | review | improve_requested | publishing` (the `LANE_BLOCKING_STATUSES` set in `src/lib/request-types.ts`). `improve_requested` reuses **same request, same branch, same PR** — never duplicates a PR. **`clarification_needed` BLOCKS the single lane:** while a request waits for the requester's answer, the queue worker / CC does **not** pick up another `queued` request until it's resolved (answered → `queued`, or `rejected`). This is intentional and simple — no parallel queue handling yet. (It has no branch/PR while parked — lane-blocking but waiting.) The separate `REQUEST_INTAKE_COUNT_STATUSES` set is *counting only* (the request-intake cap in `/api/feedback`), never a lane-busy check — don't conflate them.
-   - **Ambiguous-but-safe → `clarification_needed` (not stop-and-ask).** When a content request is ambiguous but likely safe (e.g. page/text conflict, or "tweak the intro" with no specifics), the queue worker / CC CAS-writes `queued → clarification_needed` with a concise Swedish `clarificationQuestion` (no claim, no branch, no PR) and **keeps the listener running** (the lane is now held by this request). The requester answers in the queue board (**Svara** → `POST /api/clarify/[id]`), which flips it back to `queued`; CC re-picks up the same request and reads the Q+A. Never guess page/wording/placement/image-usage. Structural/unsafe still → `failed + manualFix`; genuine owner-policy decisions can still stop and ask the owner/supervisor (Rex). Full detail in `spec/pipeline-operator-modes.md` § Roles and § Four-tier classification rule § Clarification flow.
-8. **Safe edit surface:** `src/content/{berattelser,home,kontakt,om-mig,site}.ts` — **with one narrow exception: content-driven renderer glue (below).** Outside that, the operator never edits `src/app/`, `src/components/`, `src/lib/`, configs, `package.json`, `next.config.mjs`, `.github/`, `public/` (beyond the attachments asset path in rule 10), `docs/`, `spec/`, or any other `requests/*.json` than the one being processed. Anything outside the surface = `failed + manualFix`.
-    - **Content-driven renderer glue (allowed inside a request branch, no per-request owner approval).** When a content request can't be shown by editing `src/content/*.ts` alone, the operator may also make **minimal same-page renderer wiring** to display the new content: add a field in `src/content/<page>.ts`, and update **only the matching page renderer** (e.g. `src/app/<page>/page.tsx`) to display that field — small local display wiring tied directly to the requested page. **Not** auto-allowed: route changes, API/auth/config changes, admin-pipeline internals, broad layout redesign, global styling/design-system rewrites, unrelated shared-component refactors, or changes spanning multiple unrelated pages. If the change grows beyond small local display wiring → **stop and ask**. Still inside the `req/<id>-<slug>` branch + PR + preview flow; gates still run; preview + owner approval still required before production. Detail in `spec/pipeline-operator-modes.md` § Four-tier classification rule and `spec/pipeline-mvp.md` § Safe edit surface.
-9. **No real request processing inside infrastructure PRs unless explicitly approved.** PRs B–E ship the runtime; do not exercise the pipeline end-to-end with real owner requests during setup.
-10. **Image attachments** (1–3 per request, PNG/JPG/WebP, ≤ 5 MB each) live at `requests/<id>/attachments/<server-generated-name>` and are referenced from `requests/<id>.json`. Operator rules:
-    - **Inspect every attachment before classifying.** Read the request wording to decide which of the two valid intake shapes applies.
-    - **Reference / clarification.** Screenshots showing a layout bug, examples, "here's where I want the change". Operator inspects — never copies anywhere. The request is then judged on the text alone against the normal safe edit surface.
-    - **Source asset for the website.** Wording like "lägg in dessa", "byt bilden", "använd denna bild", "lägg till denna bild på <section>", "replace the X with this", "add this image to <page>". **The operator IS allowed to copy the uploaded file from `requests/<id>/attachments/...` into the correct project asset folder (preferably `public/assets/generated/<safe-filename>`) AND reference it from the appropriate safe content/data file** (`src/content/*.ts`). This is the intended source-asset path; it is NOT an unsafe request just because the binary lands outside `src/content/`.
-    - **Source-asset guardrails — all must hold for the asset-copy path:**
-      - The owner's wording clearly says use / add / replace / put-this-image-on-page (don't read into "look at this" or "see screenshot" — those are reference, not source).
-      - The target page/section/current image is unambiguous from the request text. If unclear → stop and ask, or `failed + manualFix`. Never guess placement.
-      - Destination is a **known project asset folder**, preferably `public/assets/generated/`. Anywhere outside the established asset layout → stop and ask.
-      - The destination filename is a **safe generated** name (lowercase, ASCII, hyphenated, descriptive; e.g. `<page>-<topic>.<ext>`). Never use the user's raw uploaded filename as the on-disk path component — that's already enforced at upload time but applies to the copy step too.
-      - **No cropping, retouching, color-grading, heavy optimization, or other design-sensitive choices** unless the owner explicitly asked for them AND the operation stays inside the safe edit surface. If in doubt — stop and ask.
-      - **No edits to unsafe components or rendering code.** Only the asset copy + the content/data file reference are in scope. If the request needs a new component, new section, layout change, etc. → outside the source-asset path → stop and ask.
-    - **Attachments still do NOT expand the whole safe edit surface.** The asset-copy allowance covers exactly two things: (1) the binary into the known project asset folder, (2) the path reference in `src/content/*.ts`. Everything else still falls under the normal four-tier rule.
-    - Full data model + storage layout + validation stack in `spec/pipeline-mvp.md` § Attachments.
-
-    **Cross-project portability.** When this attachment feature is ported to Shadi (`shadi-web`), the same source-asset rule is meant to carry forward verbatim — same destination convention (`public/assets/generated/`), same guardrails, same "does not expand the safe edit surface" boundary. Note this in the Shadi spec when the port happens; see `docs/REUSABLE-REQUEST-QUEUE-PATTERN.md`.
+- Owner entry `/admin` (anonymous `GET /admin` → 307 to `/admin/login`). Request form `/onskemal`; queue board `/onskemal-kogen`.
+- API routes: intake `/api/feedback`, list `/api/list`, plus `/api/approve/[id]`, `/api/reject/[id]`, `/api/iterate/[id]`, `/api/clarify/[id]`, `/api/admin/retry/[id]`, attachment proxy `/api/attachment/[id]/[name]`.
+- Lane sets: `LANE_BLOCKING_STATUSES` and `REQUEST_INTAKE_COUNT_STATUSES` in `src/lib/request-types.ts` (`clarification_needed` IS lane-blocking; the intake-count set is counting-only — never a lane-busy check).
+- Request metadata lives at `requests/<id>.json` on `main` (the narrow metadata-only write exception). Request id is `YYYYMMDD-HHmmss-<6 random>`; slug normalization is Swedish-aware (å→a, ä→a, ö→o → NFKD → ASCII).
+- Safe edit surface: content files `src/content/{berattelser,home,kontakt,om-mig,site}.ts`, plus same-page renderer glue on the **homepage `src/app/page.tsx`** and route pages `src/app/<page>/page.tsx`, source-asset copy into `public/assets/generated/`, and direct replacement of existing approved images under `public/assets/**` — all bounded by `ops/project-profile.json` → `safeEditSurface` and the central § 11 rules. Never write a `protectedPaths` entry.
+- **Pre-launch admin-gating:** both `GET /onskemal` and `POST /api/feedback` require an admin session; anonymous direct POST returns 401 and never writes to `requests/<id>.json`. Removal trigger before public launch: `spec/pipeline-mvp.md` § Pre-launch admin-gating.
+- Do not exercise the pipeline end-to-end with real owner requests during infrastructure/setup work unless explicitly approved.
+- Nastaran implementation reference + history: `spec/pipeline-mvp.md` (data model, state machine, API contracts, Swedish UI vocabulary) and `spec/pipeline-operator-modes.md` (operator-mode history; parked Mode B). Mode B (cron-driven `claude -p` wrapper) is **parked** — reference design only, no `.loop/` directory.
 
 ## Temporary footer "Admin" link (pre-launch only)
 
@@ -213,8 +225,9 @@ Still: never paste real secret values into chat. Tell the owner to run the `open
 These apply unconditionally unless I override them in-session.
 
 - **Single source of truth.** All work happens in this repo: `/home/spawn/Apps/projects/nastaran-web` (`vampyren/nastaran-web`). Use it for every read and write.
+- **Do not touch `/home/spawn/Apps/nastaran-web/`** — the old/archived project path; off-limits.
 - **Do not change Vercel settings or env vars unless I explicitly ask.**
 - **Do not paste secrets into chat, docs, commits, logs, or PR bodies.**
 - **Do not create PATs, secrets, deployment settings, or OAuth/app integrations without explicit approval.** The pipeline's `GITHUB_TOKEN`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` must be set by the human directly in the Vercel dashboard — see [`docs/PIPELINE-HANDOFF.md`](./docs/PIPELINE-HANDOFF.md) § 2.
 - **No `ANTHROPIC_API_KEY` anywhere.** Mode A uses the local Claude CLI subscription session; setting an API key would override it.
-- **The operator's primary edit surface is `src/content/*.ts`** during request work; anything outside that = unsafe classification = `failed + manualFix`, **except minimal content-driven renderer glue** (same-page renderer wiring in `src/app/<page>/page.tsx` to display a new content field — see rule 8 and `spec/pipeline-operator-modes.md` § Four-tier classification rule).
+- **The operator's safe edit surface and image/asset rules are defined centrally** (`WEB-OPS-RULES.md` § 11) plus this project's `ops/project-profile.json` → `safeEditSurface`: content files `src/content/{berattelser,home,kontakt,om-mig,site}.ts`, same-page renderer glue on the homepage `src/app/page.tsx` and route pages `src/app/<page>/page.tsx`, source-asset copy into `public/assets/generated/`, and direct replacement of existing approved images under `public/assets/**`. Anything outside the declared surface, or any `protectedPaths` entry, is unsafe = `failed + manualFix`.

@@ -1,3 +1,8 @@
+> **⚠️ HISTORICAL — superseded by central web-ops.**
+> The canonical clean-room validation questions now live in
+> `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md` § 19. This page is kept for
+> historical context only and is not canonical for shared behavior.
+
 # Clean-room validation
 
 Captures the validation pass run on PR E (2026-05-27) and the live-run smoke checklist gated on Vercel env vars.
