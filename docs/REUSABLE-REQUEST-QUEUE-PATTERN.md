@@ -1,3 +1,10 @@
+> **⚠️ HISTORICAL — superseded by central web-ops.**
+> The cross-project request/publish pattern is now owned by the central web-ops
+> repo: `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md` (with per-project
+> values in [`../ops/project-profile.json`](../ops/project-profile.json)). This
+> page is kept for historical context only and is not canonical. If it conflicts
+> with the central rules, the central rules win.
+
 # Reusable request-queue pattern
 
 A one-page summary of the request/publish pipeline pattern as adapted into this project. Originally validated end-to-end on `shadi-web`; reused here for `nastaran-web`. Use this as the starting blueprint if you ever want to apply it to another small-team content workflow where a non-technical owner needs to request changes and approve them visually before production.

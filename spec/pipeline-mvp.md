@@ -1,3 +1,11 @@
+> **ℹ️ Shared behavior is canonical in central web-ops.**
+> Shared pipeline/operator *behavior* lives in
+> `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md`. This spec is retained as
+> **Nastaran's implementation reference and history** (data model, API contracts,
+> status union, Swedish UI vocabulary). Where it describes shared behavior, defer
+> to the central rules; the Nastaran-specific implementation detail here remains
+> the reference for this repo.
+
 # Spec — request/publish pipeline (MVP)
 
 **Status:** Planned. PR A (this PR) lands docs/spec only. Runtime implementation lands in PRs B–E.

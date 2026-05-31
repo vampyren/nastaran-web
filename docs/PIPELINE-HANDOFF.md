@@ -1,3 +1,10 @@
+> **ℹ️ Shared behavior is canonical in central web-ops.**
+> The shared pipeline/operator *behavior* lives in
+> `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md`, with this project's values
+> in [`../ops/project-profile.json`](../ops/project-profile.json). This document is
+> retained as Nastaran's **setup-from-zero runbook** (env, PAT, Vercel, smoke test)
+> plus history. Where it describes shared behavior, the central rules win.
+
 # Pipeline handoff — set up the request/publish workflow from zero
 
 This is the **canonical start-here guide** for setting up the request/publish pipeline on `nastaran-web`. Adapted from the validated `shadi-web` pipeline (where this pattern was first proven). Cross-references:

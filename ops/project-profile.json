@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "slug": "nastaran-web",
+    "displayName": "Nastaran",
+    "repo": "vampyren/nastaran-web",
+    "localPath": "/home/spawn/Apps/projects/nastaran-web",
+    "productionUrl": "https://nastaran-web.vercel.app",
+    "outputHandoffFile": "/home/spawn/temp/output_nastaran.md",
+    "oldArchivedPath": "/home/spawn/Apps/nastaran-web"
+  },
+  "routes": {
+    "admin": "/admin",
+    "login": "/admin/login",
+    "requestForm": "/onskemal",
+    "queueBoard": "/onskemal-kogen"
+  },
+  "apiRoutes": {
+    "requestCreate": "/api/feedback",
+    "requestList": "/api/list",
+    "approve": "/api/approve/<id>",
+    "reject": "/api/reject/<id>",
+    "iterate": "/api/iterate/<id>",
+    "retry": "/api/admin/retry/<id>",
+    "clarify": "/api/clarify/<id>",
+    "attachmentProxy": "/api/attachment/<id>/<name>"
+  },
+  "runtime": {
+    "framework": "Next.js App Router",
+    "packageManager": "npm",
+    "qualityGates": [
+      "npm run lint",
+      "npm run typecheck",
+      "npm run build"
+    ]
+  },
+  "pipeline": {
+    "intakePolicy": "admin-gated-prelaunch",
+    "branchPrefix": "req",
+    "metadataPath": "requests/<id>.json",
+    "attachmentsPath": "requests/<id>/attachments/",
+    "clarificationNeededBlocksLane": true
+  },
+  "safeEditSurface": {
+    "contentPaths": [
+      "src/content/berattelser.ts",
+      "src/content/home.ts",
+      "src/content/kontakt.ts",
+      "src/content/om-mig.ts",
+      "src/content/site.ts"
+    ],
+    "rendererGlue": {
+      "enabled": true,
+      "allowedPattern": [
+        "src/app/page.tsx",
+        "src/app/<page>/page.tsx"
+      ]
+    },
+    "sourceAssetCopy": {
+      "enabled": true,
+      "destinations": [
+        "public/assets/generated/"
+      ]
+    },
+    "directExistingAssetReplacement": {
+      "enabled": true,
+      "approvedPaths": [
+        "public/assets/**/*.{png,jpg,jpeg,webp}"
+      ]
+    },
+    "allowedImageTypes": [
+      "png",
+      "jpeg",
+      "webp"
+    ],
+    "protectedPaths": [
+      "src/lib/**",
+      "src/app/api/**",
+      "next.config.*",
+      "*.config.*",
+      ".env*"
+    ]
+  },
+  "language": {
+    "internal": "English",
+    "visibleUi": "Swedish"
+  }
+}

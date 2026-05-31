@@ -1,3 +1,10 @@
+> **ℹ️ Shared behavior is canonical in central web-ops.**
+> The shared operator *behavior* (Mode A model, listener cadence, single-lane,
+> classification, hard stops, recovery) lives in
+> `/home/spawn/Apps/projects/web-ops/WEB-OPS-RULES.md`. This doc is retained as
+> **Nastaran's operator-mode history and the parked Mode B reference**. Where it
+> describes shared behavior, the central rules win.
+
 # Spec — pipeline operator modes
 
 Companion to [`pipeline-mvp.md`](./pipeline-mvp.md). That spec defines **what** the operator does (state machine, API contracts, hard rules). This spec defines **how** the operator runs.
