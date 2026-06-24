@@ -123,7 +123,11 @@ export function githubClient(): GithubConfig {
   if (!repoEnv) throw new Error("GITHUB_REPO is not set (expected `owner/repo`)");
   const slash = repoEnv.indexOf("/");
   if (slash <= 0 || slash === repoEnv.length - 1) {
-    throw new Error(`GITHUB_REPO must look like 'owner/repo', got: ${repoEnv}`);
+    // Never interpolate the raw value: a misconfiguration (e.g. the token and
+    // repo env vars swapped) can put a secret here, and this error is logged.
+    throw new Error(
+      "GITHUB_REPO must look like 'owner/repo' (value is set but malformed; not logged to avoid leaking secrets)"
+    );
   }
   const owner = repoEnv.slice(0, slash);
   const repo = repoEnv.slice(slash + 1);
